@@ -12,6 +12,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = [IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
 $originalLocation = Get-Location
+$originalPubHostedUrl = $env:PUB_HOSTED_URL
 if ([string]::IsNullOrWhiteSpace($SourceStage)) {
     $export = & (Join-Path $PSScriptRoot 'export_public_source.ps1') -CoreAssets
     $SourceStage = $export.Destination
@@ -55,6 +56,15 @@ function Add-Artifact([string]$Path, [string]$Kind, [string]$Signing) {
 }
 try {
     Set-Location $buildRoot
+    # Pub treats the registry URL as part of a locked package's identity.
+    # Honor the single registry already recorded by this snapshot instead of
+    # silently rewriting an otherwise identical set of versions on CI.
+    $lockContent = [IO.File]::ReadAllText((Join-Path $buildRoot 'pubspec.lock'))
+    $lockedRegistries = @([regex]::Matches($lockContent, '(?m)^\s+url:\s+"(https://[^"\s]+)"\s*$') |
+        ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
+    if ($lockedRegistries.Count -eq 1) {
+        $env:PUB_HOSTED_URL = $lockedRegistries[0]
+    }
     flutter pub get --enforce-lockfile
     if ($LASTEXITCODE -ne 0) { throw 'Core dependencies did not match the exported lockfile.' }
     if ($RunTests) {
@@ -135,4 +145,7 @@ NTAG213：独立设备状态、故障与维护工作台，不进入耗材库存�
     $checksumLines = @($artifacts | ForEach-Object { "$($_.sha256)  $($_.file)" })
     [IO.File]::WriteAllText((Join-Path $OutputDirectory 'SHA256SUMS.txt'), ($checksumLines -join "`n") + "`n", [Text.UTF8Encoding]::new($false))
     [pscustomobject]@{ SourceStage = $SourceStage; BuildRoot = $buildRoot; OutputDirectory = $OutputDirectory; Artifacts = $artifacts.Count }
-} finally { Set-Location $originalLocation }
+} finally {
+    $env:PUB_HOSTED_URL = $originalPubHostedUrl
+    Set-Location $originalLocation
+}
