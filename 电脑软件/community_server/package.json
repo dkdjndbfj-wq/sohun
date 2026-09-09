@@ -1,0 +1,16 @@
+{
+  "name": "consumable-workbench-community-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "nodemailer": "9.1.1"
+  }
+}

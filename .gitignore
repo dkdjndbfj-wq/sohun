@@ -1,0 +1,131 @@
+# Generated Flutter, Node, and release output
+**/.dart_tool/
+**/.flutter-plugins-dependencies
+**/build/
+**/dist/
+**/coverage/
+**/node_modules/
+**/.playwright-cli/
+**/.deploy/
+
+# Local credentials, databases, logs, and generated release material
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite*
+*.log
+*.bak
+*.backup
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Private workspace material outside the source projects
+/.arts/
+/.codeartsdoer/
+/.codegraph/
+/.flutter_workspace_sdk/
+/.playwright-cli/
+/.superpowers/
+/$out/
+/__pycache__/
+/_diag_camera_link/
+/.deploy/
+/log/
+/public_release/
+/artifacts/
+/客户信息运营台/
+/打印机型号/
+/风格/
+/耗材商标/
+/其他型号图片/
+/校准文件/
+/*.3mf
+/*capture*.png
+/头像.jpg
+/图标源文件.jpg
+/软件首页图片.png
+/sohun-launch.*
+/180
+/240
+/摄像头链路调试发现记录.md
+/校准测试模型下载清单.md
+/耗材工作台_商用前审查报告.md
+/耗材工作台_技术说明书_v1.0.0.md
+
+# Website-local screenshots and browser output
+/官网网页制作/output/
+
+# Root-level client diagnostics and reverse-engineering artifacts
+/电脑软件/*.py
+/电脑软件/*.js
+/电脑软件/*.hpp
+/电脑软件/*.bat
+/电脑软件/*.txt
+/电脑软件/*.log
+/电脑软件/*.png
+/电脑软件/*.exe
+/电脑软件/check_*.ps1
+/电脑软件/result.json
+/电脑软件/.git/
+/电脑软件/.git.local-backup/
+/电脑软件/.dart-tool-home/
+/电脑软件/release-clearance.json
+/电脑软件/build/symbols/
+/电脑软件/build_snapshot_*/
+/电脑软件/build_titlebar/
+/电脑软件/build_windows_stale_*/
+
+# Third-party Bambu resources pending redistribution clearance
+/电脑软件/assets/images/bambu_icons/*
+!/电脑软件/assets/images/bambu_icons/.gitkeep
+/电脑软件/assets/bambu_presets/*
+!/电脑软件/assets/bambu_presets/.gitkeep
+!/电脑软件/assets/bambu_presets/process/
+/电脑软件/assets/bambu_presets/process/*
+!/电脑软件/assets/bambu_presets/process/.gitkeep
+!/电脑软件/assets/bambu_presets/filament/
+/电脑软件/assets/bambu_presets/filament/*
+!/电脑软件/assets/bambu_presets/filament/.gitkeep
+!/电脑软件/assets/bambu_presets/machine/
+/电脑软件/assets/bambu_presets/machine/*
+!/电脑软件/assets/bambu_presets/machine/.gitkeep
+/电脑软件/assets/bin/*
+!/电脑软件/assets/bin/.gitkeep
+/电脑软件/assets/tools/*
+!/电脑软件/assets/tools/.gitkeep
+
+# Internal audit and reverse-engineering notes
+/.audit_hits.txt
+/电脑软件/SECURITY_AUDIT.md
+/电脑软件/TRAE_*.md
+/电脑软件/signature_analysis.md
+/电脑软件/docs/*
+/电脑软件/test/failures/
+/电脑软件/tool/
+/电脑软件/tool_*.dart
+/电脑软件/tool_*.ps1
+
+# Never commit local generated bundles or duplicate source archives
+/sohun-client-*.zip
+
+# Reverse-engineering and local token tooling are never public source.
+# Keep these rules scoped to their known private locations so required build
+# helpers such as scripts/sqlite_hook_asset.ps1 remain publishable.
+/电脑软件/research/*
+/电脑软件/*hook*
+/电脑软件/*dump*token*
+电脑软件/build_snapshot_*/
+电脑软件/build_windows_stale_*/
+电脑软件/_diag_camera_link/
+电脑软件/sohun-launch.*
+电脑软件/dart_*.txt
+电脑软件/full_test_after_roles.log
+
+# Public end-user guides and required SQLite build helpers.
+!/电脑软件/docs/手机RFID模板使用说明.md
+!/电脑软件/docs/NTAG213设备工作台使用说明.md
+!/电脑软件/scripts/sqlite_hook_asset.ps1
+!/电脑软件/scripts/test_sqlite_hook_asset.ps1

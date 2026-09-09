@@ -1,0 +1,21 @@
+sohun 安装与使用说明
+====================
+
+在继续安装前，请阅读并确认以下内容：
+
+1. sohun 默认按当前 Windows 用户安装到本机。你可以在后续页面修改安装位置。
+2. 本地库存、打印记录和设备配置默认保存在你的设备上。只有你主动登录账号或启用网络功能时，相关功能才会访问网络服务。
+3. 安装程序不会修改 Bambu Studio 的项目文件。打印参数和设备操作请在实际使用前自行核验。
+4. sohun 使用的第三方组件及其许可说明，会随软件一起提供在第三方说明文件中。
+5. 继续安装表示你已阅读并同意以上安装与使用说明。
+
+sohun Installation & Use Notice
+==============================
+
+Before continuing:
+
+1. sohun is installed for the current Windows user by default. The destination can be changed on the next page.
+2. Local inventory, print history, and device settings stay on this device by default. Network access occurs only when you actively sign in or enable an online feature.
+3. The installer does not modify Bambu Studio project files. Verify print parameters and device actions before use.
+4. Third-party components and their notices are shipped with the application.
+5. Continuing means that you have read and accepted this installation and use notice.

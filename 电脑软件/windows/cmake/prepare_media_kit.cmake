@@ -1,0 +1,87 @@
+include_guard(GLOBAL)
+
+# Keep the archive names, URLs and hashes tied to the installed plugin. Do not
+# patch pub-cache: Flutter regenerates those files after a dependency restore.
+function(sohun_media_kit_setting source name output)
+  string(REGEX MATCH "set\\(${name} \"([^\"]+)\"\\)" match "${source}")
+  if(NOT match)
+    message(FATAL_ERROR "Unable to read media_kit setting ${name}; check the installed plugin version.")
+  endif()
+  set(${output} "${CMAKE_MATCH_1}" PARENT_SCOPE)
+endfunction()
+
+function(sohun_media_kit_valid path expected output)
+  set(valid FALSE)
+  if(EXISTS "${path}" AND NOT IS_DIRECTORY "${path}")
+    file(MD5 "${path}" actual)
+    if(actual STREQUAL expected)
+      set(valid TRUE)
+    endif()
+  endif()
+  set(${output} ${valid} PARENT_SCOPE)
+endfunction()
+
+function(sohun_prepare_media_kit plugin_file cache_dir build_dir)
+  file(READ "${plugin_file}" plugin_source)
+  foreach(dependency LIBMPV ANGLE)
+    sohun_media_kit_setting("${plugin_source}" "${dependency}" archive)
+    sohun_media_kit_setting("${plugin_source}" "${dependency}_MD5" expected)
+    sohun_media_kit_setting("${plugin_source}" "${dependency}_URL" url)
+    string(REPLACE "\${${dependency}}" "${archive}" url "${url}")
+    string(TOLOWER "${expected}" expected)
+    string(LENGTH "${expected}" digest_length)
+    if(NOT archive MATCHES "^[A-Za-z0-9_.-]+$" OR
+        NOT expected MATCHES "^[a-f0-9]+$" OR NOT digest_length EQUAL 32 OR
+        NOT url MATCHES "^https://")
+      message(FATAL_ERROR "Invalid media_kit archive metadata for ${dependency}.")
+    endif()
+
+    set(cached "${cache_dir}/${archive}")
+    set(staged "${build_dir}/${archive}")
+    sohun_media_kit_valid("${staged}" "${expected}" staged_valid)
+    sohun_media_kit_valid("${cached}" "${expected}" cached_valid)
+    if(staged_valid)
+      if(NOT cached_valid)
+        file(MAKE_DIRECTORY "${cache_dir}")
+        configure_file("${staged}" "${cached}" COPYONLY)
+      endif()
+      continue()
+    endif()
+
+    if(NOT cached_valid)
+      if(DEFINED SOHUN_MEDIA_KIT_ALLOW_DOWNLOADS AND NOT SOHUN_MEDIA_KIT_ALLOW_DOWNLOADS)
+        message(FATAL_ERROR "No verified media_kit archive: ${cached} (expected MD5 ${expected}).")
+      endif()
+      file(MAKE_DIRECTORY "${cache_dir}")
+      # Separate temporary names allow independent builds to share the cache.
+      # A failed or partial response must never replace a verified archive.
+      string(RANDOM LENGTH 12 ALPHABET 0123456789abcdef nonce)
+      set(partial "${cached}.${nonce}.part")
+      set(last_error "")
+      foreach(attempt RANGE 1 2)
+        message(STATUS "Downloading media_kit ${archive} (${attempt}/2)")
+        file(DOWNLOAD "${url}" "${partial}"
+          STATUS result TLS_VERIFY ON TIMEOUT 45 INACTIVITY_TIMEOUT 15)
+        list(GET result 0 code)
+        sohun_media_kit_valid("${partial}" "${expected}" downloaded_valid)
+        if(code EQUAL 0 AND downloaded_valid)
+          file(RENAME "${partial}" "${cached}")
+          set(cached_valid TRUE)
+          break()
+        endif()
+        set(last_error "${result}; archive checksum valid: ${downloaded_valid}")
+        file(REMOVE "${partial}")
+      endforeach()
+      if(NOT cached_valid)
+        message(FATAL_ERROR
+          "media_kit download failed: ${url}\n${last_error}\n"
+          "A verified copy can be placed at ${cached} (MD5 ${expected}).")
+      endif()
+    endif()
+
+    file(MAKE_DIRECTORY "${build_dir}")
+    configure_file("${cached}" "${staged}" COPYONLY)
+    message(STATUS "Using verified media_kit archive: ${archive}")
+    # The plugin still performs its own original integrity check below.
+  endforeach()
+endfunction()

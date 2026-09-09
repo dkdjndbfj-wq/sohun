@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "product": "sohun-consumable-workbench",
+  "approvedForCommercialRedistribution": false,
+  "approvedBy": "",
+  "approvedAt": "",
+  "approvalReference": "",
+  "items": [
+    { "id": "bambu-icons", "status": "pending", "rightsBasis": "", "evidenceReference": "" },
+    { "id": "bambu-presets", "status": "pending", "rightsBasis": "", "evidenceReference": "" },
+    { "id": "bambu-networking-binary", "status": "pending", "rightsBasis": "", "evidenceReference": "" },
+    { "id": "bambu-slicer-certificate", "status": "pending", "rightsBasis": "", "evidenceReference": "" },
+    { "id": "native-integration-wrappers", "status": "pending", "rightsBasis": "", "evidenceReference": "" },
+    { "id": "ffmpeg-runtime", "status": "pending", "rightsBasis": "", "evidenceReference": "" },
+    { "id": "msvc-runtime", "status": "pending", "rightsBasis": "", "evidenceReference": "" },
+    { "id": "printer-fault-knowledge", "status": "pending", "rightsBasis": "", "evidenceReference": "" }
+  ]
+}

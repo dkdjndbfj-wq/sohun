@@ -1,0 +1,93 @@
+name: Core Preview
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_tests:
+        description: 'Run automated behavior tests before packaging'
+        required: true
+        type: boolean
+        default: true
+  push:
+    tags:
+      - 'core-v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  core-preview:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.4
+          channel: stable
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install source-boundary scanner
+        shell: powershell
+        run: choco install ripgrep --no-progress -y
+      - name: Verify packaging boundaries
+        if: github.event_name != 'workflow_dispatch' || inputs.run_tests
+        shell: powershell
+        run: ./scripts/tests/test_core_build.ps1
+      - name: Verify sanitized public source export
+        if: github.event_name != 'workflow_dispatch' || inputs.run_tests
+        shell: powershell
+        run: ./scripts/tests/test_public_source.ps1
+      - name: Install installer compiler
+        shell: powershell
+        run: |
+          if (-not (Get-Command ISCC.exe -ErrorAction SilentlyContinue) -and
+              -not (Test-Path -LiteralPath "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) {
+            choco install innosetup --no-progress -y
+            if ($LASTEXITCODE -ne 0) { throw 'Inno Setup installation failed.' }
+          }
+      - name: Build and verify core snapshot
+        shell: powershell
+        env:
+          SOHUN_RUN_TESTS: ${{ github.event_name != 'workflow_dispatch' || inputs.run_tests }}
+        run: |
+          $expectedTag = if ($env:GITHUB_REF -like 'refs/tags/core-v*') { $env:GITHUB_REF_NAME } else { '' }
+          $validationFlags = @{}
+          if ($env:SOHUN_RUN_TESTS -eq 'true') { $validationFlags.RunTests = $true }
+          ./scripts/public_core_build.ps1 -Target All -Installer @validationFlags -ExpectedTag $expectedTag -OutputDirectory ./artifacts/core-preview-ci
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sohun-core-preview-unsigned
+          path: artifacts/core-preview-ci/*
+
+  publish-prerelease:
+    if: startsWith(github.ref, 'refs/tags/core-v')
+    needs: core-preview
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: sohun-core-preview-unsigned
+          path: artifacts/core-preview-ci
+      - name: Publish explicitly marked prerelease
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: true
+          name: sohun Core Preview ${{ github.ref_name }}
+          body: |
+            核心预览版：CUID/FUID 资料卡可重复批量入库，确认前可取消；每卷库存拥有独立卷号。
+            检测到取下时保留余量与未结算任务。重新装入可选择原来的半卷或另一卷，换卷后再次选择旧余料卷仍保留原余量与消耗历史，支持跨端同步。
+            个人库存按服务器与用户 ID 隔离；修复离线消耗冲突、更新地址异常、Android NFC 超时及 Windows 旧文件混包问题。NTAG213 仅用于独立设备工作台。
+            Windows 安装器和便携包未进行 Authenticode 签名；Android 为调试证书签名的测试 APK。
+            构建时功能回归：${{ (github.event_name != 'workflow_dispatch' || inputs.run_tests) && '已运行自动化回归；仍需实机验收。' || '未运行完整自动化回归，待实际使用反馈。' }}
+            不包含厂商私有网络组件、账户/视频桥、厂商图标/预设、FFmpeg/libmpv、导入的离线故障文案或校准模型。
+            真实 NFC/AMS 兼容性尚未完成实机验收。此预发布不替代完整正式发行的资源许可与签名门禁。
+          files: artifacts/core-preview-ci/*

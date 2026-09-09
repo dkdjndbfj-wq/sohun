@@ -1,0 +1,6 @@
+## Copy this file to android/key.properties on the release machine.
+## Never commit the copied file or the keystore; both are ignored by git.
+storePassword=REPLACE_WITH_KEYSTORE_PASSWORD
+keyPassword=REPLACE_WITH_KEY_PASSWORD
+keyAlias=sohun-release
+storeFile=C:/secure/signing/sohun-release.jks

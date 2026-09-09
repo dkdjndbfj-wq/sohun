@@ -1,0 +1,288 @@
+name: Windows Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  windows-release:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    defaults:
+      run:
+        working-directory: 电脑软件
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enforce public release prerequisites
+        shell: powershell
+        env:
+          RELEASE_ENABLED: ${{ vars.SOHUN_PUBLIC_RELEASE_ENABLED }}
+          CLEARANCE_JSON: ${{ secrets.SOHUN_RELEASE_CLEARANCE_JSON }}
+          RELEASE_ASSETS_URL: ${{ secrets.SOHUN_RELEASE_ASSETS_ARCHIVE_URL }}
+          RELEASE_ASSETS_TOKEN: ${{ secrets.SOHUN_RELEASE_ASSETS_TOKEN }}
+          SIGNING_CERT_PFX: ${{ secrets.SOHUN_SIGNING_CERT_PFX_BASE64 }}
+          SIGNING_CERT_PASSWORD: ${{ secrets.SOHUN_SIGNING_CERT_PASSWORD }}
+          SIGNING_CERT_THUMBPRINT: ${{ secrets.SOHUN_SIGNING_CERT_THUMBPRINT }}
+        run: |
+          if ($env:RELEASE_ENABLED -ne 'true') {
+            throw 'Public release is disabled. Set repository variable SOHUN_PUBLIC_RELEASE_ENABLED=true only after legal and operational review.'
+          }
+          if ([string]::IsNullOrWhiteSpace($env:CLEARANCE_JSON)) {
+            throw 'SOHUN_RELEASE_CLEARANCE_JSON is required. No third-party redistribution clearance was supplied.'
+          }
+          if ([string]::IsNullOrWhiteSpace($env:RELEASE_ASSETS_URL)) {
+            throw 'SOHUN_RELEASE_ASSETS_ARCHIVE_URL is required. Cleared release assets are never stored in Git history.'
+          }
+          if ([string]::IsNullOrWhiteSpace($env:SIGNING_CERT_PFX) -or
+              [string]::IsNullOrWhiteSpace($env:SIGNING_CERT_PASSWORD) -or
+              [string]::IsNullOrWhiteSpace($env:SIGNING_CERT_THUMBPRINT)) {
+            throw 'Code-signing certificate secrets are required for a public Windows release.'
+          }
+          $manifestPath = Join-Path $env:RUNNER_TEMP 'sohun-release-clearance.json'
+          $clearanceText = $env:CLEARANCE_JSON.Trim()
+          if ($clearanceText.StartsWith('{')) {
+            [IO.File]::WriteAllText(
+              $manifestPath,
+              $clearanceText,
+              [Text.UTF8Encoding]::new($false)
+            )
+          } else {
+            try {
+              [IO.File]::WriteAllBytes($manifestPath, [Convert]::FromBase64String($clearanceText))
+            } catch {
+              throw 'SOHUN_RELEASE_CLEARANCE_JSON must be a JSON object or its Base64 encoding.'
+            }
+          }
+          Copy-Item -LiteralPath $manifestPath -Destination 'release-clearance.json' -Force
+          $assetsUri = [Uri]::new($env:RELEASE_ASSETS_URL)
+          if ($assetsUri.Scheme -ne 'https' -or $assetsUri.UserInfo) {
+            throw 'SOHUN_RELEASE_ASSETS_ARCHIVE_URL must be an HTTPS URL without embedded credentials.'
+          }
+          $assetsZipPath = Join-Path $env:RUNNER_TEMP 'sohun-release-assets.zip'
+          $headers = @{}
+          if (-not [string]::IsNullOrWhiteSpace($env:RELEASE_ASSETS_TOKEN)) {
+            $headers.Authorization = "Bearer $env:RELEASE_ASSETS_TOKEN"
+          }
+          Invoke-WebRequest -Uri $assetsUri -Headers $headers -OutFile $assetsZipPath
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $projectRoot = (Get-Location).Path
+          $archive = [IO.Compression.ZipFile]::OpenRead($assetsZipPath)
+          try {
+            $seenEntries = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+            foreach ($entry in $archive.Entries) {
+              if ([string]::IsNullOrWhiteSpace($entry.FullName)) { continue }
+              $entryPath = $entry.FullName.Replace('\', '/')
+              $entryIsDirectory = $entryPath.EndsWith('/')
+              $entryPath = $entryPath.TrimEnd('/')
+              if ([string]::IsNullOrWhiteSpace($entryPath)) { continue }
+              $segments = $entryPath.Split('/')
+              if (-not $entryPath.StartsWith('assets/', [StringComparison]::OrdinalIgnoreCase) -or
+                  [IO.Path]::IsPathRooted($entryPath) -or
+                  $entryPath.Contains('//') -or
+                  $entryPath.IndexOf([char]0) -ge 0 -or
+                  ($segments -contains '.') -or
+                  ($segments -contains '..')) {
+                throw "Release asset archive may contain only safe relative assets paths: $($entry.FullName)"
+              }
+              if (-not $seenEntries.Add($entryPath)) {
+                throw "Release asset archive contains duplicate paths: $entryPath"
+              }
+              $destination = [IO.Path]::GetFullPath((Join-Path $projectRoot $entryPath))
+              if (-not $destination.StartsWith("$projectRoot\", [StringComparison]::OrdinalIgnoreCase)) {
+                throw "Release asset archive contains an unsafe path: $($entry.FullName)"
+              }
+              if ($entryIsDirectory) {
+                New-Item -ItemType Directory -Force -Path $destination | Out-Null
+                continue
+              }
+              New-Item -ItemType Directory -Force -Path (Split-Path -Parent $destination) | Out-Null
+              [IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $destination, $true)
+            }
+          } finally {
+            $archive.Dispose()
+          }
+          $required = @(
+            'assets/images/bambu_icons',
+            'assets/bambu_presets/process',
+            'assets/bambu_presets/filament',
+            'assets/bambu_presets/machine',
+            'assets/bin/bind_tool.exe',
+            'assets/bin/switch_user_tool.exe',
+            'assets/bin/cloud_camera_bridge.exe',
+            'assets/bin/bambu_networking.dll',
+            'assets/bin/slicer_base64.cer',
+            'assets/tools/ffmpeg/ffmpeg.exe'
+          )
+          $missing = @($required | Where-Object { -not (Test-Path -LiteralPath $_) })
+          if ($missing.Count -gt 0) {
+            throw "Cleared third-party release assets are missing after injection: $($missing -join ', ')"
+          }
+          $runtimeHashTargets = @(
+            'bind_tool.exe',
+            'switch_user_tool.exe',
+            'cloud_camera_bridge.exe',
+            'bambu_networking.dll',
+            'slicer_base64.cer'
+          )
+          foreach ($fileName in $runtimeHashTargets) {
+            $filePath = Join-Path 'assets/bin' $fileName
+            $fileInfo = Get-Item -LiteralPath $filePath
+            if ($fileInfo.Length -le 0) {
+              throw "Cleared third-party release asset is empty: $filePath"
+            }
+            $hash = (Get-FileHash -LiteralPath $filePath -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $fileName" | Out-File -LiteralPath (Join-Path 'assets/bin' "$fileName.sha256") -Encoding ascii -NoNewline
+          }
+          $requiredAssetPatterns = [ordered]@{
+            'assets/images/bambu_icons' = '*.svg'
+            'assets/bambu_presets/process' = '*.json'
+            'assets/bambu_presets/filament' = '*.json'
+            'assets/bambu_presets/machine' = '*.json'
+            'assets/bin' = '*.sha256'
+            'assets/tools/ffmpeg' = '*.exe'
+          }
+          $invalidDirectories = @($requiredAssetPatterns.GetEnumerator() | Where-Object {
+            $null -eq (Get-ChildItem -LiteralPath $_.Key -File -Recurse -Filter $_.Value -ErrorAction SilentlyContinue |
+              Where-Object { $_.Length -gt 0 } |
+              Select-Object -First 1)
+          } | ForEach-Object { "$($_.Key) ($($_.Value))" })
+          if ($invalidDirectories.Count -gt 0) {
+            throw "Cleared third-party release asset directories contain no expected files: $($invalidDirectories -join ', ')"
+          }
+          $pfxPath = Join-Path $env:RUNNER_TEMP 'sohun-signing.pfx'
+          [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:SIGNING_CERT_PFX))
+          $securePassword = ConvertTo-SecureString $env:SIGNING_CERT_PASSWORD -AsPlainText -Force
+          Import-PfxCertificate -FilePath $pfxPath -CertStoreLocation Cert:\CurrentUser\My -Password $securePassword | Out-Null
+          [IO.File]::AppendAllText(
+            $env:GITHUB_ENV,
+            "SIGNING_THUMBPRINT=$env:SIGNING_CERT_THUMBPRINT`n",
+            [Text.UTF8Encoding]::new($false)
+          )
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.4
+          channel: stable
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: 电脑软件/community_server/package-lock.json
+      - name: Ensure Inno Setup is available
+        shell: powershell
+        run: |
+          if (-not (Get-Command ISCC.exe -ErrorAction SilentlyContinue) -and
+              -not (Test-Path -LiteralPath "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) {
+            choco install innosetup --no-progress -y
+          }
+      - name: Install Flutter dependencies
+        run: flutter pub get
+      - name: Analyze Dart for release
+        shell: powershell
+        run: ../scripts/analyze_dart.ps1
+      - name: Run Flutter release tests
+        shell: powershell
+        run: |
+          flutter test --no-pub --concurrency=2
+          if ($LASTEXITCODE -ne 0) {
+            throw "Flutter tests failed (exit $LASTEXITCODE)."
+          }
+      - name: Run community server release preflight
+        shell: powershell
+        working-directory: 电脑软件/community_server
+        run: |
+          npm ci
+          if ($LASTEXITCODE -ne 0) { throw "Community server dependency install failed (exit $LASTEXITCODE)." }
+          npm test
+          if ($LASTEXITCODE -ne 0) { throw "Community server tests failed (exit $LASTEXITCODE)." }
+          npm audit --omit=dev --registry=https://registry.npmjs.org --fetch-retries=2 --fetch-retry-factor=2 --fetch-retry-maxtimeout=60000 --fetch-timeout=30000
+          if ($LASTEXITCODE -ne 0) { throw "Community server audit failed (exit $LASTEXITCODE)." }
+      - name: Verify desktop and phone inventory over the real HTTP API
+        shell: powershell
+        run: |
+          flutter test --no-pub --concurrency=1 --dart-define=RUN_INVENTORY_HTTP_TESTS=true test/integration/personal_inventory_http_test.dart
+          if ($LASTEXITCODE -ne 0) { throw "Inventory HTTP integration failed (exit $LASTEXITCODE)." }
+      - name: Run website release preflight
+        shell: powershell
+        working-directory: 官网网页制作
+        run: |
+          npm ci
+          if ($LASTEXITCODE -ne 0) { throw "Website dependency install failed (exit $LASTEXITCODE)." }
+          npm test
+          if ($LASTEXITCODE -ne 0) { throw "Website tests failed (exit $LASTEXITCODE)." }
+          node --check src/server.js
+          if ($LASTEXITCODE -ne 0) { throw "Website server syntax check failed (exit $LASTEXITCODE)." }
+          node --check src/public_site.js
+          if ($LASTEXITCODE -ne 0) { throw "Website template syntax check failed (exit $LASTEXITCODE)." }
+      - name: Build Windows release
+        shell: powershell
+        run: .\build_release.ps1 -ApiBaseUrl https://api.sohun.top -CertThumbprint "$env:SIGNING_THUMBPRINT" -ThirdPartyClearanceManifest .\release-clearance.json
+      - name: Build installer
+        shell: powershell
+        run: .\scripts\build_installer.ps1 -Product Personal -ReleaseDir .\dist\sohun-windows-x64
+      - name: Resolve release metadata
+        id: metadata
+        shell: powershell
+        run: |
+          $match = Select-String -LiteralPath "pubspec.yaml" -Pattern '^version:\s*(\d+\.\d+\.\d+)\+(\d+)\s*$' | Select-Object -First 1
+          if ($null -eq $match) { throw 'Unable to read pubspec version.' }
+          $baseVersion = $match.Matches[0].Groups[1].Value
+          $version = "$baseVersion-$($match.Matches[0].Groups[2].Value)"
+          $tagMatchesVersion = $env:GITHUB_REF_NAME -match '^v(\d+\.\d+\.\d+)$'
+          if (-not $tagMatchesVersion -or $Matches[1] -ne $baseVersion) {
+            throw "Release tag $env:GITHUB_REF_NAME must match pubspec version v$baseVersion."
+          }
+          [IO.File]::AppendAllText(
+            $env:GITHUB_OUTPUT,
+            "version=$version`n",
+            [Text.UTF8Encoding]::new($false)
+          )
+      - name: Sign and verify installer
+        shell: powershell
+        env:
+          SIGNING_THUMBPRINT: ${{ secrets.SOHUN_SIGNING_CERT_THUMBPRINT }}
+        run: |
+          $installerPath = Join-Path (Get-Location) "dist\installer\sohun-setup-${{ steps.metadata.outputs.version }}-windows-x64.exe"
+          if (-not (Test-Path -LiteralPath $installerPath -PathType Leaf)) {
+            throw "Installer output was not produced: $installerPath"
+          }
+          $signToolCommand = Get-Command signtool.exe -ErrorAction SilentlyContinue
+          $signToolPath = if ($null -ne $signToolCommand) { $signToolCommand.Source } else { $null }
+          if ([string]::IsNullOrWhiteSpace($signToolPath)) {
+            $windowsSdkBin = Join-Path ${env:ProgramFiles(x86)} 'Windows Kits\10\bin'
+            $signToolPath = Get-ChildItem -LiteralPath $windowsSdkBin -Filter 'signtool.exe' -File -Recurse -ErrorAction SilentlyContinue |
+              Sort-Object `
+                @{ Expression = { if ($_.Directory.Name -eq 'x64') { 0 } else { 1 } }; Ascending = $true },
+                @{ Expression = { $_.FullName }; Descending = $true } |
+              Select-Object -First 1 -ExpandProperty FullName
+          }
+          if ([string]::IsNullOrWhiteSpace($signToolPath)) {
+            throw 'signtool.exe was not found after the signed release build.'
+          }
+          $thumbprint = ($env:SIGNING_THUMBPRINT -replace '\s', '').ToUpperInvariant()
+          if ($thumbprint -notmatch '^[0-9A-F]{40}$') {
+            throw 'SIGNING_THUMBPRINT must be a 40-character SHA-1 thumbprint.'
+          }
+          & $signToolPath sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /sha1 $thumbprint $installerPath
+          if ($LASTEXITCODE -ne 0) {
+            throw "Installer signing failed (exit $LASTEXITCODE)."
+          }
+          $signature = Get-AuthenticodeSignature -LiteralPath $installerPath
+          if ($signature.Status -ne [System.Management.Automation.SignatureStatus]::Valid) {
+            throw "Installer signature verification failed ($($signature.Status))."
+          }
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            电脑软件/dist/installer/sohun-setup-${{ steps.metadata.outputs.version }}-windows-x64.exe

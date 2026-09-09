@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "product": "sohun-core-preview",
+  "signedRelease": false,
+  "omittedAssets": [
+    "电脑软件/assets/images/bambu_icons/",
+    "电脑软件/assets/bambu_presets/",
+    "电脑软件/assets/bin/",
+    "电脑软件/assets/tools/",
+    "电脑软件/assets/knowledge/",
+    "电脑软件/assets/calibration/"
+  ],
+  "optionalNativeVideo": false
+}

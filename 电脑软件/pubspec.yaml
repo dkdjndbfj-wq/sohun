@@ -1,0 +1,112 @@
+name: consumable_tracker_desktop
+description: 3D 打印耗材库存统计与打印机消耗管理（桌面版）
+publish_to: 'none'
+version: 1.0.1+2
+
+environment:
+  # Platform-scoped asset entries (used to keep Windows-only bridge binaries
+  # out of the Android APK) were introduced in Flutter 3.41.  Keep the
+  # declared minimum aligned with the manifest syntax instead of allowing an
+  # older Flutter toolchain to fail halfway through pub/build.
+  sdk: '>=3.8.0 <4.0.0'
+  flutter: '>=3.41.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # 状态管理（纯手写 Provider，无需代码生成）
+  flutter_riverpod: ^2.5.1
+
+  # 本地数据库（关系型，支持耗材/打印机多对多关联查询）
+  drift: ^2.16.0
+  sqlite3_flutter_libs: ^0.5.24
+  sqlite3: ^3.5.2
+  path_provider: ^2.1.3
+  path: ^1.9.0
+
+  # 工具
+  intl: ^0.20.2
+  flutter_svg: ^2.0.10+1
+  uuid: ^4.4.0
+  # 切片软件集成 + 打印机通信（v1.1 新增）
+  watcher: ^1.1.0          # 文件监听：监听 BambuStudio 输出目录
+  archive: ^3.6.1          # 3MF (ZIP) 解析：拓竹项目包内含 slice_info.config
+  xml: ^6.5.0              # XML 解析：3MF 内的 slice_info.config / slice_3mf.xml
+  mqtt_client: ^10.11.11   # MQTT 客户端：拓竹打印机 LAN 通信（端口 8883 TLS）
+  shared_preferences: ^2.3.2  # 持久化切片软件路径、打印机连接配置等
+  # 云连接（v1.2 新增）：拓竹账号登录 + 云 MQTT 远程状态读取
+  http: ^1.2.2                       # HTTP 请求：登录拓竹账号、拉取设备列表/任务历史
+  encrypt: ^5.0.3                    # AES 加密：账号密码加密后存本地（替代 flutter_secure_storage，避免 Windows ATL 依赖）
+  crypto: ^3.0.5                     # SHA-256：派生 AES 密钥（机器名+用户名 派生）
+
+  # 局域网自动发现（v1.3 新增）：mDNS 扫描同 WiFi 内的拓竹打印机
+  multicast_dns: ^0.3.2+7            # mDNS 查询：发现 _bambu._tcp 服务，自动获取 IP + 序列号
+
+  # 文件选择（v1.3 新增）：引导向导中选择切片软件可执行文件
+  file_selector: ^1.0.0              # 系统文件选择对话框：选 bambu-studio.exe
+  desktop_drop: ^0.7.1               # 农场工单：把 3MF/G-code 直接拖入软件
+
+  # 图标
+  # 窗口管理 + 系统托盘（自定义标题栏 + 后台运行）
+  window_manager: ^0.4.3
+  tray_manager: ^0.4.0
+
+  # 本地通知（Windows Toast 通知：打印失败/离线/缺料告警）
+  local_notifier: ^0.1.6
+  fast_gbk: ^1.0.0
+
+  # 农场客户门户视频转接：Windows 本地解码 RTSPS，按低频 JPEG 帧上行。
+  media_kit: ^1.2.6
+  # The product release target is Windows; keep the native video bundle
+  # platform-specific so Android builds do not download the unused libmpv
+  # archives or pull an unrelated JNI/CMake toolchain into the APK.
+  url_launcher: ^6.3.2
+  webview_windows: ^0.4.0
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+  # drift 代码生成
+  build_runner: ^2.4.9
+  drift_dev: 2.34.5
+
+# path_provider_android 2.3.x pulls package:jni and an AGP/CMake native
+# project that currently fails Flutter's Windows build output validation. The
+# 2.2.x implementation exposes the same PathProvider API without that
+# toolchain and remains compatible with Flutter 3.44 / Android API 35.
+dependency_overrides:
+  path_provider_android: 2.2.22
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/printers/
+    - assets/images/icons/
+    - assets/images/branding/
+    - assets/images/branding/themes/
+    - assets/images/brands/
+    - assets/images/plates/
+    - assets/images/bambu_icons/
+    - assets/calibration/
+    - assets/images/author_avatar.jpg
+    - assets/images/app_icon.ico
+    - assets/images/sohun.png
+    - assets/bambu_presets/process/
+    - assets/bambu_presets/filament/
+    - assets/bambu_presets/machine/
+    # Optional Bambu integration binaries are injected only into cleared
+    # private/release builds. The public source keeps an empty placeholder
+    # directory so core builds remain reproducible without them.
+    # Windows-only proprietary/bridge binaries must never be bundled into
+    # the native Android client.
+    - path: assets/bin/
+      platforms:
+        - windows
+    - assets/knowledge/
