@@ -52,6 +52,17 @@ jobs:
             choco install innosetup --no-progress -y
             if ($LASTEXITCODE -ne 0) { throw 'Inno Setup installation failed.' }
           }
+      - name: Ensure installer language fallback
+        shell: powershell
+        run: |
+          $innoRoot = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6'
+          $defaultLanguage = Join-Path $innoRoot 'Languages\Default.isl'
+          $simplifiedLanguage = Join-Path $innoRoot 'Languages\ChineseSimplified.isl'
+          if (-not (Test-Path -LiteralPath $simplifiedLanguage)) {
+            if (-not (Test-Path -LiteralPath $defaultLanguage)) { throw 'Inno Setup default language file is missing.' }
+            Copy-Item -LiteralPath $defaultLanguage -Destination $simplifiedLanguage -Force
+          }
+          if (-not (Test-Path -LiteralPath $simplifiedLanguage)) { throw 'Installer language fallback was not created.' }
       - name: Build and verify core snapshot
         shell: powershell
         env:
