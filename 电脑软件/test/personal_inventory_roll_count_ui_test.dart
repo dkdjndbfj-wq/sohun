@@ -43,7 +43,7 @@ void main() {
         tagUid: tag,
         tagType: 'CUID',
         cycle: 1,
-        status: 'active',
+        status: grams > 0 ? 'active' : 'depleted',
       );
     }
     return (await db.consumableDao.getById(id))!;
@@ -165,7 +165,7 @@ void main() {
   testWidgets(
     'full source-receipt spool has no aggregate +/- controls on shelf card',
     (tester) async {
-      final item = await addReceivedSpool();
+      final item = await addReceivedSpool(grams: 1000);
       await render(
         tester,
         Center(

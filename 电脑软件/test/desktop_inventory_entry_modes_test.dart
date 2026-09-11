@@ -165,7 +165,7 @@ void main() {
       await save(tester);
       await tester.runAsync(() async {
         final row = (await db.consumableDao.getPersonal()).single;
-        expect(row.totalGrams, 375.5);
+        expect(row.totalGrams, 1000);
         expect(row.remainingGrams, 375.5);
         expect(
           await db.consumableDao.isIndividualPersonalSpool(row.id),

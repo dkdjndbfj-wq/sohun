@@ -42,6 +42,7 @@ $sourceFiles = @(
     'docs/development-workflow.md', 'docs/app-update-policy.md', 'docs/bambu-feed-compatibility.md',
     'docs/bambu-printer-fault-alerts.md', 'docs/windows-build-repair-2026-09-06.md',
     'docs/glass-button-system.md', 'docs/agent-workflow-audit-2026-09-06.md',
+    'docs/release-validation-1.0.1.md',
     '电脑软件/docs/手机RFID模板使用说明.md', '电脑软件/docs/NTAG213设备工作台使用说明.md'
 )
 $excludedTrees = @(

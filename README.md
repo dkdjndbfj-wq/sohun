@@ -6,7 +6,7 @@
 
 当前公开版本为 **1.0.1+2 Core Preview**，标签为 **`core-v1.0.1+2`**。这是用于公开体验与验证的预发布版本：Windows 包没有 Authenticode 发布者签名，Android APK 使用调试证书。具体手机、标签、打印机和固件的兼容性仍需实机确认。
 
-本次安装包优先发布供实际使用，未完成最终完整功能回归。欢迎在 [Issues](https://github.com/dkdjndbfj-wq/sohun/issues) 反馈问题，注明版本、设备和复现步骤；请勿附带账号密码、密钥或真实个人数据。
+本次已完成库存、标签职责、账号隔离、启动交接和原生 NFC 的专项回归，具体范围见 [验证记录](docs/release-validation-1.0.1.md)。欢迎在 [Issues](https://github.com/dkdjndbfj-wq/sohun/issues) 反馈问题，注明版本、设备和复现步骤；请勿附带账号密码、密钥或真实个人数据。
 
 ![sohun 个人工作台](官网网页制作/public/assets/personal-workspace-v4.png)
 
@@ -25,6 +25,7 @@
 | 账号同步 | Windows 与 Android 使用同一 sohun 账号同步库存与事件；本地数据按服务器和稳定用户 ID 隔离 |
 | NTAG213 设备工作台 | 定位打印机并打开状态、故障、维护和摄像头入口，不参与耗材库存 |
 | 社区与参数 | 浏览社区内容、材料参数及相关工作台入口 |
+| 桌面启动页 | 固定窗口中的简洁品牌页、真实加载进度、短暂淡入淡出；支持关闭动画与系统减少动画设置 |
 
 ![sohun 个人库存](官网网页制作/public/assets/personal-inventory-v4.png)
 

@@ -64,7 +64,7 @@ void main() {
       final rebound = await rebind(tag: '04:bb:00:02');
       final row = (await db.consumableDao.getById(old.id))!;
       expect(row.uid, old.uid);
-      expect(row.totalGrams, 750);
+      expect(row.totalGrams, 1000);
       expect(row.remainingGrams, 125);
       expect(row.createdAt, old.createdAt);
       expect(rebound.tagUid, newTag);

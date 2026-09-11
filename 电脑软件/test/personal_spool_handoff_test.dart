@@ -2,6 +2,7 @@ import 'package:consumable_tracker_desktop/data/database/database.dart';
 import 'package:consumable_tracker_desktop/data/database/daos/print_task_dao.dart';
 import 'package:consumable_tracker_desktop/data/models/personal_inventory_sync.dart';
 import 'package:consumable_tracker_desktop/providers/database_provider.dart';
+import 'package:consumable_tracker_desktop/providers/consumable_provider.dart';
 import 'package:consumable_tracker_desktop/providers/print_task_provider.dart';
 import 'package:consumable_tracker_desktop/providers/printer_connection_provider.dart';
 import 'package:drift/drift.dart' show Value, Variable;
@@ -41,6 +42,12 @@ void main() {
     container = ProviderContainer(
       overrides: [
         databaseProvider.overrideWithValue(db),
+        personalInventoryAccountScopeProvider.overrideWithValue(
+          const PersonalInventoryAccountScope(
+            enforce: true,
+            ownerAccount: owner,
+          ),
+        ),
         mergedPrinterListProvider.overrideWithValue(const []),
       ],
     );
@@ -207,6 +214,12 @@ void main() {
       container = ProviderContainer(
         overrides: [
           databaseProvider.overrideWithValue(db),
+          personalInventoryAccountScopeProvider.overrideWithValue(
+            const PersonalInventoryAccountScope(
+              enforce: true,
+              ownerAccount: owner,
+            ),
+          ),
           mergedPrinterListProvider.overrideWithValue(const []),
         ],
       );
@@ -309,9 +322,14 @@ void main() {
         db.printerDao.finishChannel(channelId),
         throwsStateError,
       );
-      await expectLater(
-        db.printerDao.unbindChannel(channelId),
-        throwsStateError,
+      await db.printerDao.unbindChannel(channelId);
+      expect(
+        await db.printerDao.isPersonalSpoolAwaitingSelection(oldId),
+        isTrue,
+      );
+      expect(
+        await container.read(printTaskConsumableDaoProvider).getByTask(id),
+        hasLength(1),
       );
       await expectLater(
         db.printerDao.bindConsumable(channelId, newId),

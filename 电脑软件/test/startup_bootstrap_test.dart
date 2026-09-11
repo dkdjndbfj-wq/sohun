@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:consumable_tracker_desktop/core/startup/startup_bootstrap_app.dart';
 import 'package:consumable_tracker_desktop/core/startup/startup_coordinator.dart';
 import 'package:consumable_tracker_desktop/core/startup/startup_window_controller.dart';
+import 'package:consumable_tracker_desktop/core/theme/app_typography.dart';
 import 'package:consumable_tracker_desktop/data/database/database.dart';
 import 'package:consumable_tracker_desktop/data/prefs/app_prefs.dart';
 import 'package:consumable_tracker_desktop/providers/batch_recognition_provider.dart';
@@ -25,6 +26,21 @@ const _captureDirectory = String.fromEnvironment('STARTUP_SCREENSHOT_DIR');
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(() async {
+    if (_captureDirectory.isEmpty) return;
+    final windowsDirectory = Platform.environment['WINDIR'] ?? r'C:\Windows';
+    final font = File('$windowsDirectory/Fonts/msyh.ttc');
+    if (!await font.exists()) {
+      throw StateError(
+        'Startup capture requires the installed Windows Chinese font',
+      );
+    }
+    final data = ByteData.sublistView(await font.readAsBytes());
+    for (final family in [AppTypography.chineseFontFamily, 'Roboto']) {
+      final loader = FontLoader(family)..addFont(Future.value(data));
+      await loader.load();
+    }
+  });
   final windowCalls = <MethodCall>[];
   final nativeRevealCalls = <MethodCall>[];
   const windowChannel = MethodChannel('window_manager');

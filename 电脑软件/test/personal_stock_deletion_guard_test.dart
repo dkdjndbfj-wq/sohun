@@ -25,7 +25,7 @@ void main() {
         materialType: 'PLA',
         colorHex: '#2244CC',
         totalGrams: 1000,
-        remainingGrams: 1500,
+        remainingGrams: 500,
         createdAt: DateTime.utc(2026, 9, 9),
         updatedAt: DateTime.utc(2026, 9, 9),
       ),
@@ -68,7 +68,7 @@ void main() {
   }
 
   Future<void> expectStockIntact() async {
-    expect((await db.consumableDao.getById(stock.id))!.remainingGrams, 1500);
+    expect((await db.consumableDao.getById(stock.id))!.remainingGrams, 500);
     expect(
       await db.consumableDao.getPersonalInventoryTombstones(_owner),
       isEmpty,

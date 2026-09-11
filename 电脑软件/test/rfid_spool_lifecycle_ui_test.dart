@@ -85,7 +85,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('核对余量'));
       await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField), '800');
+      await tester.enterText(find.byType(TextField), '1001');
       await tester.tap(find.text('确认实际余量'));
       await tester.pumpAndSettle();
       expect(find.textContaining('请输入 0 到'), findsOneWidget);

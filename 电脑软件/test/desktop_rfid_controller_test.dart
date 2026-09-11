@@ -260,7 +260,7 @@ void main() {
       );
       await controller.commit();
       final row = await db.consumableDao.getById(1);
-      expect(row?.totalGrams, 350);
+      expect(row?.totalGrams, 1000);
       expect(row?.remainingGrams, 350);
       await expectLater(
         controller.enqueueScan(

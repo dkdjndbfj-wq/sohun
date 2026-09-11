@@ -108,7 +108,8 @@ void main() {
 
   test('只增加构建号的修复包也会提示更新', () async {
     final fixture = await _createService({
-      'desktop_latest_version': 'v1.0.0+2',
+      'desktop_latest_version':
+          '${AppVersion.version}+${int.parse(AppVersion.fullVersion.split('+').last) + 1}',
     });
     final result = await fixture.service.checkForUpdates();
     expect(result.currentVersion, AppVersion.fullVersion);
@@ -118,11 +119,15 @@ void main() {
 
   test('最低支持版本和强制开关各自能触发更新要求', () async {
     for (final policy in [
-      {'desktop_min_supported_version': 'v1.0.0+2'},
+      {
+        'desktop_min_supported_version':
+            '${AppVersion.version}+${int.parse(AppVersion.fullVersion.split('+').last) + 1}',
+      },
       {'desktop_force_update': true},
     ]) {
       final fixture = await _createService({
-        'desktop_latest_version': 'v1.0.0+3',
+        'desktop_latest_version':
+            '${AppVersion.version}+${int.parse(AppVersion.fullVersion.split('+').last) + 2}',
         'desktop_download_url': 'https://downloads.example.com/sohun.exe',
         ...policy,
       });
