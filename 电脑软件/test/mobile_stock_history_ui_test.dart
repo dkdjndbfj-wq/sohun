@@ -30,8 +30,8 @@ void main() {
           model: 'PLA',
           materialType: 'PLA',
           colorHex: '#2244CC',
-          totalGrams: 2000,
-          remainingGrams: 2000,
+          totalGrams: 1000,
+          remainingGrams: 1000,
           createdAt: DateTime.utc(2026, 9, 9),
           updatedAt: DateTime.utc(2026, 9, 9),
         );

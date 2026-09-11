@@ -25,8 +25,8 @@ PersonalInventoryRecord _template() => PersonalInventoryRecord(
   model: 'PLA',
   materialType: 'PLA',
   colorHex: '#0000FF',
-  totalGrams: 2000,
-  remainingGrams: 2000,
+  totalGrams: 1000,
+  remainingGrams: 1000,
   createdAt: DateTime.utc(2026, 9, 9),
   updatedAt: DateTime.utc(2026, 9, 9),
 );
@@ -63,13 +63,13 @@ void main() {
   }
 
   test(
-    'one manual 2kg roll is one identifiable spool, loads 2kg and cannot occupy a second slot',
+    'one manual 1kg roll is one identifiable spool, loads 1kg and cannot occupy a second slot',
     () async {
       final saved = await LocalMobileInventorySync(db.consumableDao)
           .saveManualBatch(
             _draft,
             quantity: 1,
-            initialGrams: 2000,
+            initialGrams: 1000,
             operationUid: _operation,
           );
       expect(saved, hasLength(1));
@@ -92,7 +92,7 @@ void main() {
               db.printerChannels,
             )..where((r) => r.id.equals(ids.first))).getSingle())
             .loadedRemainingGrams,
-        2000,
+        1000,
       );
       await expectLater(
         db.printerDao.bindConsumable(ids.last, row.id),
@@ -111,7 +111,11 @@ void main() {
     'legacy aggregate 2kg remains two standard rolls and can occupy two slots',
     () async {
       final id = await db.consumableDao.upsertPersonalInventoryRecord(
-        _template().copyWith(uid: 'legacy-aggregate'),
+        _template().copyWith(
+          uid: 'legacy-aggregate',
+          totalGrams: 2000,
+          remainingGrams: 2000,
+        ),
         ownerAccount: _owner,
       );
       expect(await db.consumableDao.isIndividualPersonalSpool(id), isFalse);
@@ -149,13 +153,13 @@ void main() {
       final first = await sync.saveManualBatch(
         _draft,
         quantity: 2,
-        initialGrams: 2000,
+        initialGrams: 1000,
         operationUid: _operation,
       );
       final second = await sync.saveManualBatch(
         _draft,
         quantity: 2,
-        initialGrams: 2000,
+        initialGrams: 1000,
         operationUid: _operation,
       );
       expect(

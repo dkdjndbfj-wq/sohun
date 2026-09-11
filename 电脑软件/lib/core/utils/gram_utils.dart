@@ -1,3 +1,5 @@
+import '../constants/personal_spool_policy.dart';
+
 /// 耗材克数格式化工具。统一克数在 UI 上的展示格式。
 ///
 /// 商业化软件需要同时展示「卷数」与「克数」两个维度：
@@ -10,8 +12,8 @@ class GramUtils {
   static const double comparisonToleranceGrams = 0.01;
 
   /// 每卷标准克数（1 卷 = 1kg）。
-  /// 全局统一，未来如需支持 250g/500g/2kg 卷再扩展为 per-record 字段。
-  static const double gramsPerRoll = 1000.0;
+  /// 每一实物卷固定 1000g，多卷汇总不改变单卷规格。
+  static const double gramsPerRoll = personalSpoolCapacityGrams;
 
   /// 克数 → 卷数（向下取整，不足 1 卷按 0 卷计库存可视）。
   static int gramsToRolls(double grams) {
@@ -25,7 +27,7 @@ class GramUtils {
   /// 是否已经从一卷具体耗材中使用过材料。
   ///
   /// [total] 始终代表该卷入库时的容量；[remaining] 小于它才表示余料卷。
-  /// 卷规格可以是 250g、750g、1kg 或 2kg，不能用整千克倍数推断。
+  /// 单卷容量固定 1000g；旧记录的实际值保留用于核对。
   static bool isPartiallyUsed(double remaining, double total) {
     if (!remaining.isFinite || !total.isFinite || total <= 0) return false;
     return remaining + comparisonToleranceGrams < total;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/constants/personal_spool_policy.dart';
 import '../../data/database/database.dart';
 import '../../data/models/rfid_tag_identity.dart';
 import '../../providers/personal_inventory_action_guard.dart';
@@ -102,11 +103,8 @@ Future<void> showRfidSpoolReplacementDialog(
                       decoration: const InputDecoration(labelText: '剩余克数（g）'),
                       validator: (text) {
                         final value = double.tryParse(text?.trim() ?? '');
-                        return value == null ||
-                                !value.isFinite ||
-                                value <= 0 ||
-                                value > 1000
-                            ? '请输入大于 0 且不超过 1000 g 的剩余克数'
+                        return value == null || !canReusePersonalSpool(value)
+                            ? '请输入大于 30 且不超过 1000 g 的剩余克数'
                             : null;
                       },
                     ),
@@ -129,7 +127,9 @@ Future<void> showRfidSpoolReplacementDialog(
               if (formKey.currentState!.validate()) {
                 Navigator.pop(
                   dialogContext,
-                  byRemainder ? double.parse(controller.text.trim()) : 1000.0,
+                  byRemainder
+                      ? double.parse(controller.text.trim())
+                      : personalSpoolCapacityGrams,
                 );
               }
             },

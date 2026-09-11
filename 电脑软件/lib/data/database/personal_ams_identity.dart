@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
+import '../../core/constants/personal_spool_policy.dart';
 
 import '../models/rfid_tag_identity.dart';
 import 'database.dart';
@@ -122,7 +123,7 @@ class PersonalAmsIdentityResolver {
       final sourcedRows = await db
           .customSelect(
             'SELECT id, uid, owner_account, source_rfid_tag_uid, source_rfid_tag_type, '
-            'rfid_tag_uid, remaining_grams, lifecycle_status FROM consumables '
+            'rfid_tag_uid, total_grams, remaining_grams, lifecycle_status FROM consumables '
             "WHERE inventory_scope = 'personal' AND source_rfid_tag_uid IS NOT NULL",
           )
           .get();
@@ -134,7 +135,8 @@ class PersonalAmsIdentityResolver {
         final lifecycle = row.read<String>('lifecycle_status');
         final hasCurrentTag =
             row.read<String?>('rfid_tag_uid')?.trim().isNotEmpty == true;
-        if (row.read<double>('remaining_grams') <= 0 ||
+        if (row.read<double>('total_grams') != personalSpoolCapacityGrams ||
+            !canReusePersonalSpool(row.read<double>('remaining_grams')) ||
             (lifecycle != 'active' && lifecycle != 'replaced') ||
             (lifecycle == 'active' && hasCurrentTag))
           continue;

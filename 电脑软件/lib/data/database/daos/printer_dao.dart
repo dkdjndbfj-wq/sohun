@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/constants/personal_spool_policy.dart';
 import '../../../core/services/printer_model_normalizer.dart';
 import '../../external/printer/bambu_cloud_models.dart';
 import '../../external/printer/bambu_printer_models.dart';
@@ -858,17 +859,18 @@ class PrinterDao extends DatabaseAccessor<AppDatabase> with _$PrinterDaoMixin {
       throw StateError('供料位已有耗材，请使用换卷流程保留旧卷及任务历史');
     }
 
-    final batchSpec = await customSelect(
-      'SELECT roll_count, grams_per_roll FROM studio_inventory_batch_items '
-      'WHERE consumable_id = ?',
-      variables: [Variable(consumableId)],
-    ).getSingleOrNull();
+    if (isIndividualSpool && item.totalGrams != personalSpoolCapacityGrams) {
+      throw StateError('每卷固定 1000g；该历史卷的规格异常，请先核对库存');
+    }
     final gramsInRoll = math.min(
       item.remainingGrams,
-      isIndividualSpool
-          ? item.totalGrams
-          : batchSpec?.read<double>('grams_per_roll') ?? gramsPerRoll,
+      personalSpoolCapacityGrams,
     );
+    if (!canReusePersonalSpool(gramsInRoll) ||
+        (isIndividualSpool &&
+            item.remainingGrams > personalSpoolCapacityGrams)) {
+      throw StateError('继续使用的余量必须大于 30g 且不超过 1000g，请选择其他卷或核对库存');
+    }
     if (channel.consumableId == consumableId) {
       if (channel.loadedRemainingGrams <= 0 && gramsInRoll > 0) {
         await (update(
@@ -890,11 +892,7 @@ class PrinterDao extends DatabaseAccessor<AppDatabase> with _$PrinterDaoMixin {
     final boundCount = rows.read<int>('bound_count');
     final rolls = isIndividualSpool
         ? 1
-        : batchSpec == null
-        ? inventoryRollCount(item.remainingGrams)
-        : (item.remainingGrams /
-                  math.max(1, batchSpec.read<double>('grams_per_roll')))
-              .ceil();
+        : inventoryRollCount(item.remainingGrams);
     if (boundCount >= rolls) {
       throw StateError('该耗材的 $rolls 卷库存均已绑定到其他供料位');
     }
@@ -1173,11 +1171,7 @@ class PrinterDao extends DatabaseAccessor<AppDatabase> with _$PrinterDaoMixin {
         'UPDATE printer_channels SET farm_roll_paused = ?, updated_at = ? '
         'WHERE id = ? AND consumable_id = ?',
         variables: [
-          Variable(
-            reusableTag
-                ? ChannelRollHoldState.awaitingSelection.dbValue
-                : ChannelRollHoldState.maintenance.dbValue,
-          ),
+          Variable(ChannelRollHoldState.awaitingSelection.dbValue),
           Variable(DateTime.now().millisecondsSinceEpoch ~/ 1000),
           Variable(channelId),
           Variable(expectedConsumableId),
@@ -1216,6 +1210,9 @@ class PrinterDao extends DatabaseAccessor<AppDatabase> with _$PrinterDaoMixin {
       if (row!.read<String?>('inventory_scope') == 'farm' ||
           (row.read<double?>('remaining_grams') ?? 0) <= 0) {
         throw StateError('当前具体卷不能继续使用');
+      }
+      if (!keepPaused && !await _canResumePersonalChannel(channelId)) {
+        throw StateError('继续使用的余量必须大于 30g；每卷固定 1000g，请先核对库存');
       }
       final binding = await _consumableDao.getRfidSpoolBindingById(
         expectedConsumableId,
@@ -1267,6 +1264,9 @@ class PrinterDao extends DatabaseAccessor<AppDatabase> with _$PrinterDaoMixin {
         throw StateError('请先确认实际装入的是哪一卷耗材');
       }
       if (state != ChannelRollHoldState.maintenance) return;
+      if (!await _canResumePersonalChannel(channelId)) {
+        throw StateError('继续使用的余量必须大于 30g；每卷固定 1000g，请先核对库存');
+      }
       await customUpdate(
         'UPDATE printer_channels SET farm_roll_paused = 0, updated_at = ? '
         'WHERE id = ? AND consumable_id IS NOT NULL '
@@ -1279,6 +1279,28 @@ class PrinterDao extends DatabaseAccessor<AppDatabase> with _$PrinterDaoMixin {
         updates: {printerChannels},
       );
     });
+  }
+
+  Future<bool> _canResumePersonalChannel(int channelId) async {
+    final row = await customSelect(
+      'SELECT pc.consumable_id, pc.loaded_remaining_grams, c.inventory_scope, '
+      'c.total_grams, c.remaining_grams FROM printer_channels pc '
+      'JOIN consumables c ON c.id = pc.consumable_id WHERE pc.id = ?',
+      variables: [Variable(channelId)],
+    ).getSingleOrNull();
+    if (row == null) return false;
+    if (row.read<String>('inventory_scope') == 'farm') return true;
+    final remaining = row.read<double>('remaining_grams');
+    final loaded = row.read<double>('loaded_remaining_grams');
+    final individual = await _consumableDao.isIndividualPersonalSpool(
+      row.read<int>('consumable_id'),
+    );
+    if (individual &&
+        (row.read<double>('total_grams') != personalSpoolCapacityGrams ||
+            !canReusePersonalSpool(remaining))) {
+      return false;
+    }
+    return canReusePersonalSpool(math.min(remaining, loaded));
   }
 
   /// 兼容原有农场调用；维修暂停现已同时支持个人库存。
@@ -1366,6 +1388,11 @@ class PrinterDao extends DatabaseAccessor<AppDatabase> with _$PrinterDaoMixin {
           physicalSpoolUid?.trim().isNotEmpty == true &&
           loadedSpoolUid != physicalSpoolUid!.trim();
       if (ch.consumableId == newConsumableId && !replacingPhysicalSpool) {
+        if (!await _consumableDao.isFarmConsumable(newConsumableId) &&
+            ch.loadedRemainingGrams > 0 &&
+            !await _canResumePersonalChannel(channelId)) {
+          throw StateError('继续使用的余量必须大于 30g；每卷固定 1000g，请先核对库存');
+        }
         // 聚合库存中的下一卷可能与空卷属于同一条耗材记录。此时不是
         // “没有变化”，而是同款新卷装入，槽内当前克数必须重新置为 1000g。
         if (ch.loadedRemainingGrams <= 0) {
@@ -1480,6 +1507,7 @@ class PrinterDao extends DatabaseAccessor<AppDatabase> with _$PrinterDaoMixin {
   Future<void> finishChannel(
     int channelId, {
     int? expectedConsumableId,
+    bool confirmDetectedRemoval = false,
     bool enforcePersonalOwner = false,
     String? personalOwnerAccount,
   }) async {
@@ -1497,7 +1525,14 @@ class PrinterDao extends DatabaseAccessor<AppDatabase> with _$PrinterDaoMixin {
           ch.consumableId != expectedConsumableId) {
         throw StateError('料位中的耗材已经变化，本次耗尽操作未执行');
       }
-      if ((await _loadPausedChannelIds()).contains(channelId)) {
+      if (confirmDetectedRemoval && expectedConsumableId == null) {
+        throw ArgumentError('确认检测到的取下操作必须指定原库存卷');
+      }
+      final held = (await _loadPausedChannelIds()).contains(channelId);
+      if (confirmDetectedRemoval && !held) {
+        throw StateError('料位暂停状态已经变化，本次耗尽操作未执行');
+      }
+      if (held && !confirmDetectedRemoval) {
         throw StateError('该卷正在维修暂存，请先重新装回后再操作');
       }
       final consumableId = ch.consumableId!;
@@ -1985,7 +2020,7 @@ class PrinterDao extends DatabaseAccessor<AppDatabase> with _$PrinterDaoMixin {
           !isOfficialRfid && preBoundBinding?.tagUid.isNotEmpty == true;
       final observedRemaining =
           !reusableTag && tray.hasValidRemain && tray.trayWeight > 0
-          ? tray.remainingGrams
+          ? personalSpoolCapacityGrams * tray.remain.clamp(0, 100) / 100.0
           : null;
 
       // 实时查询数据库获取真实通道（含本事务中刚插入的通道）
@@ -2051,7 +2086,9 @@ class PrinterDao extends DatabaseAccessor<AppDatabase> with _$PrinterDaoMixin {
               // A maintenance pause is a grams freeze. The first RFID packet
               // after reinsertion may be rounded or stale, so resume using the
               // exact preserved inventory value instead of overwriting it.
-              await resumeChannelRollAfterMaintenance(channelId);
+              if (await _canResumePersonalChannel(channelId)) {
+                await resumeChannelRollAfterMaintenance(channelId);
+              }
               continue;
             }
             final nextRemaining =
@@ -2143,9 +2180,7 @@ class PrinterDao extends DatabaseAccessor<AppDatabase> with _$PrinterDaoMixin {
 
       // 策略4：自动创建耗材记录（拓竹原厂料信息完整）
       if (targetId == null && !farmMode) {
-        final nominalGrams = tray.trayWeight > 0
-            ? tray.trayWeight.toDouble().clamp(0.0, gramsPerRoll).toDouble()
-            : gramsPerRoll;
+        const nominalGrams = personalSpoolCapacityGrams;
         final initialRemaining = (observedRemaining ?? nominalGrams)
             .clamp(0.0, gramsPerRoll)
             .toDouble();
@@ -2190,6 +2225,25 @@ class PrinterDao extends DatabaseAccessor<AppDatabase> with _$PrinterDaoMixin {
         // unmatched official RFID spool stays unbound until the farm-only
         // workflow can associate it with the correct warehouse SKU.
         continue;
+      }
+      if (!farmMode) {
+        final target = await _consumableDao.getById(targetId);
+        if (target == null) continue;
+        final individual = await _consumableDao.isIndividualPersonalSpool(
+          targetId,
+        );
+        final grams = math.min(
+          targetRemaining ?? target.remainingGrams,
+          personalSpoolCapacityGrams,
+        );
+        if (!canReusePersonalSpool(grams) ||
+            (individual &&
+                (target.totalGrams != personalSpoolCapacityGrams ||
+                    !canReusePersonalSpool(target.remainingGrams)))) {
+          // Keep low or inconsistent inventory untouched for explicit review.
+          // A telemetry packet cannot turn it into a fresh usable roll.
+          continue;
+        }
       }
       if (!farmMode &&
           personalOwnerAccount != null &&

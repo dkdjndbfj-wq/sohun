@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
+import '../../core/constants/personal_spool_policy.dart';
 
 import 'database.dart';
 import 'daos/filament_cost_config_dao.dart';
@@ -55,7 +56,7 @@ class PersonalSpoolHandoff {
     final binding = await db.consumableDao.getRfidSpoolBindingById(old.id);
     final tagged = binding?.tagUid.isNotEmpty == true;
     final individual = await db.consumableDao.isIndividualPersonalSpool(old.id);
-    final maxGrams = individual ? old.totalGrams : gramsPerRoll;
+    const maxGrams = personalSpoolCapacityGrams;
     final accounted = individual
         ? old.remainingGrams
         : math.min(

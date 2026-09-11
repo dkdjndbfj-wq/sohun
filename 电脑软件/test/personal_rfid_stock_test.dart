@@ -7,7 +7,7 @@ import 'package:consumable_tracker_desktop/data/database/personal_inventory_bala
 import 'package:consumable_tracker_desktop/data/models/personal_inventory_sync.dart';
 import 'package:consumable_tracker_desktop/data/external/community/community_api_client.dart';
 import 'package:consumable_tracker_desktop/data/models/app_auth.dart';
-import 'package:drift/drift.dart' show Variable;
+import 'package:drift/drift.dart' show Value, Variable;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uuid/uuid.dart';
@@ -16,14 +16,14 @@ const owner = 'stock@example.com|personal';
 const card = 'D021B75E';
 const operation = '8bccb30f-5da8-48d0-988f-ab01e23b0b01';
 
-PersonalInventoryRecord template({double grams = 2000}) =>
+PersonalInventoryRecord template({double grams = 1000}) =>
     PersonalInventoryRecord(
       uid: 'template-not-a-spool',
       manufacturer: 'eSUN',
       model: 'PLA',
       materialType: 'PLA',
       colorHex: '#223344',
-      totalGrams: grams,
+      totalGrams: 1000,
       remainingGrams: grams,
       createdAt: DateTime.utc(2026, 9, 8),
       updatedAt: DateTime.utc(2026, 9, 8),
@@ -41,7 +41,7 @@ void main() {
     String? account = owner,
     String tag = card,
     String type = 'CUID',
-    double grams = 2000,
+    double grams = 1000,
   }) => db.consumableDao.addPersonalStockFromRfidCard(
     operationUid: uid,
     tagUid: tag,
@@ -81,7 +81,7 @@ void main() {
         (await db.consumableDao.getById(
           first.consumableIds.first,
         ))!.remainingGrams,
-        1325,
+        325,
       );
       expect(
         (await db.consumableDao.getById(
@@ -172,7 +172,7 @@ void main() {
   );
 
   test(
-    'unbound sourced stock remains a single 2kg spool and cannot be refilled',
+    'unbound sourced stock remains a fixed 1kg spool and cannot be refilled',
     () async {
       final result = await receive(quantity: 1);
       final id = result.consumableIds.single;
@@ -180,8 +180,8 @@ void main() {
       await expectLater(db.consumableDao.addOneRoll(id), throwsStateError);
       await db.consumableDao.adjustGrams(id, 250);
       await db.consumableDao.adjustGrams(id, -9999);
-      expect((await db.consumableDao.getById(id))!.remainingGrams, 2000);
-      expect(await db.consumableDao.deductOneRoll(id), 2000);
+      expect((await db.consumableDao.getById(id))!.remainingGrams, 1000);
+      expect(await db.consumableDao.deductOneRoll(id), 1000);
       expect((await db.consumableDao.getById(id))!.remainingGrams, 0);
     },
   );
@@ -194,8 +194,28 @@ void main() {
         ownerAccount: owner,
       );
       expect(await db.consumableDao.isIndividualPersonalSpool(id), isFalse);
-      expect(await db.consumableDao.addOneRoll(id), 3000);
+      expect(await db.consumableDao.addOneRoll(id), 2000);
       expect(await db.consumableDao.deductOneRoll(id), 1000);
+    },
+  );
+
+  test(
+    'generic inventory edits cannot change a physical spool capacity',
+    () async {
+      final receipt = await receive(quantity: 1);
+      final id = receipt.consumableIds.single;
+      await expectLater(
+        db.consumableDao.updateConsumable(
+          ConsumablesCompanion(
+            id: Value(id),
+            totalGrams: const Value(2000),
+            remainingGrams: const Value(1800),
+          ),
+        ),
+        throwsStateError,
+      );
+      expect((await db.consumableDao.getById(id))!.totalGrams, 1000);
+      expect((await db.consumableDao.getById(id))!.remainingGrams, 1000);
     },
   );
 
@@ -213,8 +233,84 @@ void main() {
     await expectLater(receive(tag: '04AABBCCDDEEFF'), throwsArgumentError);
     await expectLater(receive(grams: 0), throwsArgumentError);
     await expectLater(receive(grams: double.nan), throwsArgumentError);
+    await expectLater(receive(grams: 1001), throwsArgumentError);
+    await expectLater(receive(grams: 2000), throwsArgumentError);
     expect(await count('consumables'), 0);
   });
+
+  test(
+    'an arbitrary spool capacity cannot enter through a receipt template',
+    () async {
+      for (final capacity in [500.0, 2000.0]) {
+        await expectLater(
+          db.consumableDao.addPersonalStockFromRfidCard(
+            operationUid: const Uuid().v4(),
+            tagUid: card,
+            tagType: 'CUID',
+            template: template(grams: 415).copyWith(totalGrams: capacity),
+            quantity: 1,
+            ownerAccount: owner,
+          ),
+          throwsArgumentError,
+        );
+      }
+      expect(await count('consumables'), 0);
+    },
+  );
+
+  for (final grams in [29.9, 30.0, 30.1, 999.9, 1000.0]) {
+    test(
+      'a $grams g remainder keeps 1kg capacity and obeys the reuse threshold',
+      () async {
+        final receipt = await receive(quantity: 1, grams: grams);
+        final id = receipt.consumableIds.single;
+        expect((await db.consumableDao.getById(id))!.totalGrams, 1000);
+        final activation = db.consumableDao
+            .attachPersonalRfidTagToExistingStock(
+              consumableId: id,
+              tagUid: card,
+              tagType: 'CUID',
+              ownerAccount: owner,
+            );
+        if (grams > 30) {
+          expect((await activation).consumableId, id);
+        } else {
+          await expectLater(activation, throwsStateError);
+          expect((await db.consumableDao.getById(id))!.remainingGrams, grams);
+          expect(await db.consumableDao.getRfidSpoolBindingsMap([id]), isEmpty);
+        }
+      },
+    );
+  }
+
+  test(
+    'legacy non-1kg stock is preserved for review and cannot be reused or adjusted',
+    () async {
+      final receipt = await receive(quantity: 1);
+      final id = receipt.consumableIds.single;
+      await db.customStatement(
+        'UPDATE consumables SET total_grams = 2000, remaining_grams = 1875 WHERE id = ?',
+        [id],
+      );
+      await expectLater(
+        db.consumableDao.attachPersonalRfidTagToExistingStock(
+          consumableId: id,
+          tagUid: card,
+          tagType: 'CUID',
+          ownerAccount: owner,
+        ),
+        throwsStateError,
+      );
+      await expectLater(
+        db.consumableDao.adjustGrams(id, 100),
+        throwsStateError,
+      );
+      await expectLater(db.consumableDao.deductOneRoll(id), throwsStateError);
+      final unchanged = (await db.consumableDao.getById(id))!;
+      expect(unchanged.totalGrams, 2000);
+      expect(unchanged.remainingGrams, 1875);
+    },
+  );
 
   test(
     'AMS only suggests already received stock until explicit selection',
@@ -264,7 +360,7 @@ void main() {
         tagType: 'CUID',
         ownerAccount: owner,
       );
-      await db.consumableDao.adjustGrams(first.consumableId, 1500);
+      await db.consumableDao.adjustGrams(first.consumableId, 500);
       final next = await db.consumableDao.attachPersonalRfidTagToExistingStock(
         consumableId: receipt.consumableIds.last,
         tagUid: card,
@@ -280,7 +376,7 @@ void main() {
       );
       expect(
         (await db.consumableDao.getById(next.consumableId))!.remainingGrams,
-        2000,
+        1000,
       );
       expect(
         (await db.consumableDao.getRfidSpoolBindingById(
@@ -594,7 +690,7 @@ void main() {
         revision: api.snapshot.revision + 1,
         records: [
           api.snapshot.records.single.copyWith(
-            remainingGrams: 1800,
+            remainingGrams: 800,
             updatedAt: DateTime.utc(2030),
           ),
         ],
@@ -613,20 +709,28 @@ void main() {
         (await db.consumableDao.getById(
           receipt.consumableIds.single,
         ))!.remainingGrams,
-        1900,
+        900,
       );
       final conflicts = await db.consumableDao.readInventoryBalanceConflicts(
         receipt.inventoryUids.single,
         ownerAccount: syncOwner,
       );
-      expect(conflicts.single.remote.remainingGrams, 1800);
+      expect(conflicts.single.remote.remainingGrams, 800);
+      await expectLater(
+        db.consumableDao.reconcilePersonalInventoryBalance(
+          receipt.consumableIds.single,
+          conflicts.single,
+          1001,
+        ),
+        throwsArgumentError,
+      );
       await db.consumableDao.reconcilePersonalInventoryBalance(
         receipt.consumableIds.single,
         conflicts.single,
-        1777,
+        777,
       );
       await sync.synchronize(session: session);
-      expect(api.snapshot.records.single.remainingGrams, 1777);
+      expect(api.snapshot.records.single.remainingGrams, 777);
       expect(api.snapshot.records.single.sourceRfidTagUid, card);
     },
   );

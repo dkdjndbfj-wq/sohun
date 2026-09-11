@@ -242,6 +242,7 @@ class PersonalInventorySyncService {
           await dao.upsertPersonalInventoryRecord(
             record,
             ownerAccount: ownerAccount,
+            preserveLegacyWeights: true,
           );
           imported += 1;
         } else {
@@ -430,7 +431,11 @@ class PersonalInventorySyncService {
     await dao.transaction(() async {
       final latest = await _readLocalRecords(owner);
       for (final record in _merge(records, latest, {})) {
-        await dao.upsertPersonalInventoryRecord(record, ownerAccount: owner);
+        await dao.upsertPersonalInventoryRecord(
+          record,
+          ownerAccount: owner,
+          preserveLegacyWeights: true,
+        );
       }
     });
     throw CommunityApiException(
@@ -604,8 +609,14 @@ class PersonalInventorySyncService {
     PersonalInventoryRecord candidate,
     PersonalInventoryRecord current,
   ) {
-    final candidateSource = PersonalRfidStockSource.fromRecord(candidate);
-    final currentSource = PersonalRfidStockSource.fromRecord(current);
+    final candidateSource = PersonalRfidStockSource.fromRecord(
+      candidate,
+      preserveLegacyWeights: true,
+    );
+    final currentSource = PersonalRfidStockSource.fromRecord(
+      current,
+      preserveLegacyWeights: true,
+    );
     if (candidateSource != null &&
         currentSource != null &&
         !_sameJson(candidateSource.toJson(), currentSource.toJson())) {

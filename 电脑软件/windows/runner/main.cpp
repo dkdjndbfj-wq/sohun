@@ -75,11 +75,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
 
   FlutterWindow window(project);
-  // Start with the same compact surface used by the Flutter splash. The
-  // native host remains hidden until Flutter's first frame, so the normal
-  // 1440x900 application frame is never flashed behind the logo animation.
+  // Startup and the workspace use one stable surface; Flutter fades between
+  // them without resizing the native window on every animation frame.
   Win32Window::Point origin(120, 80);
-  Win32Window::Size size(520, 292);
+  Win32Window::Size size(1440, 900);
   if (!window.Create(kWindowTitle, origin, size)) {
     ::CoUninitialize();
     if (single_instance_mutex != nullptr) {

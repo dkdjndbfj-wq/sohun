@@ -10,7 +10,7 @@ import 'package:drift/drift.dart' show Value, driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-const owner = 'ledger@example.com|personal';
+final owner = PersonalInventorySyncService.ownerAccountFor(session());
 final at = DateTime.utc(2026, 9, 6, 12, 30, 45);
 PersonalInventoryRecord spool() => PersonalInventoryRecord(
   uid: 'spool-1',
@@ -18,7 +18,7 @@ PersonalInventoryRecord spool() => PersonalInventoryRecord(
   model: 'PLA',
   materialType: 'PLA',
   colorHex: '#FFFFFF',
-  totalGrams: 750,
+  totalGrams: 1000,
   remainingGrams: 750,
   createdAt: at,
   updatedAt: at,
@@ -233,21 +233,22 @@ void main() {
   );
 
   test(
-    'tagged manual use respects actual 750 g weight, archives evidence and rejects stale deductions',
+    'tagged manual use preserves a 750 g remainder in a 1kg spool and rejects stale deductions',
     () async {
       final dao = db.consumableDao;
       final id = await dao.upsertPersonalInventoryRecord(
         spool(),
         ownerAccount: owner,
       );
-      expect(await dao.adjustGrams(id, -100), 0);
+      expect(await dao.adjustGrams(id, -100), -100);
+      expect(await dao.adjustGrams(id, 100), 100);
       await expectLater(dao.adjustGrams(id, double.nan), throwsArgumentError);
       expect(await dao.deductOneRoll(id), 750);
       final event = (await dao.getPersonalInventoryEvents(owner)).single;
       expect(event.deltaGrams, -750);
       final next = await dao.replacePersonalRfidSpool(
         consumableId: id,
-        initialGrams: 2000,
+        initialGrams: 1000,
       );
       await expectLater(dao.adjustGrams(id, -10), throwsStateError);
       await dao.retirePersonalRfidSpool(next.consumableId);

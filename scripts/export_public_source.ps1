@@ -68,6 +68,9 @@ function Test-PublicCandidate([string]$Relative) {
     if ($leaf -in @('local.properties', 'key.properties', 'release-clearance.json')) { return $false }
     if ($Relative -like '电脑软件/android/*' -and $leaf -in @('gradlew', 'gradlew.bat', 'GeneratedPluginRegistrant.java')) { return $false }
     if ($Relative.StartsWith('电脑软件/scripts/') -and $leaf -like '*.py') { return $false }
+    if ($Relative.StartsWith('电脑软件/test/') -and $leaf -like '_screenshots_*') { return $false }
+    if ($Relative.StartsWith('电脑软件/test/') -and $leaf -eq '_mobile_capture_support.dart') { return $false }
+    if ($Relative.StartsWith('电脑软件/test/') -and $leaf -like '_mobile_*_capture_test.dart') { return $false }
     return $true
 }
 

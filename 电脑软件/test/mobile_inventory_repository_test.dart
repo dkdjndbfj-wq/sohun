@@ -56,7 +56,7 @@ void main() {
     expect(binding.cycle, 1);
   });
 
-  for (final grams in [500.0, 2000.0]) {
+  for (final grams in [500.0, 1000.0]) {
     test(
       'registers a $grams g CUID roll and rescan preserves exact balance',
       () async {
@@ -69,7 +69,7 @@ void main() {
         final row = (await database.consumableDao.getPersonalByUid(
           saved.inventoryUid,
         ))!;
-        expect(row.totalGrams, grams);
+        expect(row.totalGrams, 1000);
         expect(row.remainingGrams, grams);
         await database.consumableDao.adjustGrams(row.id, 123.45);
         final rescanned = await repository.addFromDraft(
@@ -80,12 +80,30 @@ void main() {
         );
         final unchanged = (await database.consumableDao.getById(row.id))!;
         expect(rescanned.inventoryUid, saved.inventoryUid);
-        expect(unchanged.totalGrams, grams);
+        expect(unchanged.totalGrams, 1000);
         expect(unchanged.remainingGrams, closeTo(grams - 123.45, 0.00001));
         expect(
           await database.consumableDao.getPersonalRfidSpoolHistory('04A1B2C3'),
           hasLength(1),
         );
+      },
+    );
+  }
+
+  for (final grams in [30.0, 1001.0, 2000.0, double.infinity, double.nan]) {
+    test(
+      'rejects $grams g at a new mobile CUID entry without creating stock',
+      () async {
+        await expectLater(
+          repository.addFromDraft(
+            draft('PLA'),
+            tagUid: '04A1B2C3',
+            tagType: 'CUID',
+            initialGrams: grams,
+          ),
+          throwsA(anyOf(isA<ArgumentError>(), isA<StateError>())),
+        );
+        expect(await database.consumableDao.getPersonal(), isEmpty);
       },
     );
   }
@@ -179,7 +197,7 @@ void main() {
         third.inventoryUid,
         ownerAccount: owner,
       );
-      expect(thirdRow!.totalGrams, 750);
+      expect(thirdRow!.totalGrams, 1000);
       expect(thirdRow.remainingGrams, 750);
       await expectLater(
         repository.addFromDraft(
@@ -238,7 +256,7 @@ void main() {
         model: 'PLA',
         materialType: 'PLA',
         colorHex: '#112233',
-        totalGrams: 750,
+        totalGrams: 1000,
         remainingGrams: 321,
         createdAt: at,
         updatedAt: at,
@@ -294,7 +312,7 @@ void main() {
     final row = (await database.consumableDao.getPersonalByUid(
       saved.inventoryUid,
     ))!;
-    expect(row.totalGrams, 500);
+    expect(row.totalGrams, 1000);
     expect(saved.rfidTagUid, isNull);
     final binding = (await database.consumableDao.getRfidSpoolBindingById(
       row.id,

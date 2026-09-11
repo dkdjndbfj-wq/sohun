@@ -286,16 +286,16 @@ void main() {
     },
   );
   test(
-    'new full-roll registration never normalizes an existing 2kg spool',
+    'new full-roll registration never refills an existing 750g remnant',
     () async {
       await LocalMobileInventorySync(
         db.consumableDao,
-      ).save(draft, tagId: serial.uid, tagType: 'cuid', initialGrams: 2000);
+      ).save(draft, tagId: serial.uid, tagType: 'cuid', initialGrams: 750);
       await scan();
       await controller.commit();
       final row = await db.consumableDao.getById(1);
-      expect(row?.totalGrams, 2000);
-      expect(row?.remainingGrams, 2000);
+      expect(row?.totalGrams, 1000);
+      expect(row?.remainingGrams, 750);
       expect(await count(), 1);
     },
   );

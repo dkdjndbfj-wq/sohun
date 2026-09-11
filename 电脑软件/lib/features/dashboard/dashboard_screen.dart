@@ -10,6 +10,7 @@ import '../../core/utils/friendly_error.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/responsive/breakpoints.dart';
+import '../../core/constants/personal_spool_policy.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
@@ -31,6 +32,7 @@ import '../../data/external/printer/printer_alerts.dart';
 import '../../data/external/printer/printer_connector.dart';
 import '../../providers/consumable_provider.dart';
 import '../../providers/database_provider.dart';
+import '../../providers/personal_inventory_action_guard.dart';
 import '../../providers/filament_cost_provider.dart';
 import '../../providers/print_task_provider.dart';
 import '../../providers/printer_connection_provider.dart';
@@ -2072,10 +2074,12 @@ class _ChannelActionTile extends ConsumerWidget {
             Icon(Icons.lock_outline_rounded, color: AppColors.textSecondary)
           else if (c != null && channel.farmRollPaused) ...[
             AppButton(
-              label: '继续使用',
+              label: canReusePersonalSpool(c.remainingGrams) ? '继续使用' : '选择其他卷',
               icon: const Icon(Icons.build_circle_outlined, size: 16),
               variant: AppButtonVariant.primary,
-              onPressed: () => _resumeAfterMaintenance(context, ref),
+              onPressed: () => canReusePersonalSpool(c.remainingGrams)
+                  ? _resumeAfterMaintenance(context, ref)
+                  : _changeConsumable(context, ref),
             ),
           ] else if (c != null) ...[
             AppButton(
@@ -2129,6 +2133,7 @@ class _ChannelActionTile extends ConsumerWidget {
   /// 更换/装载耗材：直接弹出该通道的耗材选择面板。
   /// 非拓竹打印机换卷时会先弹窗询问旧卷剩余克数。
   Future<void> _changeConsumable(BuildContext context, WidgetRef ref) async {
+    final guard = PersonalInventoryActionGuard.fromRef(ref);
     // 查询打印机品牌，判断是否为拓竹
     final printer = await ref
         .read(printerDaoProvider)
@@ -2144,6 +2149,10 @@ class _ChannelActionTile extends ConsumerWidget {
     }
     final isBambu = printer?.printer.brand.contains('拓竹') ?? false;
     if (!context.mounted) return;
+    if (!guard.isCurrent) {
+      _showDashboardAccountProtected(context);
+      return;
+    }
     await showConsumablePickerForChannel(
       context,
       channel.channel.id,
@@ -2155,6 +2164,7 @@ class _ChannelActionTile extends ConsumerWidget {
   /// 个人模式取下前先区分“确实用完”和“堵头/维修暂取”。
   Future<void> _finish(BuildContext context, WidgetRef ref) async {
     try {
+      final guard = PersonalInventoryActionGuard.fromRef(ref);
       final printer = await ref
           .read(printerDaoProvider)
           .getByIdWithChannels(printerId);
@@ -2176,6 +2186,7 @@ class _ChannelActionTile extends ConsumerWidget {
           .read(consumableDaoProvider)
           .isFarmConsumable(c.id);
       if (!context.mounted) return;
+      guard.assertCurrent();
 
       if (isFarm) {
         final ok = await AppDialog.confirm(
@@ -2202,43 +2213,59 @@ class _ChannelActionTile extends ConsumerWidget {
         normalDecision: PersonalSpoolRemovalDecision.usedUp,
       );
       if (decision == null || !context.mounted) return;
-      final accountScope = ref.read(personalInventoryAccountScopeProvider);
+      guard.assertCurrent();
+      final accountScope = guard.scope;
 
       if (decision == PersonalSpoolRemovalDecision.maintenance) {
-        await ref
-            .read(printerDaoProvider)
-            .pauseChannelRollForMaintenance(
-              channel.channel.id,
-              enforcePersonalOwner: accountScope.enforce,
-              personalOwnerAccount: accountScope.ownerAccount,
-            );
+        await guard.run(
+          c.id,
+          () => ref
+              .read(printerDaoProvider)
+              .pauseChannelRollForMaintenance(
+                channel.channel.id,
+                enforcePersonalOwner: accountScope.enforce,
+                personalOwnerAccount: accountScope.ownerAccount,
+              ),
+        );
         if (context.mounted) {
-          showSnack(context, '已保留当前克数；维修完成后点击“继续使用”');
+          showSnack(
+            context,
+            canReusePersonalSpool(c.remainingGrams)
+                ? '已保留当前克数；维修完成后点击“继续使用”'
+                : '已保留当前克数；余量需大于 30g 才能继续使用',
+          );
         }
         return;
       }
 
       if (decision == PersonalSpoolRemovalDecision.takeOff) {
-        await ref
+        await guard.run(
+          c.id,
+          () => ref
+              .read(printerDaoProvider)
+              .unbindChannel(
+                channel.channel.id,
+                expectedConsumableId: c.id,
+                enforcePersonalOwner: accountScope.enforce,
+                personalOwnerAccount: accountScope.ownerAccount,
+              ),
+        );
+        if (context.mounted)
+          showSnack(context, '余料已回库；大于 30g 的卷重新装机时可选择原卷继续使用');
+        return;
+      }
+
+      await guard.run(
+        c.id,
+        () => ref
             .read(printerDaoProvider)
-            .unbindChannel(
+            .finishChannel(
               channel.channel.id,
               expectedConsumableId: c.id,
               enforcePersonalOwner: accountScope.enforce,
               personalOwnerAccount: accountScope.ownerAccount,
-            );
-        if (context.mounted) showSnack(context, '余料已回库；重新装机时选择原卷即可继续使用');
-        return;
-      }
-
-      await ref
-          .read(printerDaoProvider)
-          .finishChannel(
-            channel.channel.id,
-            expectedConsumableId: c.id,
-            enforcePersonalOwner: accountScope.enforce,
-            personalOwnerAccount: accountScope.ownerAccount,
-          );
+            ),
+      );
       if (context.mounted) {
         showSnack(context, '已标记用完并清空通道');
       }
@@ -2251,6 +2278,7 @@ class _ChannelActionTile extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) async {
+    final guard = PersonalInventoryActionGuard.fromRef(ref);
     final printer = await ref
         .read(printerDaoProvider)
         .getByIdWithChannels(printerId);
@@ -2259,11 +2287,25 @@ class _ChannelActionTile extends ConsumerWidget {
         .firstOrNull;
     final c = currentChannel?.consumable;
     if (c == null) return;
+    if (!guard.isCurrent) {
+      if (context.mounted) _showDashboardAccountProtected(context);
+      return;
+    }
     if (!await _canUseDashboardPersonalConsumable(ref, c.id)) {
       if (context.mounted) _showDashboardAccountProtected(context);
       return;
     }
-    final accountScope = ref.read(personalInventoryAccountScopeProvider);
+    if (!guard.isCurrent) {
+      if (context.mounted) _showDashboardAccountProtected(context);
+      return;
+    }
+    if (!canReusePersonalSpool(c.remainingGrams)) {
+      if (context.mounted) {
+        showSnack(context, '余量需大于 30g 且不超过 1000g 才能继续，当前克数已保留', error: true);
+      }
+      return;
+    }
+    final accountScope = guard.scope;
     if (currentChannel!.awaitingSpoolSelection) {
       ref
           .read(spoolChangeQueueProvider.notifier)
@@ -2292,13 +2334,16 @@ class _ChannelActionTile extends ConsumerWidget {
           );
       return;
     }
-    await ref
-        .read(printerDaoProvider)
-        .resumeChannelRollAfterMaintenance(
-          channel.channel.id,
-          enforcePersonalOwner: accountScope.enforce,
-          personalOwnerAccount: accountScope.ownerAccount,
-        );
+    await guard.run(
+      c.id,
+      () => ref
+          .read(printerDaoProvider)
+          .resumeChannelRollAfterMaintenance(
+            channel.channel.id,
+            enforcePersonalOwner: accountScope.enforce,
+            personalOwnerAccount: accountScope.ownerAccount,
+          ),
+    );
     if (context.mounted) {
       showSnack(
         context,

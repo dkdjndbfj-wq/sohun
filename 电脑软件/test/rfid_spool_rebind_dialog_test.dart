@@ -15,7 +15,7 @@ void main() {
         model: 'PLA',
         materialType: 'PLA',
         colorHex: '#FFFFFF',
-        totalGrams: 750,
+        totalGrams: 1000,
         remainingGrams: 125,
         createdAt: now,
         updatedAt: now,

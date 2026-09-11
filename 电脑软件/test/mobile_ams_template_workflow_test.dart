@@ -248,13 +248,21 @@ void main() {
         find.byKey(const ValueKey('mobile-registration-remnant')),
       );
       await tester.pumpAndSettle();
-      for (final invalid in ['0', '-1', 'NaN', 'Infinity', '1001', '2000']) {
+      for (final invalid in [
+        '0',
+        '30',
+        '-1',
+        'NaN',
+        'Infinity',
+        '1001',
+        '2000',
+      ]) {
         await tester.enterText(
           find.byKey(const ValueKey('rfid-initial-grams')),
           invalid,
         );
         await begin(tester);
-        expect(find.text('请输入大于 0 且不超过 1000 g 的剩余克数'), findsOneWidget);
+        expect(find.text('请输入大于 30 且不超过 1000 g 的剩余克数'), findsOneWidget);
         expect(nfc.restores, 0);
         expect(nfc.statusChecks, 0);
         expect(sync.saves, 0);

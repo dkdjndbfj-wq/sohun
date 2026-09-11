@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/constants/personal_spool_policy.dart';
 import '../models/personal_inventory_sync.dart';
 import 'database.dart';
 
@@ -103,7 +104,10 @@ extension PersonalInventoryBalanceSync on ConsumableDao {
         throw StateError('耗材卷或所属账号已变化，请刷新后重试');
       }
       final individual = await isIndividualPersonalSpool(id);
-      final maximum = individual ? row.totalGrams : 100000.0;
+      if (individual && row.totalGrams != personalSpoolCapacityGrams) {
+        throw StateError('历史耗材卷规格不是固定 1000 g，原始余额已保留，请先核对规格');
+      }
+      final maximum = individual ? personalSpoolCapacityGrams : 100000.0;
       if (!remainingGrams.isFinite ||
           remainingGrams < 0 ||
           remainingGrams > maximum) {

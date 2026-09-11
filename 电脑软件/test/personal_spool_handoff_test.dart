@@ -25,7 +25,7 @@ void main() {
           model: 'PLA',
           materialType: 'PLA',
           colorHex: '#FFFFFF',
-          totalGrams: grams,
+          totalGrams: 1000,
           remainingGrams: grams,
           createdAt: DateTime.utc(2026, 9, 6),
           updatedAt: DateTime.utc(2026, 9, 6),
@@ -45,7 +45,7 @@ void main() {
       ],
     );
     oldId = await spool('old-spool', '04AABB01', 750);
-    newId = await spool('new-spool', '04AABB02', 2000);
+    newId = await spool('new-spool', '04AABB02', 1000);
     printerId = await db
         .into(db.printers)
         .insert(
@@ -122,46 +122,46 @@ void main() {
           .toList();
 
   test(
-    '2 kg roll and 10 g remnant retain actual weight without repeat consumption',
+    '1 kg roll and 31 g remnant retain actual weight without repeat consumption',
     () async {
       await db.printerDao.changeRoll(
         channelId: channelId,
         newConsumableId: newId,
-        manualRemainingGrams: 10,
+        manualRemainingGrams: 31,
       );
-      expect((await db.consumableDao.getById(oldId))!.totalGrams, 750);
-      expect((await db.consumableDao.getById(oldId))!.remainingGrams, 10);
+      expect((await db.consumableDao.getById(oldId))!.totalGrams, 1000);
+      expect((await db.consumableDao.getById(oldId))!.remainingGrams, 31);
       expect(
         (await db.consumableDao.getRfidSpoolBindingById(oldId))!.isActive,
         isTrue,
       );
-      expect(await usage(oldId), [740]);
+      expect(await usage(oldId), [719]);
       await db.printerDao.changeRoll(
         channelId: channelId,
         newConsumableId: oldId,
-        manualRemainingGrams: 1800,
+        manualRemainingGrams: 800,
       );
-      expect((await db.consumableDao.getById(newId))!.totalGrams, 2000);
+      expect((await db.consumableDao.getById(newId))!.totalGrams, 1000);
       expect(await usage(newId), [200]);
       await db.printerDao.changeRoll(
         channelId: channelId,
         newConsumableId: newId,
       );
-      expect(await usage(oldId), [740]);
+      expect(await usage(oldId), [719]);
       await db.printerDao.finishChannel(channelId);
       expect((await db.consumableDao.getById(newId))!.remainingGrams, 0);
       expect(
         (await db.consumableDao.getRfidSpoolBindingById(newId))!.status,
         'depleted',
       );
-      expect(await usage(newId), [200, 1800]);
+      expect(await usage(newId), [200, 800]);
     },
   );
 
   test(
     'weighing rejects non-finite and over-capacity values without changing bindings',
     () async {
-      for (final grams in [double.nan, double.infinity, -1.0, 751.0]) {
+      for (final grams in [double.nan, double.infinity, -1.0, 1001.0]) {
         await expectLater(
           db.printerDao.changeRoll(
             channelId: channelId,
@@ -215,7 +215,7 @@ void main() {
           .read(printTaskOrchestratorProvider.notifier)
           .recoverPendingSettlements();
       expect((await db.consumableDao.getById(oldId))!.remainingGrams, 730);
-      expect((await db.consumableDao.getById(newId))!.remainingGrams, 1900);
+      expect((await db.consumableDao.getById(newId))!.remainingGrams, 900);
       expect(await usage(newId), [100]);
       final events = await db.consumableDao.getPersonalInventoryEvents(owner);
       final usageEvents = events.where((e) => e.source == 'usage').toList();
@@ -264,7 +264,7 @@ void main() {
       expect(await usage(oldId), [20, 20]);
       expect(await usage(newId), [40]);
       expect((await db.consumableDao.getById(oldId))!.remainingGrams, 710);
-      expect((await db.consumableDao.getById(newId))!.remainingGrams, 1960);
+      expect((await db.consumableDao.getById(newId))!.remainingGrams, 960);
     },
   );
 
@@ -359,7 +359,7 @@ void main() {
       final id = await task();
       final next = await db.consumableDao.replacePersonalRfidSpool(
         consumableId: oldId,
-        initialGrams: 2000,
+        initialGrams: 1000,
         continueCurrentTask: true,
       );
       expect(next.cycle, 2);
@@ -378,7 +378,7 @@ void main() {
       expect((await db.consumableDao.getById(oldId))!.remainingGrams, 730);
       expect(
         (await db.consumableDao.getById(next.consumableId))!.remainingGrams,
-        1920,
+        920,
       );
     },
   );
@@ -416,7 +416,7 @@ void main() {
         "BEGIN SELECT RAISE(ABORT, 'test final write failure'); END",
       );
       await finish(id, 50, cancelled: true);
-      expect((await db.consumableDao.getById(newId))!.remainingGrams, 2000);
+      expect((await db.consumableDao.getById(newId))!.remainingGrams, 1000);
       expect(await usage(oldId), [20]);
       await db.customStatement('DROP TRIGGER fail_final');
       await container
@@ -438,7 +438,7 @@ void main() {
       await finish(id, 0, cancelled: true);
       expect(await usage(oldId), isEmpty);
       expect(await usage(newId), isEmpty);
-      expect((await db.consumableDao.getById(newId))!.remainingGrams, 2000);
+      expect((await db.consumableDao.getById(newId))!.remainingGrams, 1000);
     },
   );
 }

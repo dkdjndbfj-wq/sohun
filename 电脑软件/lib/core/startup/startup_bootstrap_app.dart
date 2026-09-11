@@ -9,7 +9,6 @@ import '../../data/prefs/app_prefs.dart';
 import '../../providers/database_provider.dart';
 import '../../providers/onboarding_provider.dart';
 import '../../providers/theme_provider.dart';
-import '../../widgets/sohun_wordmark.dart';
 import '../app_identity.dart';
 import '../theme/app_theme.dart';
 import '../theme/interaction_effects.dart';
@@ -17,16 +16,15 @@ import 'startup_coordinator.dart';
 import 'startup_handoff.dart';
 import 'startup_window_controller.dart';
 
-typedef StartupTask = Future<StartupResult> Function(
-  StartupProgressCallback onProgress,
-);
+typedef StartupTask =
+    Future<StartupResult> Function(StartupProgressCallback onProgress);
 
 class StartupBootstrapApp extends ConsumerStatefulWidget {
   const StartupBootstrapApp({
     super.key,
     this.startupTask,
     this.appBuilder,
-    this.minimumSplashDuration = const Duration(milliseconds: 900),
+    this.minimumSplashDuration = Duration.zero,
     this.prepareMainWindow,
     this.updateMainWindowTransition,
     this.showMainWindow,
@@ -77,8 +75,12 @@ class _StartupBootstrapAppState extends ConsumerState<StartupBootstrapApp> {
     _started = true;
     unawaited(windowManager.show().catchError((_) {}));
     final platformDisablesAnimations = WidgetsBinding
-        .instance.platformDispatcher.accessibilityFeatures.disableAnimations;
-    final effectsEnabled = ref.read(interactionEffectsEnabledProvider) &&
+        .instance
+        .platformDispatcher
+        .accessibilityFeatures
+        .disableAnimations;
+    final effectsEnabled =
+        ref.read(interactionEffectsEnabledProvider) &&
         !platformDisablesAnimations;
     _motionEnabled = effectsEnabled;
     final minimumDelay = _createMinimumDelay(effectsEnabled);
@@ -109,10 +111,7 @@ class _StartupBootstrapAppState extends ConsumerState<StartupBootstrapApp> {
       // Mount the complete application behind the opaque startup layer first.
       // Its local providers, first layout, icons and cached preferences are
       // therefore ready before the native window starts changing size.
-      await Future.wait<void>([
-        minimumDelay,
-        _prewarmApplication(),
-      ]);
+      await Future.wait<void>([minimumDelay, _prewarmApplication()]);
       if (!mounted) {
         await result.database.close();
         return;
@@ -151,11 +150,7 @@ class _StartupBootstrapAppState extends ConsumerState<StartupBootstrapApp> {
           context,
         ).catchError((_) {}),
       );
-      final onboardingCompleted =
-          await ref.read(onboardingCompletedProvider.future);
-      if (onboardingCompleted) {
-        await _startupHandoff.waitForStableLandingRect();
-      }
+      await ref.read(onboardingCompletedProvider.future);
     } catch (error) {
       debugPrint(
         'Startup prewarm continued after a non-critical error: $error',
@@ -236,7 +231,8 @@ class _StartupBootstrapAppState extends ConsumerState<StartupBootstrapApp> {
     final themeColor = ref.watch(themeColorProvider);
     final platformBrightness =
         WidgetsBinding.instance.platformDispatcher.platformBrightness;
-    final useDark = themeMode == ThemeMode.dark ||
+    final useDark =
+        themeMode == ThemeMode.dark ||
         (themeMode == ThemeMode.system &&
             platformBrightness == Brightness.dark);
     final transitionTheme = useDark
@@ -287,10 +283,7 @@ class _StartupBootstrapAppState extends ConsumerState<StartupBootstrapApp> {
 }
 
 class _ApplicationStage extends StatelessWidget {
-  const _ApplicationStage({
-    required this.interactive,
-    required this.child,
-  });
+  const _ApplicationStage({required this.interactive, required this.child});
 
   final bool interactive;
   final Widget child;
@@ -443,23 +436,23 @@ class _StartupReveal extends StatefulWidget {
 
 class _StartupRevealState extends State<_StartupReveal>
     with TickerProviderStateMixin {
-  late final AnimationController _writeController;
+  late final AnimationController _introController;
   late final AnimationController _handoffController;
   bool _handoffScheduled = false;
 
   @override
   void initState() {
     super.initState();
-    _writeController = AnimationController(
+    _introController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 720),
+      duration: const Duration(milliseconds: 280),
       value: widget.animate ? 0 : 1,
     );
     _handoffController = AnimationController(
       vsync: this,
       duration: StartupWindowController.transitionDuration,
     )..addListener(_reportHandoffProgress);
-    if (widget.animate) _writeController.forward();
+    if (widget.animate) _introController.forward();
     if (widget.ready) _scheduleHandoff();
   }
 
@@ -467,7 +460,7 @@ class _StartupRevealState extends State<_StartupReveal>
   void didUpdateWidget(covariant _StartupReveal oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.animate && !widget.animate) {
-      _writeController.value = 1;
+      _introController.value = 1;
     }
     if (!oldWidget.ready && widget.ready) _scheduleHandoff();
   }
@@ -482,9 +475,9 @@ class _StartupRevealState extends State<_StartupReveal>
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       try {
-        if (_writeController.isAnimating) {
-          await _writeController.forward().orCancel;
-        }
+        // Initialization can finish before the intro; it must not wait for art.
+        _introController.stop();
+        _introController.value = 1;
         if (!mounted) return;
         await widget.onHandoffStarted();
         if (!mounted) return;
@@ -505,226 +498,142 @@ class _StartupRevealState extends State<_StartupReveal>
   @override
   void dispose() {
     _handoffController.removeListener(_reportHandoffProgress);
-    _writeController.dispose();
+    _introController.dispose();
     _handoffController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final startupHandoff = StartupHandoffScope.maybeRead(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final value = widget.progress.value.clamp(0.0, 1.0);
     return Semantics(
       key: const ValueKey('startup-progress-semantics'),
       label: widget.progress.label,
-      value: '${(widget.progress.value * 100).round()}%',
+      value: (value * 100).round().toString() + '%',
       liveRegion: true,
-      child: AnimatedBuilder(
-        animation: Listenable.merge([_writeController, _handoffController]),
-        builder: (context, _) {
-          final handoff = _handoffController.value;
-          final splashPlateOpacity = 1 -
-              const Interval(
-                0.08,
-                0.55,
-                curve: Curves.easeOutCubic,
-              ).transform(handoff);
-          final detailsOpacity = 1 -
-              const Interval(
-                0,
-                0.18,
-                curve: Curves.easeOutCubic,
-              ).transform(handoff);
-          final frameOpacity = 1 -
-              const Interval(
-                0.88,
-                1,
-                curve: Curves.easeOutCubic,
-              ).transform(handoff);
-          final targetRect = startupHandoff?.landingRect;
-          final movingWordmarkOpacity = 1 -
-              (targetRect == null
-                      ? const Interval(
-                          0.55,
-                          1,
-                          curve: Curves.easeInCubic,
+      child: FadeTransition(
+        opacity: ReverseAnimation(_handoffController),
+        child: ColoredBox(
+          key: const ValueKey('startup-backdrop'),
+          color: scheme.surface,
+          child: Center(
+            child: FadeTransition(
+              opacity: _introController,
+              child: SlideTransition(
+                position:
+                    Tween<Offset>(
+                          begin: const Offset(0, 0.04),
+                          end: Offset.zero,
                         )
-                      : const Interval(
-                          0.96,
-                          1,
-                          curve: Curves.easeInCubic,
-                        ))
-                  .transform(handoff);
-          final glowStrength = targetRect == null
-              ? 0.0
-              : const Interval(
-                  0.78,
-                  1,
-                  curve: Curves.easeOutCubic,
-                ).transform(handoff);
-          final logoRect = targetRect == null
-              ? StartupRevealGeometry.startLogoRect
-              : StartupRevealGeometry.logoRectForProgress(
-                  handoff,
-                  targetRect: targetRect,
-                );
-          final frameSize = StartupWindowController.revealSizeForProgress(
-            StartupWindowController.splashSize,
-            StartupWindowController.mainSize,
-            handoff,
-          );
-          return Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned(
-                left: 0,
-                top: 0,
-                width: StartupWindowController.splashSize.width,
-                height: StartupWindowController.splashSize.height,
-                child: IgnorePointer(
-                  child: Opacity(
-                    key: const ValueKey('startup-backdrop'),
-                    opacity: splashPlateOpacity,
-                    child: _StartupBackdrop(scheme: scheme),
-                  ),
-                ),
-              ),
-              Positioned.fromRect(
-                rect: logoRect,
-                child: IgnorePointer(
-                  child: Opacity(
-                    opacity: movingWordmarkOpacity,
-                    child: SohunWordmark(
-                      key: const ValueKey('startup-moving-wordmark'),
-                      progress: _writeController.value,
-                      glowStrength: glowStrength,
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                left: StartupRevealGeometry.progressLeft,
-                top: StartupRevealGeometry.progressTop,
-                width: StartupRevealGeometry.progressWidth,
-                child: IgnorePointer(
-                  child: Opacity(
-                    opacity: detailsOpacity,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
-                      child: LinearProgressIndicator(
-                        key: const ValueKey('startup-progress-bar'),
-                        value: widget.progress.value.clamp(0, 1),
-                        minHeight: 2,
-                        backgroundColor: scheme.primary.withValues(alpha: 0.10),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          scheme.primary.withValues(alpha: 0.68),
+                        .chain(CurveTween(curve: Curves.easeOutCubic))
+                        .animate(_introController),
+                child: SizedBox(
+                  width: 280,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      RepaintBoundary(
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 72,
+                              height: 72,
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: scheme.primaryContainer.withValues(
+                                  alpha: 0.45,
+                                ),
+                                borderRadius: BorderRadius.circular(22),
+                                border: Border.all(
+                                  color: scheme.primary.withValues(alpha: 0.08),
+                                ),
+                              ),
+                              child: Image.asset(
+                                AppIdentity.iconAsset,
+                                cacheWidth: 144,
+                                cacheHeight: 144,
+                                filterQuality: FilterQuality.medium,
+                                errorBuilder: (_, error, stack) => Icon(
+                                  Icons.layers_rounded,
+                                  color: scheme.primary,
+                                  size: 40,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 22),
+                            Text(
+                              'sohun',
+                              key: const ValueKey('startup-brand'),
+                              style: TextStyle(
+                                fontSize: 36,
+                                height: 1.1,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -1.2,
+                                color: scheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 9),
+                            Text(
+                              '让耗材与打印，轻松归位',
+                              style: TextStyle(
+                                fontSize: 13,
+                                letterSpacing: 0.8,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 42),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(2),
+                        child: LinearProgressIndicator(
+                          key: const ValueKey('startup-progress-bar'),
+                          value: value,
+                          minHeight: 3,
+                          backgroundColor: scheme.primary.withValues(
+                            alpha: 0.08,
+                          ),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            scheme.primary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              widget.progress.label,
+                              maxLines: 2,
+                              style: TextStyle(
+                                fontSize: 12,
+                                height: 1.4,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            (value * 100).round().toString() + '%',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ),
-              Positioned(
-                left: 0,
-                top: 0,
-                width: frameSize.width,
-                height: frameSize.height,
-                child: IgnorePointer(
-                  child: Opacity(
-                    opacity: frameOpacity,
-                    child: _StartupRevealFrame(scheme: scheme),
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _StartupBackdrop extends StatelessWidget {
-  const _StartupBackdrop({required this.scheme});
-
-  final ColorScheme scheme;
-
-  @override
-  Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Color.lerp(
-          scheme.surface,
-          scheme.primary,
-          dark ? 0.025 : 0.012,
+            ),
+          ),
         ),
       ),
     );
-  }
-}
-
-class _StartupRevealFrame extends StatelessWidget {
-  const _StartupRevealFrame({required this.scheme});
-
-  final ColorScheme scheme;
-
-  @override
-  Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return CustomPaint(
-      key: const ValueKey('startup-growing-frame'),
-      painter: _StartupRevealFramePainter(
-        color: scheme.outlineVariant.withValues(alpha: dark ? 0.52 : 0.70),
-      ),
-    );
-  }
-}
-
-class _StartupRevealFramePainter extends CustomPainter {
-  const _StartupRevealFramePainter({required this.color});
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (size.width <= 1 || size.height <= 1) return;
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1
-      ..color = color;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        (Offset.zero & size).deflate(0.5),
-        const Radius.circular(14),
-      ),
-      paint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_StartupRevealFramePainter oldDelegate) {
-    return color != oldDelegate.color;
-  }
-}
-
-@visibleForTesting
-class StartupRevealGeometry {
-  StartupRevealGeometry._();
-
-  static const startLogoRect = Rect.fromLTWH(148, 88, 224, 72);
-  static const progressWidth = 132.0;
-  static const progressLeft = 194.0;
-  static const progressTop = 181.0;
-
-  static Rect logoRectForProgress(
-    double progress, {
-    required Rect targetRect,
-  }) {
-    final value = Curves.easeInOutCubic.transform(
-      progress.clamp(0.0, 1.0),
-    );
-    return Rect.lerp(startLogoRect, targetRect, value)!;
   }
 }
 

@@ -973,6 +973,46 @@ const STOCK_SOURCE_KEYS = [
   'stockReceiptIndex', 'stockReceiptQuantity',
 ];
 
+// Business invariant: one physical spool is always 1 kg. Aggregate rows may
+// contain N spools; the threshold below governs reusing a physical remainder.
+const PERSONAL_SPOOL_CAPACITY_GRAMS = 1000;
+const MINIMUM_REUSABLE_SPOOL_GRAMS = 30;
+
+function isStandardPersonalSpool(record) {
+  return record.totalGrams === PERSONAL_SPOOL_CAPACITY_GRAMS
+    && Number.isFinite(record.remainingGrams)
+    && record.remainingGrams >= 0
+    && record.remainingGrams <= PERSONAL_SPOOL_CAPACITY_GRAMS;
+}
+
+function canReusePersonalSpool(record) {
+  return isStandardPersonalSpool(record)
+    && record.remainingGrams > MINIMUM_REUSABLE_SPOOL_GRAMS;
+}
+
+function assertPersonalSpoolCapacity(records, currentRecords) {
+  const current = personalInventoryRecordMap(currentRecords);
+  for (const record of records) {
+    const stored = current.get(uidForRecord(record));
+    const individual = record.rfidTagUid != null || record.stockReceiptUid != null
+      || stored?.rfidTagUid != null || stored?.stockReceiptUid != null;
+    if (!individual || isStandardPersonalSpool(record)) continue;
+    // Preserve existing non-standard historical balances verbatim. They may
+    // be archived, but cannot become new stock, be refilled or be reactivated.
+    const preservingHistory = stored && !isStandardPersonalSpool(stored)
+      && record.totalGrams === stored.totalGrams
+      && record.remainingGrams === stored.remainingGrams
+      && samePersonalInventoryBinding(stored, record)
+      && JSON.stringify(record.rfidTagHistory ?? []) === JSON.stringify(stored.rfidTagHistory ?? [])
+      && STOCK_SOURCE_KEYS.every((key) => record[key] === stored[key])
+      && (record.lifecycleStatus === stored.lifecycleStatus || record.lifecycleStatus === 'retired');
+    if (!preservingHistory) {
+      throw new ApiError(409, 'inventory_spool_capacity_conflict',
+        '每卷规格固定为 1000 g，余量须在 0 至 1000 g；历史异常重量已保留，请先核对');
+    }
+  }
+}
+
 function normalizePersonalStockSource(record) {
   if (STOCK_SOURCE_KEYS.every((key) => record[key] == null)) return {};
   const tag = normalizePersonalInventoryRfidTag(record.sourceRfidTagUid);
@@ -1007,8 +1047,8 @@ function normalizePersonalInventoryRecord(record) {
     { required: true, min: 0, max: 100_000 },
   );
   // Untagged personal rows are aggregate stock and may legitimately contain
-  // several rolls after a replenishment. A tagged row is one physical spool,
-  // so its balance can never exceed the spool's declared starting weight.
+  // several 1000 g rolls after a replenishment. Physical spools are validated
+  // against the fixed capacity after existing historical rows are available.
   const hygroscopicity = personalInventoryText(
     record.hygroscopicity,
     'hygroscopicity',
@@ -1207,6 +1247,11 @@ function assertPersonalInventoryLifecycleGraph(records, currentRecords = []) {
     const supportedType = consumableType || type === 'AMS';
     const sameStoredBinding = stored?.rfidTagUid && samePersonalInventoryBinding(stored, record)
       && JSON.stringify(stored.rfidTagHistory ?? []) === JSON.stringify(record.rfidTagHistory ?? []);
+    const activating = !sameStoredBinding || (stored?.lifecycleStatus !== 'active' && record.lifecycleStatus === 'active');
+    if (record.lifecycleStatus === 'active' && activating && !canReusePersonalSpool(record)) {
+      throw new ApiError(409, 'inventory_spool_not_reusable',
+        '每卷规格固定为 1000 g，余量必须大于 30 g 才能装入或继续使用');
+    }
     if (!stored?.rfidTagUid && !supportedType) {
       throw new ApiError(400, 'unsupported_inventory_tag_type', '自定义耗材标签只支持已确认的 CUID/FUID，NTAG213 用于设备工作台');
     }
@@ -1241,10 +1286,11 @@ function assertPersonalInventoryLifecycleGraph(records, currentRecords = []) {
       if (!prefixRetained || (rebound ? !samePersonalInventoryBinding(stored, prior) : !samePersonalInventoryBinding(stored, record))) {
         throw new ApiError(409, 'inventory_spool_identity_conflict', '已登记卷的标签、周期和前驱不能被改写，请创建新卷');
       }
-      if (rebound && (!['CUID', 'FUID'].includes(storedType) || stored.lifecycleStatus === 'retired' || stored.remainingGrams <= 0
+      if (rebound && (!['CUID', 'FUID'].includes(storedType) || stored.lifecycleStatus === 'retired' || !canReusePersonalSpool(stored)
+          || !canReusePersonalSpool(record)
           || record.totalGrams !== stored.totalGrams || record.remainingGrams > stored.remainingGrams
           || !/^[0-9A-F]{8}$/.test(record.rfidTagUid) || !['CUID', 'FUID'].includes(record.rfidTagType?.toUpperCase()))) {
-        throw new ApiError(409, 'inventory_rebind_conflict', '只有尚有余料的未归档卷可以换绑，新卷重与余量不能因此增加');
+        throw new ApiError(409, 'inventory_rebind_conflict', '只有余量大于 30 g 的 1000 g 未归档卷可以换绑，余量不能因此增加');
       }
       if (!rebound && ['replaced', 'retired'].includes(stored.lifecycleStatus)
           && !['replaced', 'retired'].includes(record.lifecycleStatus)) {
@@ -3105,6 +3151,7 @@ export function createCommunityServer(options = {}) {
               throw new Error('personal inventory snapshot is corrupted');
             }
             retainAndRecordPersonalStockReceipts(database, user.id, records, currentRecords, timestamp);
+            assertPersonalSpoolCapacity(records, currentRecords);
             assertPersonalInventoryHistoryRetained(
               currentRecords,
               records,

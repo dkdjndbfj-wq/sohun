@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/constants/personal_spool_policy.dart';
 import '../core/utils/color_utils.dart';
 
 /// The only fields the mobile writer collects from a user.
@@ -36,8 +37,8 @@ class MobileConsumableDraft {
       'materialType': model,
       'colorHex': colorHex,
       if (colorName.trim().isNotEmpty) 'colorName': colorName.trim(),
-      'totalGrams': 1000.0,
-      'remainingGrams': 1000.0,
+      'totalGrams': personalSpoolCapacityGrams,
+      'remainingGrams': personalSpoolCapacityGrams,
       'createdAt': timestamp,
       'updatedAt': timestamp,
       if (trayUuid != null && trayUuid.trim().isNotEmpty)

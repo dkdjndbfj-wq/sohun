@@ -1,5 +1,6 @@
 import 'package:uuid/uuid.dart';
 
+import '../core/constants/personal_spool_policy.dart';
 import '../data/database/database.dart';
 import '../data/models/personal_inventory_sync.dart';
 import '../data/models/rfid_tag_identity.dart';
@@ -23,14 +24,16 @@ class MobileInventoryRepository {
     String? ownerAccount,
     DateTime? now,
     bool forceNewCycle = false,
-    double initialGrams = 1000,
+    double initialGrams = personalSpoolCapacityGrams,
     String? expectedInventoryUid,
   }) async {
-    if (!initialGrams.isFinite || initialGrams <= 0 || initialGrams > 100000) {
+    if (!initialGrams.isFinite ||
+        initialGrams <= 0 ||
+        initialGrams > personalSpoolCapacityGrams) {
       throw ArgumentError.value(
         initialGrams,
         'initialGrams',
-        '新耗材卷重量必须在 0 到 100000 g 之间',
+        '每卷规格固定为 1000 g，入库余量必须大于 0 且不超过 1000 g',
       );
     }
     final timestamp = now ?? DateTime.now();
@@ -93,6 +96,18 @@ class MobileInventoryRepository {
       if (expectedInventoryUid != null &&
           existing?.uid != expectedInventoryUid) {
         throw StateError('标签已换到另一卷，请刷新库存后重试');
+      }
+      if (existing != null &&
+          (existing.totalGrams != personalSpoolCapacityGrams ||
+              !existing.remainingGrams.isFinite ||
+              existing.remainingGrams < 0 ||
+              existing.remainingGrams > personalSpoolCapacityGrams)) {
+        throw StateError('历史耗材卷重量不符合每卷 1000 g 规则，原余量已保留，请先核对后再写卡或换卷');
+      }
+      if (existing == null &&
+          normalizedTagUid?.isNotEmpty == true &&
+          !canReusePersonalSpool(initialGrams)) {
+        throw StateError('余量必须大于 30 g 才能登记为正在使用的耗材卷');
       }
       String? consumableTagType;
       if (normalizedTagUid?.isNotEmpty == true) {
@@ -187,7 +202,7 @@ class MobileInventoryRepository {
         colorHex: draft.colorHex,
         colorName: colorName.isEmpty ? null : colorName,
         // Rewriting metadata for an active spool preserves its exact stock.
-        totalGrams: existing?.totalGrams ?? initialGrams,
+        totalGrams: existing?.totalGrams ?? personalSpoolCapacityGrams,
         remainingGrams: existing?.remainingGrams ?? initialGrams,
         batchNo: existing?.batchNo,
         purchaseDate: existing?.purchaseDate ?? timestamp,

@@ -98,7 +98,7 @@ UsePreviousAppDir=yes
 UsePreviousTasks=yes
 
 [Languages]
-Name: "chinesesimp"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
+Name: "chinesesimp"; MessagesFile: "Languages\ChineseSimplified.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [CustomMessages]
@@ -170,6 +170,7 @@ WelcomeFontSize=15
 #if MyPreview
 #else
 Source: "{#MyBuildSource}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "Languages\ChineseSimplified.LICENSE.txt"; DestDir: "{app}\licenses"; Flags: ignoreversion
 #endif
 
 [Icons]

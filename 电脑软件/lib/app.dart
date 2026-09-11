@@ -51,6 +51,8 @@ import 'providers/telemetry_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/printer_connection_provider.dart';
 import 'providers/spool_change_provider.dart';
+import 'providers/personal_inventory_action_guard.dart';
+import 'core/constants/personal_spool_policy.dart';
 import 'providers/external_multicolor_plan_provider.dart';
 import 'providers/farm_slice_intake_provider.dart';
 import 'providers/print_queue_provider.dart';
@@ -250,6 +252,7 @@ class _ConsumableTrackerAppState extends ConsumerState<ConsumableTrackerApp>
   ) async {
     final queue = ref.read(spoolChangeQueueProvider.notifier);
     final dao = ref.read(printerDaoProvider);
+    final guard = PersonalInventoryActionGuard.fromRef(ref);
     SpoolChangeObservation? currentAtLocation() => queue
         .pendingForMode(false)
         .where((item) => item.locationKey == event.locationKey)
@@ -282,9 +285,8 @@ class _ConsumableTrackerAppState extends ConsumerState<ConsumableTrackerApp>
         resolveRemovalIfCurrent();
         return;
       }
-      final initialAccountScope = ref.read(
-        personalInventoryAccountScopeProvider,
-      );
+      guard.assertCurrent();
+      final initialAccountScope = guard.scope;
       if (initialAccountScope.enforce &&
           !await ref
               .read(consumableDaoProvider)
@@ -306,11 +308,14 @@ class _ConsumableTrackerAppState extends ConsumerState<ConsumableTrackerApp>
       // leaving the cloud-synced lifecycle active.
       final provisionalPause = consumable.remainingGrams > 0;
       if (provisionalPause) {
-        await dao.preparePersonalSpoolReplacement(
-          channel.channel.id,
-          expectedConsumableId: consumable.id,
-          enforcePersonalOwner: initialAccountScope.enforce,
-          personalOwnerAccount: initialAccountScope.ownerAccount,
+        await guard.run(
+          consumable.id,
+          () => dao.preparePersonalSpoolReplacement(
+            channel.channel.id,
+            expectedConsumableId: consumable.id,
+            enforcePersonalOwner: initialAccountScope.enforce,
+            personalOwnerAccount: initialAccountScope.ownerAccount,
+          ),
         );
       }
       if (!mounted || !dialogContext.mounted) return;
@@ -362,22 +367,28 @@ class _ConsumableTrackerAppState extends ConsumerState<ConsumableTrackerApp>
       }
 
       final channelId = channel.channel.id;
-      final accountScope = ref.read(personalInventoryAccountScopeProvider);
+      guard.assertCurrent();
+      final accountScope = guard.scope;
       switch (decision) {
         case PersonalSpoolRemovalDecision.maintenance:
           if (provisionalPause) {
-            await dao.resumePreparedPersonalSpoolReplacement(
-              channelId,
-              expectedConsumableId: consumable.id,
-              keepPaused: true,
-              enforcePersonalOwner: accountScope.enforce,
-              personalOwnerAccount: accountScope.ownerAccount,
+            await guard.run(
+              consumable.id,
+              () => dao.resumePreparedPersonalSpoolReplacement(
+                channelId,
+                expectedConsumableId: consumable.id,
+                keepPaused: true,
+                enforcePersonalOwner: accountScope.enforce,
+                personalOwnerAccount: accountScope.ownerAccount,
+              ),
             );
           }
           if (dialogContext.mounted) {
             showSnack(
               dialogContext,
-              '已保留当前克数；维修完成后装回原卷即可继续',
+              canReusePersonalSpool(consumable.remainingGrams)
+                  ? '已保留当前克数；维修完成后装回原卷即可继续'
+                  : '已保留当前克数；余量需大于 30g 才能继续使用',
               tone: AppNoticeTone.warning,
             );
           }
@@ -385,12 +396,15 @@ class _ConsumableTrackerAppState extends ConsumerState<ConsumableTrackerApp>
           // The detection flow freezes this channel before opening the
           // reason dialog. A confirmed return-to-stock must be allowed to
           // clear that provisional freeze while preserving the exact grams.
-          await dao.unbindChannel(
-            channelId,
-            confirmDetectedRemoval: true,
-            expectedConsumableId: consumable.id,
-            enforcePersonalOwner: accountScope.enforce,
-            personalOwnerAccount: accountScope.ownerAccount,
+          await guard.run(
+            consumable.id,
+            () => dao.unbindChannel(
+              channelId,
+              confirmDetectedRemoval: true,
+              expectedConsumableId: consumable.id,
+              enforcePersonalOwner: accountScope.enforce,
+              personalOwnerAccount: accountScope.ownerAccount,
+            ),
           );
           if (dialogContext.mounted) {
             showSnack(dialogContext, '已正常取下并保留余量；装回时请选择具体卷');
@@ -430,8 +444,7 @@ class _ConsumableTrackerAppState extends ConsumerState<ConsumableTrackerApp>
               personalInventoryAccountScopeProvider,
             );
             if (currentScope.enforce != initialAccountScope.enforce ||
-                currentScope.ownerAccount.trim().toLowerCase() !=
-                    initialAccountScope.ownerAccount.trim().toLowerCase()) {
+                currentScope.ownerAccount != initialAccountScope.ownerAccount) {
               throw StateError('账号已经切换，本次耗尽结算未执行');
             }
             if (currentAtLocation()?.isRemoval != true) {
@@ -441,18 +454,10 @@ class _ConsumableTrackerAppState extends ConsumerState<ConsumableTrackerApp>
 
           await dao.attachedDatabase.transaction(() async {
             assertRemovalStillCurrent();
-            if (provisionalPause) {
-              await dao.resumePreparedPersonalSpoolReplacement(
-                channelId,
-                expectedConsumableId: consumable.id,
-                enforcePersonalOwner: initialAccountScope.enforce,
-                personalOwnerAccount: initialAccountScope.ownerAccount,
-              );
-              assertRemovalStillCurrent();
-            }
             await dao.finishChannel(
               channelId,
               expectedConsumableId: consumable.id,
+              confirmDetectedRemoval: provisionalPause,
               enforcePersonalOwner: initialAccountScope.enforce,
               personalOwnerAccount: initialAccountScope.ownerAccount,
             );

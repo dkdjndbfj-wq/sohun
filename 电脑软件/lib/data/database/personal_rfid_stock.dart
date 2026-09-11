@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/constants/personal_spool_policy.dart';
 import '../models/personal_inventory_sync.dart';
 import '../models/rfid_tag_identity.dart';
 import 'database.dart';
@@ -34,7 +35,10 @@ class PersonalRfidStockSource {
     'stockReceiptQuantity': quantity,
   };
 
-  static PersonalRfidStockSource? fromRecord(PersonalInventoryRecord record) {
+  static PersonalRfidStockSource? fromRecord(
+    PersonalInventoryRecord record, {
+    bool preserveLegacyWeights = false,
+  }) {
     if (record.sourceRfidTagUid == null &&
         record.sourceRfidTagType == null &&
         record.stockReceiptUid == null &&
@@ -60,11 +64,12 @@ class PersonalRfidStockSource {
     }
     if (!record.totalGrams.isFinite ||
         record.totalGrams <= 0 ||
-        record.totalGrams > 100000 ||
+        (!preserveLegacyWeights &&
+            record.totalGrams != personalSpoolCapacityGrams) ||
         !record.remainingGrams.isFinite ||
         record.remainingGrams < 0 ||
         record.remainingGrams > record.totalGrams) {
-      throw ArgumentError('逐卷入库的余量不能超过该卷实际净重');
+      throw ArgumentError('每卷规格固定为 1000 g，余量须在 0 至 1000 g；旧数据请先核对');
     }
     return PersonalRfidStockSource(
       tagUid: tag,
@@ -399,11 +404,14 @@ class PersonalRfidStockStore {
       final source = (await sources([consumableId]))[consumableId];
       if (stock == null ||
           source == null ||
-          stock.remainingGrams <= 0 ||
+          stock.totalGrams != personalSpoolCapacityGrams ||
+          !canReusePersonalSpool(stock.remainingGrams) ||
           source.tagUid != tag ||
           source.tagType != type ||
           _owner(await dao.getOwnerAccount(consumableId)) != owner) {
-        throw StateError('请选择当前账号通过这张资料卡已入库且仍有余量的耗材卷');
+        throw StateError(
+          '请选择当前账号通过这张资料卡入库、规格为 1000 g 且余量大于 30 g 的耗材卷；旧异常重量请先核对',
+        );
       }
       final bound = await dao.getRfidSpoolBindingById(consumableId);
       final reactivatingSameCardRemnant =

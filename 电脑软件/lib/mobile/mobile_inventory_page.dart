@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:uuid/uuid.dart';
 
 import 'package:flutter/material.dart';
+import '../core/constants/personal_spool_policy.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 
@@ -299,7 +300,7 @@ class _MobileInventoryPageState extends ConsumerState<MobileInventoryPage> {
             _refreshError = '新增库存已保存到本机，联网后可继续同步。';
           });
         _showMessage(
-          '${received.receipt.replayed ? '此入库批次已处理，未重复增加' : '已用资料卡新增 $saved 卷，每卷 ${result.initialGrams} g'}'
+          '${received.receipt.replayed ? '此入库批次已处理，未重复增加' : '已用资料卡新增 $saved 卷（每卷规格 1 kg，单卷余量 ${result.initialGrams} g）'}'
           '${received.syncPending ? '；云端待同步' : ''}',
         );
         return;
@@ -1056,7 +1057,8 @@ class _MobileInventoryPageState extends ConsumerState<MobileInventoryPage> {
             ],
             if (binding?.status == 'replaced' &&
                 isConsumableRfidTagType(binding?.tagType) &&
-                item.remainingGrams > 0 &&
+                item.totalGrams == personalSpoolCapacityGrams &&
+                canReusePersonalSpool(item.remainingGrams) &&
                 widget.sync is MobileInventoryRebindSync)
               OutlinedButton.icon(
                 icon: const Icon(Icons.link),
@@ -1184,13 +1186,10 @@ class _MobileInventoryPageState extends ConsumerState<MobileInventoryPage> {
             FilledButton(
               onPressed: () {
                 final value = entryMode == _InventoryEntryMode.rolls
-                    ? 1000.0
+                    ? personalSpoolCapacityGrams
                     : double.tryParse(_replacementWeightController.text.trim());
-                if (value == null ||
-                    !value.isFinite ||
-                    value <= 0 ||
-                    value > 1000) {
-                  update(() => inputError = '请输入大于 0 且不超过 1000 g 的剩余克数');
+                if (value == null || !canReusePersonalSpool(value)) {
+                  update(() => inputError = '请输入大于 30 且不超过 1000 g 的剩余克数');
                   return;
                 }
                 Navigator.of(dialogContext).pop(value);

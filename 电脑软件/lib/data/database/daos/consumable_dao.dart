@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/constants/personal_spool_policy.dart';
 import '../database.dart';
 import '../personal_ams_identity.dart';
 import '../personal_spool_handoff.dart';
@@ -18,7 +19,7 @@ import '../tables.dart';
 part 'consumable_dao.g.dart';
 
 /// 每卷标准克数（1 卷 = 1kg）。
-const double gramsPerRoll = 1000.0;
+const double gramsPerRoll = personalSpoolCapacityGrams;
 
 const personalInventoryScope = 'personal';
 const farmInventoryScope = 'farm';
@@ -1308,6 +1309,17 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
     if (!validConsumableLifecycleStatuses.contains(status)) {
       throw ArgumentError.value(status, 'status', '未知的耗材生命周期状态');
     }
+    if (status == 'active' && await isIndividualPersonalSpool(consumableId)) {
+      final item = await getById(consumableId);
+      final previous = await getRfidSpoolBindingById(consumableId);
+      if (item != null) {
+        _requireStandardPersonalSpool(item);
+        if (previous?.status != 'active' &&
+            !canReusePersonalSpool(item.remainingGrams)) {
+          throw StateError('余量必须大于 30 g 才能重新启用耗材卷');
+        }
+      }
+    }
     await customUpdate(
       'UPDATE consumables SET lifecycle_status = ?, updated_at = ? WHERE id = ?',
       variables: [
@@ -1327,8 +1339,8 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
     bool continueCurrentTask = false,
     DateTime? now,
   }) async {
-    if (!initialGrams.isFinite || initialGrams <= 0 || initialGrams > 100000) {
-      throw ArgumentError('新卷净重必须大于 0 且不超过 100000 g');
+    if (!canReusePersonalSpool(initialGrams)) {
+      throw ArgumentError('每卷规格固定为 1000 g，换入卷的余量必须大于 30 g 且不超过 1000 g');
     }
     return transaction(() async {
       final old = await getById(consumableId);
@@ -1345,6 +1357,7 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
       if (!isConsumableRfidTagType(binding.tagType)) {
         throw StateError('只有已确认的 CUID/FUID 可以复用换卷；其他卡型或未确认历史仅供查看');
       }
+      _requireStandardPersonalSpool(old);
       final owner = await getOwnerAccount(consumableId);
       final history = await getPersonalRfidSpoolHistory(
         binding.tagUid,
@@ -1409,7 +1422,7 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
           materialType: old.materialType,
           colorHex: old.colorHex,
           colorName: old.colorName,
-          totalGrams: initialGrams,
+          totalGrams: personalSpoolCapacityGrams,
           remainingGrams: initialGrams,
           purchaseDate: timestamp,
           createdAt: timestamp,
@@ -1451,7 +1464,7 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
           Variable(old.model),
           Variable(old.colorHex),
           Variable(
-            '第 ${binding.cycle} 卷 → 第 ${next.cycle} 卷；上一卷 ${old.uid}；新卷 $initialGrams g',
+            '第 ${binding.cycle} 卷 → 第 ${next.cycle} 卷；上一卷 ${old.uid}；每卷规格 1000 g，新卷余量 $initialGrams g',
           ),
           Variable(timestamp.millisecondsSinceEpoch),
           Variable(timestamp.millisecondsSinceEpoch),
@@ -1492,10 +1505,11 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
       }
       if (binding.status != 'replaced' ||
           !isConsumableRfidTagType(binding.tagType) ||
-          item.remainingGrams <= 0 ||
+          !canReusePersonalSpool(item.remainingGrams) ||
           !rfidTagUidEquals(binding.tagUid, expectedTagUid)) {
-        throw StateError('该卷状态已变化；只有标签已转移且仍有余量的旧卷可以换绑');
+        throw StateError('该卷状态已变化；只有标签已转移且余量大于 30 g 的旧卷可以换绑');
       }
+      _requireStandardPersonalSpool(item);
       if (binding.tagHistory.length >= 32) throw StateError('该卷已达到 32 次换绑上限');
       final history = await getPersonalRfidSpoolHistory(
         binding.tagUid,
@@ -1883,6 +1897,7 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
     String? previousInventoryUid,
     DateTime? updatedAt,
     List<RfidTagHistoryEntry>? tagHistory,
+    bool preserveLegacyWeights = false,
   }) async {
     final normalized = tagUid == null ? null : normalizeRfidTagUid(tagUid);
     if (normalized != null && normalized.isEmpty) {
@@ -1894,6 +1909,23 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
     }
     final normalizedType = tagType?.trim();
     final normalizedPrevious = previousInventoryUid?.trim();
+    if (normalized != null && !preserveLegacyWeights) {
+      final item = await getById(consumableId);
+      if (item != null && !await isFarmConsumable(consumableId)) {
+        _requireStandardPersonalSpool(item);
+        final previous = await getRfidSpoolBindingById(consumableId);
+        final activating =
+            previous == null ||
+            previous.tagUid != normalized ||
+            previous.cycle != cycle ||
+            previous.status != 'active';
+        if (status == 'active' &&
+            activating &&
+            !canReusePersonalSpool(item.remainingGrams)) {
+          throw StateError('余量必须大于 30 g 才能装入或继续使用耗材卷');
+        }
+      }
+    }
     await customUpdate(
       'UPDATE consumables SET rfid_tag_uid = ?, rfid_tag_type = ?, '
       'rfid_tag_cycle = ?, lifecycle_status = ?, previous_consumable_uid = ?, '
@@ -1964,16 +1996,33 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
   ///
   /// The companion deliberately writes every shared field so a desktop pull
   /// cannot leave stale color, remaining-weight, or RFID metadata behind.
+  /// [preserveLegacyWeights] is reserved for synchronization of existing
+  /// historical records. It preserves evidence without authorizing use of a
+  /// non-standard spool; receipt, binding and consumption entries reject it.
   Future<int> upsertPersonalInventoryRecord(
     PersonalInventoryRecord record, {
     String? ownerAccount,
+    bool preserveLegacyWeights = false,
   }) async {
     return transaction(() async {
-      final source = PersonalRfidStockSource.fromRecord(record);
+      final source = PersonalRfidStockSource.fromRecord(
+        record,
+        preserveLegacyWeights: preserveLegacyWeights,
+      );
       final existing = await getPersonalByUid(
         record.uid,
         ownerAccount: ownerAccount,
       );
+      final individual =
+          record.rfidTagUid?.trim().isNotEmpty == true ||
+          source != null ||
+          (existing != null && await isIndividualPersonalSpool(existing.id));
+      if (individual && !preserveLegacyWeights) {
+        _requireStandardPersonalSpoolWeights(
+          record.totalGrams,
+          record.remainingGrams,
+        );
+      }
       if (existing != null && source != null) {
         // Validate provenance before writing any weight or metadata.
         await PersonalRfidStockStore(
@@ -2036,11 +2085,15 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
           previousInventoryUid: record.previousConsumableUid,
           tagHistory: record.rfidTagHistory,
           updatedAt: record.updatedAt,
+          preserveLegacyWeights: preserveLegacyWeights,
         );
         await PersonalRfidStockStore(attachedDatabase).setSource(id, source);
         return id;
       }
-      await updateConsumable(companion);
+      await updateConsumable(
+        companion,
+        preserveLegacyWeights: preserveLegacyWeights,
+      );
       if (ownerAccount?.trim().isNotEmpty == true) {
         await setOwnerAccount(existing.id, ownerAccount!.trim());
       }
@@ -2053,6 +2106,7 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
         previousInventoryUid: record.previousConsumableUid,
         tagHistory: record.rfidTagHistory,
         updatedAt: record.updatedAt,
+        preserveLegacyWeights: preserveLegacyWeights,
       );
       return existing.id;
     });
@@ -2066,6 +2120,21 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
       updates: {consumables},
     );
     return id;
+  }
+
+  void _requireStandardPersonalSpool(Consumable item) =>
+      _requireStandardPersonalSpoolWeights(
+        item.totalGrams,
+        item.remainingGrams,
+      );
+
+  void _requireStandardPersonalSpoolWeights(double total, double remaining) {
+    if (total != personalSpoolCapacityGrams ||
+        !remaining.isFinite ||
+        remaining < 0 ||
+        remaining > personalSpoolCapacityGrams) {
+      throw StateError('每卷规格固定为 1000 g，余量须在 0 至 1000 g；历史异常重量已保留，请先核对');
+    }
   }
 
   Future<void> setInventoryScope(
@@ -2124,7 +2193,24 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
     return id;
   }
 
-  Future<bool> updateConsumable(ConsumablesCompanion entry) {
+  Future<bool> updateConsumable(
+    ConsumablesCompanion entry, {
+    bool preserveLegacyWeights = false,
+  }) async {
+    if (!preserveLegacyWeights &&
+        (entry.totalGrams.present || entry.remainingGrams.present)) {
+      final current = await getById(entry.id.value);
+      if (current != null && await isIndividualPersonalSpool(current.id)) {
+        _requireStandardPersonalSpoolWeights(
+          entry.totalGrams.present
+              ? entry.totalGrams.value
+              : current.totalGrams,
+          entry.remainingGrams.present
+              ? entry.remainingGrams.value
+              : current.remainingGrams,
+        );
+      }
+    }
     return (update(consumables)..where((t) => t.id.equals(entry.id.value)))
         .write(entry)
         .then((rows) => rows > 0);
@@ -2452,8 +2538,8 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
     });
   }
 
-  /// Tagged inventory is one physical spool, at its actual net weight.
-  /// Aggregate inventory retains the legacy 1000 g roll unit.
+  /// A tagged row is one fixed 1000 g spool with its exact remaining balance.
+  /// Aggregate inventory may contain multiple 1000 g rolls.
   Future<double> deductOneRoll(int id) async {
     return transaction(() async {
       final item = await getById(id);
@@ -2465,6 +2551,7 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
       final individual =
           tagged ||
           (await getPersonalRfidStockSourcesMap([id])).containsKey(id);
+      if (individual) _requireStandardPersonalSpool(item);
       if (individual) {
         if (binding != null && !binding.isActive)
           throw StateError('历史卷已结束标签关联，不能继续扣料');
@@ -2568,6 +2655,7 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
           (binding!.status == 'replaced' || binding.status == 'retired')) {
         throw StateError('历史卷已结束标签关联，拒绝延迟扣料或回补');
       }
+      if (individual) _requireStandardPersonalSpool(item);
       if (tagged) {
         final history = await getPersonalRfidSpoolHistory(
           binding!.tagUid,
@@ -2585,7 +2673,9 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
       var next = item.remainingGrams - grams; // grams>0 扣减，grams<0 回补
       // 只约束下限。补充多卷后 remainingGrams 合法地可能大于 totalGrams。
       if (next < 0) next = 0;
-      if (individual && next > item.totalGrams) next = item.totalGrams;
+      if (individual && next > personalSpoolCapacityGrams) {
+        next = personalSpoolCapacityGrams;
+      }
       final actual = item.remainingGrams - next;
       await (update(consumables)..where((t) => t.id.equals(id))).write(
         ConsumablesCompanion(
@@ -2640,8 +2730,15 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
       consumableId,
     ])).containsKey(consumableId))
       return;
+    if (await isIndividualPersonalSpool(consumableId)) {
+      _requireStandardPersonalSpool(item);
+    } else if (item.totalGrams != personalSpoolCapacityGrams ||
+        item.remainingGrams > personalSpoolCapacityGrams) {
+      // One RFID reading must never replace a multi-roll aggregate balance.
+      return;
+    }
     final singleRollGrams = remainingGrams
-        .clamp(0.0, item.totalGrams > 0 ? item.totalGrams : gramsPerRoll)
+        .clamp(0.0, personalSpoolCapacityGrams)
         .toDouble();
     await customUpdate(
       'UPDATE consumables SET remaining_grams = ?, rfid_synced_at = ?, '

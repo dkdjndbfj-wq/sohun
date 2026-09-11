@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/constants/personal_spool_policy.dart';
 import '../../core/theme/app_curves.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/services/personal_inventory_sync_service.dart';
@@ -344,7 +345,7 @@ class _AddConsumableSheetState extends ConsumerState<AddConsumableSheet> {
     // 型号即材质：删除型号输入栏后，model 字段直接保存材质值
     final model = _material;
     // 卷数（加减号或输入），内部换算成克数存储（1 卷 = 1000g）
-    final total = _rolls * 1000.0;
+    final total = _rolls * personalSpoolCapacityGrams;
     final note = _noteController.text.trim();
     final colorHex = ColorUtils.toHex(_color);
     final colorName = _colorName.trim();
@@ -354,8 +355,8 @@ class _AddConsumableSheetState extends ConsumerState<AddConsumableSheet> {
 
     if (widget.edit == null && widget.farmWorkspaceId == null) {
       final now = DateTime.now();
-      // A 1 kg roll is a distinct inventory object. A remnant records only
-      // its actual weight at intake, without inventing earlier consumption.
+      // Every physical spool has a fixed 1 kg capacity. A remnant keeps its
+      // measured balance without inventing a consumption event before intake.
       final session = ref.read(appAuthProvider).session;
       final owner = session != null && session.authRealm == 'personal'
           ? PersonalInventorySyncService.ownerAccountFor(session)
@@ -370,9 +371,7 @@ class _AddConsumableSheetState extends ConsumerState<AddConsumableSheet> {
           materialType: _material,
           colorHex: colorHex,
           colorName: colorName.isEmpty ? null : colorName,
-          totalGrams: _enterRemaining
-              ? double.parse(_remainingController.text.trim())
-              : 1000,
+          totalGrams: personalSpoolCapacityGrams,
           remainingGrams: _enterRemaining
               ? double.parse(_remainingController.text.trim())
               : 1000,

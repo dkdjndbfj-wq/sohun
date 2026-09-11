@@ -60,7 +60,8 @@ final consumablesProvider = StreamProvider<List<Consumable>>((ref) {
 });
 
 /// Shared identity lookup for inventory totals, cards, and lifecycle badges.
-/// A 2 kg registered roll is one spool, and a 10 g remnant still occupies one.
+/// Each registered 1 kg spool counts once; a low-weight remnant remains visible
+/// for reconciliation even when it cannot be loaded again.
 final personalRfidSpoolBindingsProvider =
     FutureProvider<Map<int, RfidSpoolBinding>>((ref) {
       final items =

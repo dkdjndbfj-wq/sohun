@@ -1363,6 +1363,75 @@ function personalInventoryRecord(overrides = {}) {
   };
 }
 
+test('个人库存实物卷固定 1000g，聚合库存仍可保存多卷', async (t) => {
+  const app = await startServer();
+  t.after(app.close);
+  const user = await registerUser(app, 'fixed-capacity@example.com', 'fixed_capacity', '固定规格');
+  const put = (records) => jsonRequest(app.baseUrl, '/v1/me/inventory/snapshot', {
+    method: 'PUT', token: user.token, body: { revision: 0, records },
+  });
+  for (const capacity of [500, 2000]) {
+    const invalid = await put([personalInventoryRecord({ totalGrams: capacity, remainingGrams: 415 })]);
+    assert.equal(invalid.status, 409, JSON.stringify(invalid.json));
+    assert.equal(invalid.json.error.code, 'inventory_spool_capacity_conflict');
+    const stock = personalInventoryRecord({ rfidTagUid: null, rfidTagType: null,
+      sourceRfidTagUid: '04A1B2C3', sourceRfidTagType: 'CUID',
+      stockReceiptUid: '8bccb30f-5da8-48d0-988f-ab01e23b0b01',
+      stockReceiptIndex: 0, stockReceiptQuantity: 1, totalGrams: capacity, remainingGrams: 415 });
+    const invalidReceipt = await put([stock]);
+    assert.equal(invalidReceipt.status, 409, JSON.stringify(invalidReceipt.json));
+  }
+  const aggregate = personalInventoryRecord({ uid: 'aggregate', rfidTagUid: null, rfidTagType: null,
+    totalGrams: 3000, remainingGrams: 2415 });
+  const valid = await put([aggregate, personalInventoryRecord({ remainingGrams: 415 })]);
+  assert.equal(valid.status, 200, JSON.stringify(valid.json));
+  assert.equal(valid.json.records.find((record) => record.uid === aggregate.uid).remainingGrams, 2415);
+});
+
+test('个人库存再次启用以余量大于 30g 为界，正常消耗到 30g 不抹掉余额', async (t) => {
+  const app = await startServer();
+  t.after(app.close);
+  const user = await registerUser(app, 'reuse-threshold@example.com', 'reuse_threshold', '余量边界');
+  const put = (revision, records) => jsonRequest(app.baseUrl, '/v1/me/inventory/snapshot', {
+    method: 'PUT', token: user.token, body: { revision, records },
+  });
+  for (const remainingGrams of [29.9, 30]) {
+    const invalid = await put(0, [personalInventoryRecord({ remainingGrams })]);
+    assert.equal(invalid.status, 409, JSON.stringify(invalid.json));
+    assert.equal(invalid.json.error.code, 'inventory_spool_not_reusable');
+  }
+  const usable = personalInventoryRecord({ remainingGrams: 30.1 });
+  assert.equal((await put(0, [usable])).status, 200);
+  const consumed = await put(1, [{ ...usable, remainingGrams: 30 }]);
+  assert.equal(consumed.status, 200, JSON.stringify(consumed.json));
+  assert.equal(consumed.json.records[0].remainingGrams, 30);
+});
+
+test('旧非 1kg 实物卷原样保留且禁止继续扣料或新建异常规格', async (t) => {
+  const app = await startServer();
+  t.after(app.close);
+  const user = await registerUser(app, 'legacy-capacity@example.com', 'legacy_capacity', '旧规格核对');
+  const put = (revision, records) => jsonRequest(app.baseUrl, '/v1/me/inventory/snapshot', {
+    method: 'PUT', token: user.token, body: { revision, records },
+  });
+  const saved = await put(0, [personalInventoryRecord()]);
+  assert.equal(saved.status, 200);
+  const legacy = { ...saved.json.records[0], totalGrams: 2000, remainingGrams: 1875 };
+  const database = new DatabaseSync(app.databasePath);
+  database.prepare('UPDATE personal_inventory_snapshots SET records_json = ? WHERE user_id = ?')
+    .run(JSON.stringify([legacy]), user.userId);
+  database.close();
+  const preserved = await put(1, [legacy]);
+  assert.equal(preserved.status, 200, JSON.stringify(preserved.json));
+  assert.equal(preserved.json.records[0].remainingGrams, 1875);
+  const changed = await put(2, [{ ...legacy, remainingGrams: 1800 }]);
+  assert.equal(changed.status, 409, JSON.stringify(changed.json));
+  assert.equal(changed.json.error.code, 'inventory_spool_capacity_conflict');
+  const archived = await put(2, [{ ...legacy, lifecycleStatus: 'retired' }]);
+  assert.equal(archived.status, 200, JSON.stringify(archived.json));
+  assert.equal(archived.json.records[0].remainingGrams, 1875);
+});
+
 test('个人库存快照按账号隔离、使用 revision 乐观锁并拒绝 RFID 敏感字段', async (t) => {
   const app = await startServer();
   t.after(app.close);
@@ -1734,7 +1803,7 @@ test('个人库存核对分叉后保留两卷历史并能继续换卷', async (t
   const resolved = await put(1, [previous, archived, chosen]);
   assert.equal(resolved.status, 200, JSON.stringify(resolved.json));
   const next = { ...chosen, uid: 'next', rfidTagCycle: 3, previousConsumableUid: chosen.uid,
-    totalGrams: 750, remainingGrams: 750 };
+    totalGrams: 1000, remainingGrams: 750 };
   const advanced = await put(2, [previous, archived, { ...chosen, lifecycleStatus: 'replaced' }, next]);
   assert.equal(advanced.status, 200, JSON.stringify(advanced.json));
   assert.equal(advanced.json.records.find((r) => r.uid === previous.uid).remainingGrams, 200);

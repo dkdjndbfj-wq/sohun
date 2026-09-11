@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/glass_button_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/personal_spool_policy.dart';
 import '../../core/services/spool_change_detector.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_curves.dart';
@@ -182,7 +183,7 @@ class _SpoolChangeConfirmationDialogState
         .whenOrNull(data: (value) => value);
     final currentSpoolVisible =
         currentSpool != null &&
-        currentSpool.remainingGrams > 0 &&
+        canReusePersonalSpool(currentSpool.remainingGrams) &&
         inventory.any((item) => item.id == currentSpool.consumableId);
     final canContinueCurrent =
         currentSpoolVisible &&
@@ -201,6 +202,14 @@ class _SpoolChangeConfirmationDialogState
     final selected = selectedId == null
         ? null
         : inventory.where((item) => item.id == selectedId).firstOrNull;
+    final selectedReusable =
+        selected != null &&
+        canReusePersonalSpool(
+          individualSpoolIds.contains(selected.id) ||
+                  event.rfidCandidateIds.contains(selected.id)
+              ? selected.remainingGrams
+              : singleRollAvailableGrams(selected.remainingGrams),
+        );
 
     return Center(
       child: ConstrainedBox(
@@ -309,9 +318,9 @@ class _SpoolChangeConfirmationDialogState
                           ),
                         ),
                       FilledButton.icon(
-                        onPressed: selectedId == null || _busy
+                        onPressed: !selectedReusable || _busy
                             ? null
-                            : () => _bind(event, selectedId),
+                            : () => _bind(event, selectedId!),
                         icon: _busy
                             ? Builder(
                                 builder: (context) => SizedBox.square(
@@ -333,7 +342,7 @@ class _SpoolChangeConfirmationDialogState
                                     ? '继续选中的原余料卷'
                                     : GramUtils.isPartiallyUsed(
                                         selected.remainingGrams,
-                                        selected.totalGrams,
+                                        personalSpoolCapacityGrams,
                                       )
                                     ? '确认已有余料卷并绑定'
                                     : '确认同款新卷并绑定'
@@ -369,12 +378,19 @@ class _SpoolChangeConfirmationDialogState
           .where((item) => item.channel.channelIndex == event.channelIndex)
           .firstOrNull;
       if (channel?.consumable == null ||
-          channel!.consumable!.remainingGrams <= 0) {
+          !canReusePersonalSpool(channel!.consumable!.remainingGrams)) {
         throw StateError('当前料位没有可继续使用的余料卷，请从库存重新选择');
       }
       await guard.run(channel.consumable!.id, () async {
         _assertEventCurrent(event);
-        if (channel.farmRollPaused) {
+        if (channel.awaitingSpoolSelection) {
+          await dao.resumePreparedPersonalSpoolReplacement(
+            channel.channel.id,
+            expectedConsumableId: channel.consumable!.id,
+            enforcePersonalOwner: accountScope.enforce,
+            personalOwnerAccount: accountScope.ownerAccount,
+          );
+        } else if (channel.farmRollPaused) {
           await dao.resumeChannelRollAfterMaintenance(
             channel.channel.id,
             enforcePersonalOwner: accountScope.enforce,
@@ -409,7 +425,13 @@ class _SpoolChangeConfirmationDialogState
       return null;
     }
     for (final item in items) {
-      if (current.trayUuid.isNotEmpty && item.trayUuid == current.trayUuid) {
+      if (current.trayUuid.isNotEmpty &&
+          item.trayUuid == current.trayUuid &&
+          _hasAvailableRoll(
+            item,
+            boundCounts,
+            individualSpool: individualSpoolIds.contains(item.id),
+          )) {
         return item.id;
       }
     }
@@ -439,7 +461,11 @@ class _SpoolChangeConfirmationDialogState
     if (event.requiresRfidConfirmation) {
       final items =
           (ref.read(consumablesProvider).valueOrNull ?? const <Consumable>[])
-              .where((c) => event.rfidCandidateIds.contains(c.id))
+              .where(
+                (c) =>
+                    event.rfidCandidateIds.contains(c.id) &&
+                    canReusePersonalSpool(c.remainingGrams),
+              )
               .toList();
       final chosen = await showDialog<Consumable>(
         context: context,
@@ -461,7 +487,7 @@ class _SpoolChangeConfirmationDialogState
                           title: Text(
                             '${item.id == currentConsumableId
                                 ? "当前暂存余料卷"
-                                : GramUtils.isPartiallyUsed(item.remainingGrams, item.totalGrams)
+                                : GramUtils.isPartiallyUsed(item.remainingGrams, personalSpoolCapacityGrams)
                                 ? "已有余料卷"
                                 : "同款新卷"} · '
                             '${item.manufacturer} · ${item.model} · ${item.colorName ?? item.colorHex}',
@@ -510,7 +536,12 @@ class _SpoolChangeConfirmationDialogState
         initialColorHex: tray == null ? null : _trayHex(tray),
         includeItem: (item) => event.requiresRfidConfirmation
             ? event.rfidCandidateIds.contains(item.id)
-            : item.id == selectedId ||
+            : (item.id == selectedId &&
+                      canReusePersonalSpool(
+                        individualSpoolIds.contains(item.id)
+                            ? item.remainingGrams
+                            : singleRollAvailableGrams(item.remainingGrams),
+                      )) ||
                   _hasAvailableRoll(
                     item,
                     boundCounts,
@@ -524,7 +555,7 @@ class _SpoolChangeConfirmationDialogState
                 item.remainingGrams,
                 alreadyBoundRolls: boundCounts[item.id] ?? 0,
               ),
-        emptyLabel: '库存中没有可继续使用或可绑定的耗材卷',
+        emptyLabel: '库存中没有余量大于 30g 的可用卷；低余量记录仍然保留',
       ),
     );
     if (selected == null || !mounted) return;
@@ -542,6 +573,10 @@ class _SpoolChangeConfirmationDialogState
           event.printerId ??
           await dao.getPrinterIdBySerial(event.printerSerial);
       if (printerId == null) throw StateError('找不到打印机记录');
+      if (event.requiresRfidConfirmation &&
+          !event.rfidCandidateIds.contains(consumableId)) {
+        throw StateError('请选择已经登记的候选标签卷；不能按模板颜色推断身份');
+      }
       double? manualRemainingGrams;
       final oldConsumableId = await dao.getConsumableIdByChannel(
         printerId,
@@ -552,15 +587,16 @@ class _SpoolChangeConfirmationDialogState
         final currentChannel = printer?.channels
             .where((item) => item.channel.channelIndex == event.channelIndex)
             .firstOrNull;
-        final binding = await ref
-            .read(consumableDaoProvider)
-            .getRfidSpoolBindingById(consumableId);
-        if (currentChannel?.awaitingSpoolSelection == true &&
-            binding?.isActive == true) {
+        if (currentChannel?.awaitingSpoolSelection == true) {
+          if (!canReusePersonalSpool(
+            currentChannel!.consumable!.remainingGrams,
+          )) {
+            throw StateError('余量需大于 30g 且不超过 1000g 才能继续，当前克数已保留');
+          }
           await guard.run(consumableId, () async {
             _assertEventCurrent(event);
             await dao.resumePreparedPersonalSpoolReplacement(
-              currentChannel!.channel.id,
+              currentChannel.channel.id,
               expectedConsumableId: consumableId,
               enforcePersonalOwner: accountScope.enforce,
               personalOwnerAccount: accountScope.ownerAccount,
@@ -608,10 +644,6 @@ class _SpoolChangeConfirmationDialogState
       final reusable =
           stockCandidate != null ||
           (binding?.tagUid.isNotEmpty == true && binding?.tagType != 'ams');
-      if (event.requiresRfidConfirmation &&
-          !event.rfidCandidateIds.contains(consumableId)) {
-        throw StateError('请选择已经登记的候选标签卷；不能按模板颜色推断身份');
-      }
       await guard.run(consumableId, () async {
         _assertEventCurrent(event);
         await dao.bindSpoolReplacement(
@@ -629,18 +661,22 @@ class _SpoolChangeConfirmationDialogState
           enforcePersonalOwner: accountScope.enforce,
           personalOwnerAccount: accountScope.ownerAccount,
         );
-      });
-      if (tray case final officialTray?
-          when officialTray.isBambuOfficialRfid && !reusable) {
-        final consumableDao = ref.read(consumableDaoProvider);
-        await consumableDao.updateTrayUuid(consumableId, officialTray.trayUuid);
-        if (officialTray.hasValidRemain && officialTray.trayWeight > 0) {
-          await consumableDao.updateRfidSync(
-            consumableId: consumableId,
-            remainingGrams: officialTray.remainingGrams,
+        if (tray case final officialTray?
+            when officialTray.isBambuOfficialRfid && !reusable) {
+          final consumableDao = ref.read(consumableDaoProvider);
+          await consumableDao.updateTrayUuid(
+            consumableId,
+            officialTray.trayUuid,
           );
+          if (officialTray.hasValidRemain) {
+            await consumableDao.updateRfidSync(
+              consumableId: consumableId,
+              remainingGrams:
+                  personalSpoolCapacityGrams * officialTray.remain / 100,
+            );
+          }
         }
-      }
+      });
       ref.read(spoolChangeQueueProvider.notifier).resolve(event.eventId);
       _closeCurrentPopup();
       ref.invalidate(_spoolChangeBoundCountsProvider);
@@ -678,7 +714,7 @@ class _SpoolChangeConfirmationDialogState
         .getRfidSpoolBindingById(old.id);
     if (!mounted) return null;
     final tagged = binding?.tagUid.isNotEmpty == true;
-    final maxGrams = tagged ? old.totalGrams : gramsPerRoll;
+    const maxGrams = personalSpoolCapacityGrams;
     final controller = TextEditingController(
       text:
           (tagged
@@ -1062,12 +1098,16 @@ bool _hasAvailableRoll(
   Map<int, int> boundCounts, {
   required bool individualSpool,
 }) {
-  if (item.remainingGrams <= 0) return false;
+  final bound = boundCounts[item.id] ?? 0;
+  final available = individualSpool
+      ? item.remainingGrams
+      : singleRollAvailableGrams(item.remainingGrams, alreadyBoundRolls: bound);
+  if (!canReusePersonalSpool(available)) return false;
   final physicalRolls = inventoryRollCount(
     item.remainingGrams,
     individualSpool: individualSpool,
   );
-  return (boundCounts[item.id] ?? 0) < physicalRolls;
+  return bound < physicalRolls;
 }
 
 int _spoolMatchScore(Consumable item, AmsTray? tray) {

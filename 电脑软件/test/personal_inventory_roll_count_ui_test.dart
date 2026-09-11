@@ -32,7 +32,7 @@ void main() {
         manufacturer: '验收品牌',
         model: 'PLA',
         remainingGrams: Value(grams),
-        totalGrams: Value(total ?? grams),
+        totalGrams: Value(total ?? 1000),
         colorHex: const Value('#2244CC'),
         colorName: Value(colorName),
       ),
@@ -62,7 +62,7 @@ void main() {
         materialType: 'PLA',
         colorHex: '#2244CC',
         colorName: '资料卡入库卷',
-        totalGrams: grams,
+        totalGrams: 1000,
         remainingGrams: grams,
         createdAt: DateTime.utc(2026, 9, 9),
         updatedAt: DateTime.utc(2026, 9, 9),
@@ -107,25 +107,24 @@ void main() {
     await unmount(tester);
   });
 
-  testWidgets(
-    '500 g and 2 kg tagged rolls each count as one in cards and summary',
-    (tester) async {
-      await add(500, tag: 'AABBCC01');
-      await add(2000, tag: 'AABBCC02');
-      await add(0, tag: 'AABBCC03', total: 1000);
-      await render(tester, const InventoryScreen());
-      expect(find.text('2 卷  ·  2.5kg'), findsOneWidget);
-      expect(find.text('1 卷'), findsNothing);
-      expect(find.text('500g'), findsWidgets);
-      expect(find.text('2kg'), findsWidgets);
-      await unmount(tester);
-    },
-  );
+  testWidgets('500 g remnant and full 1 kg tagged roll each count as one', (
+    tester,
+  ) async {
+    await add(500, tag: 'AABBCC01');
+    await add(1000, tag: 'AABBCC02');
+    await add(0, tag: 'AABBCC03', total: 1000);
+    await render(tester, const InventoryScreen());
+    expect(find.text('2 卷  ·  1.5kg'), findsOneWidget);
+    expect(find.text('1 卷'), findsNothing);
+    expect(find.text('500g'), findsWidgets);
+    expect(find.text('1kg'), findsWidgets);
+    await unmount(tester);
+  });
 
   testWidgets(
-    'selection keeps the actual net weight and initial capacity of a tagged 2 kg roll',
+    'selection keeps actual remaining weight against the fixed 1 kg capacity',
     (tester) async {
-      final item = await add(1875, tag: 'AABBCC01', total: 2000);
+      final item = await add(875, tag: 'AABBCC01', total: 1000);
       await render(
         tester,
         Center(
@@ -135,14 +134,14 @@ void main() {
             child: MaterialShelfCard(
               item: item,
               selectionMode: true,
-              selectionDisplayGrams: 1500,
+              selectionDisplayGrams: 750,
             ),
           ),
         ),
       );
       final bar = tester.widget<StockBar>(find.byType(StockBar));
-      expect(bar.remaining, 1500);
-      expect(bar.total, 2000);
+      expect(bar.remaining, 750);
+      expect(bar.total, 1000);
       await unmount(tester);
     },
   );
@@ -184,7 +183,7 @@ void main() {
     },
   );
 
-  testWidgets('inventory sorts a full 750 g spool before a used 1 kg spool', (
+  testWidgets('inventory sorts a full 1 kg spool before a used 1 kg spool', (
     tester,
   ) async {
     final used = await add(
@@ -193,8 +192,8 @@ void main() {
       colorName: 'A-used-first-alphabetically',
     );
     final full = await add(
-      750,
-      total: 750,
+      1000,
+      total: 1000,
       colorName: 'Z-full-last-alphabetically',
     );
     await render(tester, const InventoryScreen());

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/constants/personal_spool_policy.dart';
 import '../../core/theme/glass_button_theme.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -34,6 +35,7 @@ class PersonalSpoolRemovalDialog {
       remainingGrams < 0 ? 0 : remainingGrams,
     );
     final marksUsedUp = normalDecision == PersonalSpoolRemovalDecision.usedUp;
+    final reusable = canReusePersonalSpool(remainingGrams);
 
     return AppDialog.show<PersonalSpoolRemovalDecision>(
       context: context,
@@ -75,7 +77,8 @@ class PersonalSpoolRemovalDialog {
                 Expanded(
                   child: Text(
                     '如果只是堵头或维修，请选择“维修暂取”。系统会保留当前 '
-                    '$preserved，不进行扣除；重新装回后从这个克数继续计算。',
+                    '$preserved，不进行扣除；'
+                    '${reusable ? '重新装回后从这个克数继续计算。' : '余量需大于 30g 且不超过 1000g 才能继续使用，低余量不会自动清零。'}',
                     style: TextStyle(
                       fontSize: 12,
                       height: 1.55,
@@ -163,6 +166,7 @@ class PersonalSpoolRemovalDialog {
     final preserved = GramUtils.formatGrams(
       remainingGrams < 0 ? 0 : remainingGrams,
     );
+    final reusable = canReusePersonalSpool(remainingGrams);
 
     return AppDialog.show<PersonalSpoolRemovalDecision>(
       context: context,
@@ -193,7 +197,9 @@ class PersonalSpoolRemovalDialog {
             icon: Icons.build_outlined,
             color: AppColors.warning,
             title: '堵头或维修暂取',
-            subtitle: '保留 $preserved，不扣除；装回原卷后继续计算',
+            subtitle: reusable
+                ? '保留 $preserved，不扣除；装回原卷后继续计算'
+                : '保留 $preserved，不扣除；余量需大于 30g 才能继续使用',
             onTap: () => Navigator.of(
               context,
             ).pop(PersonalSpoolRemovalDecision.maintenance),

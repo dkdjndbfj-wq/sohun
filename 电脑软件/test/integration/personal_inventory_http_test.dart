@@ -195,7 +195,7 @@ void main() {
             tagUid: '04A1B2C3',
             ownerAccount: owner,
             forceNewCycle: true,
-            initialGrams: 2000,
+            initialGrams: 1000,
             expectedInventoryUid: first.inventoryUid,
           );
       await phoneSync.synchronize(session: session);
@@ -226,7 +226,7 @@ void main() {
           next.inventoryUid,
           ownerAccount: owner,
         ))!.remainingGrams,
-        1975,
+        975,
       );
       expect(
         await phone.consumableDao.getPersonalInventoryConsumedGrams(
@@ -309,7 +309,7 @@ void main() {
           next.inventoryUid,
           ownerAccount: owner,
         ))!.remainingGrams,
-        1975,
+        975,
       );
     },
     skip: !const bool.fromEnvironment('RUN_INVENTORY_HTTP_TESTS'),

@@ -92,8 +92,8 @@ void main() {
         model: 'PLA',
         materialType: 'PLA',
         colorHex: '#123456',
-        totalGrams: 2000,
-        remainingGrams: 2000,
+        totalGrams: 1000,
+        remainingGrams: 1000,
         createdAt: DateTime.utc(2026, 9, 8),
         updatedAt: DateTime.utc(2026, 9, 8),
       );
@@ -145,7 +145,7 @@ void main() {
       expect(await desktop.consumableDao.getPersonal(), hasLength(5));
       expect(
         (await desktop.consumableDao.getById(firstId))!.remainingGrams,
-        1875,
+        875,
       );
       final nextId = (await desktop.consumableDao.getPersonalByUid(
         first.inventoryUids[1],
@@ -188,7 +188,7 @@ void main() {
         remote.records
             .firstWhere((r) => r.uid == first.inventoryUids.first)
             .remainingGrams,
-        1875,
+        875,
       );
       final events = await api.fetchPersonalInventoryEvents(
         accessToken: session.accessToken,
@@ -199,8 +199,8 @@ void main() {
         hasLength(5),
       );
 
-      // A manual 2 kg receipt must stay one actual spool after cloud import,
-      // not revert to the legacy aggregate convention of two 1 kg rolls.
+      // A manual 1 kg receipt must stay one actual spool after cloud import,
+      // with its receipt identity and remaining balance preserved.
       final manual = AccountMobileInventorySync(
         dao: phone.consumableDao,
         api: api,
@@ -217,7 +217,7 @@ void main() {
         draft,
         operationUid: manualOperation,
         quantity: 1,
-        initialGrams: 2000,
+        initialGrams: 1000,
       );
       expect(manualSaved.single.syncPending, isFalse);
       await desktopSync.synchronize(session: session);
@@ -238,7 +238,7 @@ void main() {
       expect(source.tagUid, isNull);
       expect(source.tagType, isNull);
       expect(source.receiptUid, manualOperation);
-      expect(importedManual.totalGrams, 2000);
+      expect(importedManual.totalGrams, 1000);
       await desktop.consumableDao.adjustGrams(importedManual.id, 125);
       await desktopSync.synchronize(session: session);
       await manual.synchronizeExisting();
@@ -246,7 +246,7 @@ void main() {
         draft,
         operationUid: manualOperation,
         quantity: 1,
-        initialGrams: 2000,
+        initialGrams: 1000,
       );
       expect(manualRetry.single.inventoryUid, manualSaved.single.inventoryUid);
       final manualRemote = await api.fetchPersonalInventory(
@@ -258,7 +258,7 @@ void main() {
       );
       expect(manualRecord.sourceRfidTagUid, isNull);
       expect(manualRecord.rfidTagUid, isNull);
-      expect(manualRecord.remainingGrams, 1875);
+      expect(manualRecord.remainingGrams, 875);
     },
     skip: !const bool.fromEnvironment('RUN_INVENTORY_HTTP_TESTS'),
     timeout: const Timeout(Duration(seconds: 60)),

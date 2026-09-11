@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import '../core/constants/personal_spool_policy.dart';
 
 import '../core/theme/app_colors.dart';
 import '../core/theme/interaction_effects.dart';
@@ -352,12 +353,9 @@ class _MobileRfidWriterPageState extends State<MobileRfidWriterPage>
     }
     final initialGrams = _registerRemainder
         ? double.tryParse(_initialWeightController.text.trim())
-        : 1000.0;
-    if (initialGrams == null ||
-        !initialGrams.isFinite ||
-        initialGrams <= 0 ||
-        initialGrams > 1000) {
-      setState(() => _error = '请输入大于 0 且不超过 1000 g 的剩余克数');
+        : personalSpoolCapacityGrams;
+    if (initialGrams == null || !canReusePersonalSpool(initialGrams)) {
+      setState(() => _error = '请输入大于 30 且不超过 1000 g 的剩余克数');
       return null;
     }
     setState(() => _error = null);
@@ -481,7 +479,7 @@ class _MobileRfidWriterPageState extends State<MobileRfidWriterPage>
     if (draft == null) return;
     final initialGrams = _registerRemainder
         ? double.parse(_initialWeightController.text.trim())
-        : 1000.0;
+        : personalSpoolCapacityGrams;
     final writeGeneration = _accountGeneration;
     final operationGeneration = ++_nfcOperationGeneration;
     final writeSync = widget.sync;
@@ -817,7 +815,7 @@ class _MobileRfidWriterPageState extends State<MobileRfidWriterPage>
               ),
               const _RegistrationHelpItem(
                 title: '每次登记当前 1 卷',
-                body: '整卷按 1000 g 登记；余料填写实际剩余克数，不超过 1000 g。写入与回读校验通过后才保存库存。',
+                body: '每卷规格固定 1000 g；余料填写实际剩余克数，大于 30 g 且不超过 1000 g 才可写卡续用。写入与回读校验通过后才保存库存。',
               ),
               const _RegistrationHelpItem(
                 title: '后续到货，去库存批量添加',

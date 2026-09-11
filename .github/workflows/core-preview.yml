@@ -52,17 +52,6 @@ jobs:
             choco install innosetup --no-progress -y
             if ($LASTEXITCODE -ne 0) { throw 'Inno Setup installation failed.' }
           }
-      - name: Ensure installer language fallback
-        shell: powershell
-        run: |
-          $innoRoot = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6'
-          $defaultLanguage = Join-Path $innoRoot 'Languages\Default.isl'
-          $simplifiedLanguage = Join-Path $innoRoot 'Languages\ChineseSimplified.isl'
-          if (-not (Test-Path -LiteralPath $simplifiedLanguage)) {
-            if (-not (Test-Path -LiteralPath $defaultLanguage)) { throw 'Inno Setup default language file is missing.' }
-            Copy-Item -LiteralPath $defaultLanguage -Destination $simplifiedLanguage -Force
-          }
-          if (-not (Test-Path -LiteralPath $simplifiedLanguage)) { throw 'Installer language fallback was not created.' }
       - name: Build and verify core snapshot
         shell: powershell
         env:
@@ -95,7 +84,7 @@ jobs:
           name: sohun Core Preview ${{ github.ref_name }}
           body: |
             核心预览版：CUID/FUID 资料卡可重复批量入库，确认前可取消；每卷库存拥有独立卷号。
-            检测到取下时保留余量与未结算任务。重新装入可选择原来的半卷或另一卷，换卷后再次选择旧余料卷仍保留原余量与消耗历史，支持跨端同步。
+            检测到取下时保留余量与未结算任务。重新装入可选择原来的余料卷或另一卷，换卷后再次选择旧余料卷仍保留原余量与消耗历史，支持跨端同步。
             个人库存按服务器与用户 ID 隔离；修复离线消耗冲突、更新地址异常、Android NFC 超时及 Windows 旧文件混包问题。NTAG213 仅用于独立设备工作台。
             Windows 安装器和便携包未进行 Authenticode 签名；Android 为调试证书签名的测试 APK。
             构建时功能回归：${{ (github.event_name != 'workflow_dispatch' || inputs.run_tests) && '已运行自动化回归；仍需实机验收。' || '未运行完整自动化回归，待实际使用反馈。' }}

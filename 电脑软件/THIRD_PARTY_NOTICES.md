@@ -147,6 +147,14 @@ evidence that the release's redistribution obligations have been reviewed.
 
 ## Inno Setup installer runtime
 
+The installer includes the Simplified Chinese translation by kirakira / Kira,
+under the MIT license. The unmodified translation and license are retained in
+`installer/Languages/ChineseSimplified.isl` and
+`installer/Languages/ChineseSimplified.LICENSE.txt`.
+Source: https://github.com/kira-96/Inno-Setup-Chinese-Simplified-Translation
+(commit `1ff90acc4ed4aee82b1cda43253243deee3daed4`, SHA-256
+`bf0751fa176569c6faa2f6e17ed2734617bef325d5cc06eae030fdd0258ee778`).
+
 - Build definition: `installer/sohun.iss`
 - Upstream project: Inno Setup by Jordan Russell and Martijn Laan
 - Official site: https://jrsoftware.org/isinfo.php

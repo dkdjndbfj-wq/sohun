@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:uuid/uuid.dart';
 
+import '../core/constants/personal_spool_policy.dart';
 import '../data/database/daos/consumable_dao.dart';
 import '../data/database/database.dart' show PersonalStockReceipt;
 import '../data/models/personal_inventory_sync.dart';
@@ -90,7 +91,7 @@ PersonalInventoryRecord _stockTemplate(
     materialType: draft.model.trim(),
     colorHex: draft.colorHex,
     colorName: draft.colorName.trim(),
-    totalGrams: grams,
+    totalGrams: personalSpoolCapacityGrams,
     remainingGrams: grams,
     createdAt: now,
     updatedAt: now,

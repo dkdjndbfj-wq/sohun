@@ -262,11 +262,11 @@ void main() {
     },
   );
 
-  test('a registered 2kg roll remains one physical spool', () async {
+  test('a registered 1kg roll remains one physical spool', () async {
     final result = await inventory.addFromDraft(
       draft,
       tagUid: tag,
-      initialGrams: 2000,
+      initialGrams: 1000,
       tagType: 'CUID',
     );
     final item = (await db.consumableDao.getPersonalByUid(
@@ -275,7 +275,7 @@ void main() {
     await sync([tray(), const AmsTray(amsId: 0, slot: 1, hasFilament: true)]);
     final printer = (await db.printerDao.getByIdWithChannels(printerId))!;
     final first = printer.channels.first.channel;
-    expect(first.loadedRemainingGrams, 2000);
+    expect(first.loadedRemainingGrams, 1000);
     await expectLater(
       db.printerDao.bindConsumable(printer.channels.last.channel.id, item.id),
       throwsStateError,

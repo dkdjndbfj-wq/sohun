@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-09-09T16:10:33.0984284+00:00",
+  "createdAt": "2026-09-11T13:50:08.0216859+00:00",
   "purpose": "Public source export; not a signed binary or third-party release clearance.",
   "coreAssets": true,
   "omittedAssetTrees": [
@@ -28,7 +28,7 @@
     "related tests and build scripts"
   ],
   "resourceReview": "THIRD_PARTY_NOTICES.md remains authoritative. Keeping attributed source data is not a clearance declaration for a distributable binary.",
-  "fileCount": 919,
+  "fileCount": 923,
   "files": [
     {
       "path": ".agents/skills/sohun-validation/SKILL.md",
@@ -42,8 +42,8 @@
     },
     {
       "path": ".github/workflows/core-preview.yml",
-      "bytes": 4079,
-      "sha256": "9b7cadd16454682ce4f23ca9e7819c0a405951f0bede772da1bb0b891669a1fd"
+      "bytes": 4082,
+      "sha256": "a44cfb7f8bd0f98a1a40fd6f415227423e9f1598ec69dbfd7bb80ab64cdcb622"
     },
     {
       "path": ".github/workflows/release.yml",
@@ -932,8 +932,8 @@
     },
     {
       "path": "电脑软件/community_server/src/server.js",
-      "bytes": 208302,
-      "sha256": "a91c6fdd02d93546ac2f176d219d1306ee0bfeae3cd321b32c79dc22a1a02df3"
+      "bytes": 210763,
+      "sha256": "d248396291cf0cc39f291a145b509ae191cf2b26be78425ecb59c52b9d995a19"
     },
     {
       "path": "电脑软件/community_server/src/site_assets/app-workbench-v2.png",
@@ -1002,8 +1002,8 @@
     },
     {
       "path": "电脑软件/community_server/test/server.test.js",
-      "bytes": 154090,
-      "sha256": "2f719e7544f1283da5a862f0dfb0c45d4c0d344057817f199ff4593d2590d12f"
+      "bytes": 158127,
+      "sha256": "31526a28b97fe157511c5182b76e132262b3e3a87500cdaf8872aad6ff3ceccc"
     },
     {
       "path": "电脑软件/core-build.json",
@@ -1012,8 +1012,8 @@
     },
     {
       "path": "电脑软件/docs/手机RFID模板使用说明.md",
-      "bytes": 7387,
-      "sha256": "a50eb6123b2248dac2ca0d71a1d2b932000267def9a816b77dc9a5437549215e"
+      "bytes": 7498,
+      "sha256": "39e78f31bd99610eb75d339d05a7ef22f3ef15bdcd048895e2400f376f371beb"
     },
     {
       "path": "电脑软件/docs/NTAG213设备工作台使用说明.md",
@@ -1024,6 +1024,16 @@
       "path": "电脑软件/installer/INSTALL_AGREEMENT.txt",
       "bytes": 1332,
       "sha256": "6f50e8c4e240d48290e9856c30210abe8a17052fe64250f0edb169cf8a8aaf17"
+    },
+    {
+      "path": "电脑软件/installer/Languages/ChineseSimplified.isl",
+      "bytes": 21099,
+      "sha256": "bf0751fa176569c6faa2f6e17ed2734617bef325d5cc06eae030fdd0258ee778"
+    },
+    {
+      "path": "电脑软件/installer/Languages/ChineseSimplified.LICENSE.txt",
+      "bytes": 1072,
+      "sha256": "02f0dd3b98833040147d01daf91243c24392a33ddced674152220b5216782c6a"
     },
     {
       "path": "电脑软件/installer/personal-messages.iss",
@@ -1037,13 +1047,13 @@
     },
     {
       "path": "电脑软件/installer/sohun.iss",
-      "bytes": 41450,
-      "sha256": "bd173fb54f484e83e3e362f4d4472465df3bf56c132cc43898365966ca0c3632"
+      "bytes": 41540,
+      "sha256": "3150f68da7c99e66f3619c05aaccde897c9b2be55274381f662423d9bd23cc4d"
     },
     {
       "path": "电脑软件/lib/app.dart",
-      "bytes": 40291,
-      "sha256": "f58c15d895fff753151385ac7734e0a95671192b4e570afb2d16c81f58c4efe0"
+      "bytes": 40426,
+      "sha256": "5fdf7529bd904a6dc1c058e379e61b71207243fc15af0dfc9890d41c60b31368"
     },
     {
       "path": "电脑软件/lib/core/app_identity.dart",
@@ -1059,6 +1069,11 @@
       "path": "电脑软件/lib/core/app_version.dart",
       "bytes": 388,
       "sha256": "1ff60bbed58e38ef6971f823400b7a3a1871b2593c13f1ff8169cd40b2f64f6a"
+    },
+    {
+      "path": "电脑软件/lib/core/constants/personal_spool_policy.dart",
+      "bytes": 589,
+      "sha256": "202f85baf01055ce3e3603937463a2729729baed6540092001e01aba92f686e4"
     },
     {
       "path": "电脑软件/lib/core/releases/app_release_notes.dart",
@@ -1167,8 +1182,8 @@
     },
     {
       "path": "电脑软件/lib/core/services/personal_inventory_sync_service.dart",
-      "bytes": 35643,
-      "sha256": "8eb639d4450d6ea8942bdb1ec7e52bc5a444384319222cd6d84ecea5f07b77ab"
+      "bytes": 35850,
+      "sha256": "074eabe9e5c216c88b6f794e8606c3b37442877348e1949558ad21f2842ca308"
     },
     {
       "path": "电脑软件/lib/core/services/preset_diff_service.dart",
@@ -1262,8 +1277,8 @@
     },
     {
       "path": "电脑软件/lib/core/startup/startup_bootstrap_app.dart",
-      "bytes": 23808,
-      "sha256": "85f2d71db8fe88847176aec24f73fed42427181bab8b7255f177d460e59f2d1a"
+      "bytes": 22225,
+      "sha256": "956e004b7aa706f890f05643084d3392bc111d8458a7ac447e80222ad4c7cfa7"
     },
     {
       "path": "电脑软件/lib/core/startup/startup_coordinator.dart",
@@ -1277,8 +1292,8 @@
     },
     {
       "path": "电脑软件/lib/core/startup/startup_window_controller.dart",
-      "bytes": 9295,
-      "sha256": "acf3daa7819dbdd69f42a5b9f19b34667409d5fb526efdde2892bb0d6e8c9c7e"
+      "bytes": 3029,
+      "sha256": "99d0d6f98dce065b517d8021340ad7bc5e81ae05c4289b7d14c2d1c28ada16f3"
     },
     {
       "path": "电脑软件/lib/core/theme/app_colors.dart",
@@ -1362,8 +1377,8 @@
     },
     {
       "path": "电脑软件/lib/core/utils/gram_utils.dart",
-      "bytes": 2637,
-      "sha256": "eacc5958b913919546d729eb3941999ab66c5b8eaf3d156ec89b3cf7ca3ec80f"
+      "bytes": 2679,
+      "sha256": "5b6da303a76d82a2e86f891088cd5c33f03aa6a4c926283eb91dc585f3503ae3"
     },
     {
       "path": "电脑软件/lib/core/utils/image_storage.dart",
@@ -1412,8 +1427,8 @@
     },
     {
       "path": "电脑软件/lib/data/database/daos/consumable_dao.dart",
-      "bytes": 107929,
-      "sha256": "580fdcaf327fa0245833e7297a38999cde00ec2447482fa7d67be581caa2739d"
+      "bytes": 111960,
+      "sha256": "a24ef55b6746558a8c83d8e089e779b5a542764e901412ff1bb69af353348d3b"
     },
     {
       "path": "电脑软件/lib/data/database/daos/consumable_dao.g.dart",
@@ -1457,8 +1472,8 @@
     },
     {
       "path": "电脑软件/lib/data/database/daos/printer_dao.dart",
-      "bytes": 105163,
-      "sha256": "728374456c4019b89341e12ea4051f73c4b983a29968c47189b6d226994cc939"
+      "bytes": 107960,
+      "sha256": "a4e2307e28b96fa9df1bb374e6afe2be56eed1ed66962fe7326de93043bac632"
     },
     {
       "path": "电脑软件/lib/data/database/daos/printer_dao.g.dart",
@@ -1597,13 +1612,13 @@
     },
     {
       "path": "电脑软件/lib/data/database/personal_ams_identity.dart",
-      "bytes": 17906,
-      "sha256": "81ce002ecbb0192109d576a24a2544642295c8860b410b093692ba662c91413c"
+      "bytes": 18073,
+      "sha256": "eade8aef6d4491ffec9604617500ffbfad88ccf67924ab8e6273730259e58451"
     },
     {
       "path": "电脑软件/lib/data/database/personal_inventory_balance_sync.dart",
-      "bytes": 6441,
-      "sha256": "d58026aad5784d7874830d3f598d60714e7086bc4094dc4f1e0629ae820bb89d"
+      "bytes": 6706,
+      "sha256": "5d2e8cbd942ccb8561b9db39836b617af47bfabcd00871fbcdc1c896f70d6032"
     },
     {
       "path": "电脑软件/lib/data/database/personal_inventory_event_schema.dart",
@@ -1612,13 +1627,13 @@
     },
     {
       "path": "电脑软件/lib/data/database/personal_rfid_stock.dart",
-      "bytes": 22247,
-      "sha256": "756e7a52a72ba1fa921fabc4d022a2e330910add8ced23c19722e0c13a553758"
+      "bytes": 22600,
+      "sha256": "06cafba870cbdd56b433ead45a6d70e22a3c6f696c6854f0c698b9d6ddadbc0e"
     },
     {
       "path": "电脑软件/lib/data/database/personal_spool_handoff.dart",
-      "bytes": 10526,
-      "sha256": "958154358fb6424c3507e78b58a93b3e1b33840c64f3d7e4b10325059d8a8fd3"
+      "bytes": 10568,
+      "sha256": "a25f2c7e9c61dc770b4999ef710fb946cd7930a13992d73d7a04f9820601d60d"
     },
     {
       "path": "电脑软件/lib/data/database/tables.dart",
@@ -1992,8 +2007,8 @@
     },
     {
       "path": "电脑软件/lib/features/dashboard/dashboard_screen.dart",
-      "bytes": 115475,
-      "sha256": "dd5773e74b59ea4990180f49b186704d0bf05634cee0717d2c4172388832f5b2"
+      "bytes": 116949,
+      "sha256": "2d36a6535b2f3ff241941235784099856e55098e20eecaa28cf4f352ca048c9c"
     },
     {
       "path": "电脑软件/lib/features/dashboard/material_playground_hero.dart",
@@ -2027,8 +2042,8 @@
     },
     {
       "path": "电脑软件/lib/features/inventory/add_consumable_sheet.dart",
-      "bytes": 38893,
-      "sha256": "9d4f5dff21356f2a7d70496ab1b39ec8b7b4c63d30a636371bcb77c930a40120"
+      "bytes": 38901,
+      "sha256": "5ca7e2840cc67c81db109433208173b6daf84d47c51186b9ff356ee43c6d2a63"
     },
     {
       "path": "电脑软件/lib/features/inventory/consumable_card.dart",
@@ -2042,8 +2057,8 @@
     },
     {
       "path": "电脑软件/lib/features/inventory/rfid_spool_replacement_dialog.dart",
-      "bytes": 6448,
-      "sha256": "3541a2213756fe9cb7a7823f06076ce43cdbba595a160907a45bc616eeab02d2"
+      "bytes": 6459,
+      "sha256": "b0e0a392ccffde5266c617b7270bea58ed7a70cfbebe0f50f57416ffb333041d"
     },
     {
       "path": "电脑软件/lib/features/onboarding/onboarding_wizard.dart",
@@ -2162,8 +2177,8 @@
     },
     {
       "path": "电脑软件/lib/features/print_task/spool_change_confirmation_dialog.dart",
-      "bytes": 41343,
-      "sha256": "df28bf44763bb15ca5bd31bed08255319f4c5de7410abab233e7a584fb5c2104"
+      "bytes": 42972,
+      "sha256": "d809bd01b75854191e3a62166ddc2d4f69f09f7243b80253c33f111fa148128c"
     },
     {
       "path": "电脑软件/lib/features/printers/add_printer_sheet.dart",
@@ -2172,13 +2187,13 @@
     },
     {
       "path": "电脑软件/lib/features/printers/channel_slot.dart",
-      "bytes": 90134,
-      "sha256": "e27605c7c874530df3c02b929eb8a24f568fb5ab67bce8b9b01f74b570f327e1"
+      "bytes": 93951,
+      "sha256": "252eb45954f3e69bfc27bbab1b6579239f78b6791509ff83d8a9db1bb56ca44c"
     },
     {
       "path": "电脑软件/lib/features/printers/personal_spool_removal_dialog.dart",
-      "bytes": 12199,
-      "sha256": "4024a825e6b41fce81ab04f122b6e0f3bf6239b6567003dfab3901f736791842"
+      "bytes": 12306,
+      "sha256": "6a2a24bc32b6fdfa1b194dec5c9f8de1ae2b0cb55ff15d9c327f9bb465db26e8"
     },
     {
       "path": "电脑软件/lib/features/printers/printer_camera_dialog.dart",
@@ -2527,18 +2542,18 @@
     },
     {
       "path": "电脑软件/lib/mobile/mobile_inventory_page.dart",
-      "bytes": 101615,
-      "sha256": "9b3faf316ca6c7f5e87a40704cdfd4efa3241f939ba743c3492be9b77bb947ec"
+      "bytes": 101728,
+      "sha256": "8cd4445f0e0665f9814a333744b0e332c59c8f0131535ae52daae1b876354ebc"
     },
     {
       "path": "电脑软件/lib/mobile/mobile_inventory_repository.dart",
-      "bytes": 10150,
-      "sha256": "844f050f21b51075baf42695b0f44ba0ddbcfe6eb9dcff3c3f5e0e89505af2f6"
+      "bytes": 10942,
+      "sha256": "cedb403f88207c824b67d6845f11607c0b0abc5394afbffd2ce7cb48cf5a3d0b"
     },
     {
       "path": "电脑软件/lib/mobile/mobile_inventory_sync.dart",
-      "bytes": 12790,
-      "sha256": "62c6eec48c42fa5f35be90b65db810511b6f57fa034d1629f29075a537d7e816"
+      "bytes": 12866,
+      "sha256": "e2e75d416162acd0b794bff9e24b8a6a0d2c20fb823ee7ba46bf49fdd673835e"
     },
     {
       "path": "电脑软件/lib/mobile/mobile_printer_faults.dart",
@@ -2567,8 +2582,8 @@
     },
     {
       "path": "电脑软件/lib/mobile/mobile_rfid_writer_page.dart",
-      "bytes": 62051,
-      "sha256": "2cfc2cb99885898e24ad0f7608f31f5d0052bb2f6ccdc030446487562cba9940"
+      "bytes": 62126,
+      "sha256": "907c5c2d2d42bb02674f9811e1a8ef296cfd51fbe68ca1ad7049130fd550e70f"
     },
     {
       "path": "电脑软件/lib/mobile/mobile_visual_theme.dart",
@@ -2577,8 +2592,8 @@
     },
     {
       "path": "电脑软件/lib/mobile/rfid_mobile_models.dart",
-      "bytes": 2386,
-      "sha256": "4cb79f57469dea28a6d1aafe8eec0cc76f97113193131143a04da101cf55af50"
+      "bytes": 2481,
+      "sha256": "2140f78376a29b37f042778af5de0c7d14e325691e0885c38833c0013f80f214"
     },
     {
       "path": "电脑软件/lib/mobile/rfid_native_bridge.dart",
@@ -2642,8 +2657,8 @@
     },
     {
       "path": "电脑软件/lib/providers/consumable_provider.dart",
-      "bytes": 4781,
-      "sha256": "ad44c558af5b25c24d0bb68826d7485ef271b5ef141f5620ed49359cab5071d2"
+      "bytes": 4842,
+      "sha256": "6e9ffac89000b39261e13f74d4f5c3a37850f4b0a2637994e24ffd407003e545"
     },
     {
       "path": "电脑软件/lib/providers/database_provider.dart",
@@ -3297,8 +3312,8 @@
     },
     {
       "path": "电脑软件/test/cuid_tag_purpose_boundary_test.dart",
-      "bytes": 3232,
-      "sha256": "9cdb5fa9cbb8822190912c82b05eb693ad42a705cf2a911393e5f607104b4b0a"
+      "bytes": 3234,
+      "sha256": "a680209bbf46761247a30a3a2e7d038dc3d93b1d170421992db6269418962e15"
     },
     {
       "path": "电脑软件/test/custom_ams_rfid_binding_test.dart",
@@ -3337,8 +3352,8 @@
     },
     {
       "path": "电脑软件/test/desktop_rfid_controller_test.dart",
-      "bytes": 9797,
-      "sha256": "88c994036ec702856d84b9220692a907d35a27338c573313daa894f8166c9f97"
+      "bytes": 9795,
+      "sha256": "37a9bce9965ba572ac631b2dcbb29eec6f044d095451a4b090e37e4898a15e9f"
     },
     {
       "path": "电脑软件/test/desktop_rfid_workbench_test.dart",
@@ -3587,8 +3602,8 @@
     },
     {
       "path": "电脑软件/test/integration/personal_inventory_http_test.dart",
-      "bytes": 11137,
-      "sha256": "1cb32f7c4628b06d0e19a058ae6768cfb3a023bfcf0942e44da5df7157bb043d"
+      "bytes": 11135,
+      "sha256": "e0c587b3d4d1c44cd5cd54c6ed5760952b10a43be50112a4553ae8360d627b5f"
     },
     {
       "path": "电脑软件/test/integration/personal_spool_reuse_http_test.dart",
@@ -3597,8 +3612,8 @@
     },
     {
       "path": "电脑软件/test/integration/personal_stock_receipts_http_test.dart",
-      "bytes": 9852,
-      "sha256": "7506062621cc890c347b9333d73fc474f84c152670754fa62aef504357d8d026"
+      "bytes": 9843,
+      "sha256": "222f3e68443843a89187c1c2618c4d9e548853f43aeed72c9302f0ff0cf8897a"
     },
     {
       "path": "电脑软件/test/interaction_effects_test.dart",
@@ -3622,8 +3637,8 @@
     },
     {
       "path": "电脑软件/test/manual_stock_spool_test.dart",
-      "bytes": 8496,
-      "sha256": "feeb35c54cf26e0638a61996c5ab1be1cf616e339f7ebdcd70b20f152f943440"
+      "bytes": 8577,
+      "sha256": "84c87fe80adf6d4cfaf87e4f3543d5f156966f9df8eadcad50685f405180657e"
     },
     {
       "path": "电脑软件/test/material_catalog_service_test.dart",
@@ -3647,8 +3662,8 @@
     },
     {
       "path": "电脑软件/test/mobile_ams_template_workflow_test.dart",
-      "bytes": 19354,
-      "sha256": "6dbe6588b18450dab0ea4c5f6a2a9a51c0b447f4fcd0dee6f4d6b9aac2fb1dd5"
+      "bytes": 19434,
+      "sha256": "91a8458fb7d96e50ba715dac87d4f2afb8386ba9f419a5094c7102384c201b3c"
     },
     {
       "path": "电脑软件/test/mobile_device_workbench_test.dart",
@@ -3667,8 +3682,8 @@
     },
     {
       "path": "电脑软件/test/mobile_inventory_repository_test.dart",
-      "bytes": 12439,
-      "sha256": "806b7098225ad434b011c96c441a1b34fb6fc3c2e1b105402e763b1801a93a6d"
+      "bytes": 12983,
+      "sha256": "6300a90e244cf56702bd949c79655a6b4bc1271897e3b972788c559c7f8f02a7"
     },
     {
       "path": "电脑软件/test/mobile_printer_faults_test.dart",
@@ -3687,8 +3702,8 @@
     },
     {
       "path": "电脑软件/test/mobile_rfid_tag_repository_test.dart",
-      "bytes": 9710,
-      "sha256": "3e4bbe02139a300e03e53f207338859c9fe9f69377f2947812b82f2481a6b85e"
+      "bytes": 9711,
+      "sha256": "cd8b47dc0eeb3f565ecaa5d3719f20df1a1042b80bc02856ee0f0b7d7243e482"
     },
     {
       "path": "电脑软件/test/mobile_rfid_writer_page_test.dart",
@@ -3698,7 +3713,7 @@
     {
       "path": "电脑软件/test/mobile_stock_history_ui_test.dart",
       "bytes": 5461,
-      "sha256": "cbd01c8c4e034a13e943cd31cdf09624c08c8ddc84bcfe50e73761461274d419"
+      "sha256": "43695d964ae9c3560a1aa91ba1b9b5cfb70be47244fdd4dcf2e47d7dc11620d3"
     },
     {
       "path": "电脑软件/test/mobile_tag_registration_layout_test.dart",
@@ -3757,8 +3772,8 @@
     },
     {
       "path": "电脑软件/test/personal_ams_identity_test.dart",
-      "bytes": 40387,
-      "sha256": "005f7cb4b7244f5a77e74f2048d386ccc135193a1552ba66c0b77526ac1d17b6"
+      "bytes": 40376,
+      "sha256": "251321b193860db86549fe1955488b9db5e34c7eb5925b104a68e5ebf1db8ec4"
     },
     {
       "path": "电脑软件/test/personal_desktop_visual_test.dart",
@@ -3772,8 +3787,8 @@
     },
     {
       "path": "电脑软件/test/personal_inventory_event_ledger_test.dart",
-      "bytes": 11585,
-      "sha256": "a54c23a9a997f510b959e91800d3c11e8e193c73f0672df0b94430c2df2687fa"
+      "bytes": 11661,
+      "sha256": "f628db49223cd14b6378aacbc2aad658ef8abe9861bbfe26478d52415f4c7288"
     },
     {
       "path": "电脑软件/test/personal_inventory_legacy_concurrency_test.dart",
@@ -3782,8 +3797,8 @@
     },
     {
       "path": "电脑软件/test/personal_inventory_roll_count_ui_test.dart",
-      "bytes": 6753,
-      "sha256": "937bb11887fe26db01ecc5b96344fb44c91b31901baf52dba0ada00317f0b951"
+      "bytes": 6707,
+      "sha256": "dafbe029828a9ef8db291d3cae7a24bba8eff86e5aba1e423398be42202b7d8a"
     },
     {
       "path": "电脑软件/test/personal_inventory_sync_service_test.dart",
@@ -3792,8 +3807,8 @@
     },
     {
       "path": "电脑软件/test/personal_pending_spool_action_ui_test.dart",
-      "bytes": 4412,
-      "sha256": "d7a28ccc85af26a61ff2f45b521e08fb389b9f8f2ea6cfbf12b5183534bc4619"
+      "bytes": 11189,
+      "sha256": "005c37013b32c3405a75cd9bb15ad40299305c6a44bc93a0856911e62aad959e"
     },
     {
       "path": "电脑软件/test/personal_plate_editor_store_test.dart",
@@ -3807,13 +3822,18 @@
     },
     {
       "path": "电脑软件/test/personal_rfid_stock_test.dart",
-      "bytes": 23906,
-      "sha256": "d13fb7148e0d64f52cfe927821eef30f8ef21eb001e90b7d48a3c64cd1f275ca"
+      "bytes": 27342,
+      "sha256": "2e4d90c31e2bf239356e57fb4d86e6b0d22d31483a5d6bd13b18158aec5e9af2"
+    },
+    {
+      "path": "电脑软件/test/personal_spool_continuation_threshold_test.dart",
+      "bytes": 5821,
+      "sha256": "0ec15482012a220444be812cd5438e5131febdb07b0112d68705b03a5adfb1d9"
     },
     {
       "path": "电脑软件/test/personal_spool_handoff_test.dart",
-      "bytes": 15026,
-      "sha256": "553b01ad3c151f850aed586d333593f42798fc633a82011c3558797c44a0ab1a"
+      "bytes": 15022,
+      "sha256": "c85f9ccc2460bebe917809fd62399a7f974d786783d74ba185bef4aeb0e62b11"
     },
     {
       "path": "电脑软件/test/personal_spool_maintenance_test.dart",
@@ -3822,13 +3842,13 @@
     },
     {
       "path": "电脑软件/test/personal_stock_deletion_guard_test.dart",
-      "bytes": 6442,
-      "sha256": "c15f227d5435ccbfec5bee2bd730d2f1bd002a20f6814d2208a0afee2e843af1"
+      "bytes": 6443,
+      "sha256": "54a0d7b431f44c84ca12b4b7b4a71e7c47b6b33bf925ff4028044aabba205295"
     },
     {
       "path": "电脑软件/test/personal_stock_history_ui_test.dart",
       "bytes": 10389,
-      "sha256": "43725622b8480b601ead5f59c275c0b53e7e4a3474693302e7e16ca80a6e9ae3"
+      "sha256": "bf1f25222763987d77a18f590bd02f005a0e137e2664fe4c9fb85ca270c00f80"
     },
     {
       "path": "电脑软件/test/preset_fingerprint_service_test.dart",
@@ -3953,7 +3973,7 @@
     {
       "path": "电脑软件/test/rfid_reuse_end_to_end_test.dart",
       "bytes": 9078,
-      "sha256": "850d970a16311d1a3e1ef4407efbe1bee8098b5f33fba4852f27896e0a36c926"
+      "sha256": "07051f2b8edf101d65bfae0890ed82b82f4b3c9c6b7223701408a019c089224d"
     },
     {
       "path": "电脑软件/test/rfid_spool_lifecycle_migration_test.dart",
@@ -3962,18 +3982,18 @@
     },
     {
       "path": "电脑软件/test/rfid_spool_lifecycle_ui_test.dart",
-      "bytes": 10122,
-      "sha256": "3242df320be2dc7ed731a07c747f3880d864ccd2c61b673ea2faefcad138c7cd"
+      "bytes": 10125,
+      "sha256": "c277c07a7647bbe2c30f0bce106925897c875ade1dd7917c92fd1e2cf0d7c307"
     },
     {
       "path": "电脑软件/test/rfid_spool_rebind_dialog_test.dart",
-      "bytes": 2455,
-      "sha256": "b7d61bf4e70cd6ba719ffb390d8a0fc3d741316a6d8a3adf81184ef88b1ac1ea"
+      "bytes": 2456,
+      "sha256": "292e723fdcaa4dcb98058f50a599f81fb44b5008d1b2a17ce7012611d43a0906"
     },
     {
       "path": "电脑软件/test/rfid_spool_rebind_test.dart",
-      "bytes": 10593,
-      "sha256": "d1152c1ba0a909bce59d7757945206245355b48c3f624a61ea29aab6a00a889e"
+      "bytes": 10597,
+      "sha256": "1dffaa1f75556943d729a1c2fd35c3f273fd7127ef0a9a910359090ccb42eddd"
     },
     {
       "path": "电脑软件/test/rfid_tag_identity_normalization_test.dart",
@@ -4017,8 +4037,8 @@
     },
     {
       "path": "电脑软件/test/startup_bootstrap_test.dart",
-      "bytes": 13346,
-      "sha256": "657675a064d57e550ca71aa1fc29ab812fc43701b027f4140943db666214dd3b"
+      "bytes": 17898,
+      "sha256": "a1b73fd0539192e5177a4a9c55ca8faa5325049e61302a498e746d57d4a4ff8b"
     },
     {
       "path": "电脑软件/test/studio_api_client_test.dart",
@@ -4157,8 +4177,8 @@
     },
     {
       "path": "电脑软件/THIRD_PARTY_NOTICES.md",
-      "bytes": 8999,
-      "sha256": "285ac7544da571e970efb4f977255b496988ca7bf813eb72f5cd1224813d7446"
+      "bytes": 9463,
+      "sha256": "3cd3bda04996970a7e5dd3ee27e846588ae5f3211b23280b98ca19631b4cf303"
     },
     {
       "path": "电脑软件/windows/.gitignore",
@@ -4237,8 +4257,8 @@
     },
     {
       "path": "电脑软件/windows/runner/main.cpp",
-      "bytes": 3169,
-      "sha256": "273aae7798b0a805d427949aaa8f092183646620b418d1721ed5e8a698f5e278"
+      "bytes": 3094,
+      "sha256": "4037ace9bd58211c2771006f1ea793de0b04a71f754b52ccf9c4db0160aeff80"
     },
     {
       "path": "电脑软件/windows/runner/native_tests/CMakeLists.txt",
@@ -4507,8 +4527,8 @@
     },
     {
       "path": "AGENTS.md",
-      "bytes": 2953,
-      "sha256": "4da5ca20dc4e9e89d0f976d25d03870efbc5cea33a5e94796f62cf289a135558"
+      "bytes": 3429,
+      "sha256": "6cdc70ded6f4e0ba318d6a1236facb4029476c0fefeda6e7d75ece6609c693d2"
     },
     {
       "path": "DEPLOYMENT.md",
@@ -4562,8 +4582,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 14005,
-      "sha256": "6e308bda18d3fd15e2c88d8d9cbdfe4e20adf2f176b4e5decf78300fcc0410d8"
+      "bytes": 14396,
+      "sha256": "f379a745ec87e2a5186c9d6eeffffc7d5a6b33a81b2e53a2acc5bf435e2638da"
     },
     {
       "path": "scripts/analyze_dart.ps1",
@@ -4577,8 +4597,8 @@
     },
     {
       "path": "scripts/export_public_source.ps1",
-      "bytes": 10959,
-      "sha256": "5b28218c95709f018e2af7a5e68340fbb0a514f41e74067d0929dc4b16c270d7"
+      "bytes": 11296,
+      "sha256": "8d085ac28643f45e697822838c36d19b74bf9c4a12fb92b4c9b65444fedaa261"
     },
     {
       "path": "scripts/public_core_build.ps1",

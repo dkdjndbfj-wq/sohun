@@ -57,8 +57,8 @@ Future<int> _spool(
       manufacturer: 'eSUN',
       model: 'PLA+',
       materialType: const Value('PLA'),
-      totalGrams: const Value(2000),
-      remainingGrams: const Value(1375),
+      totalGrams: const Value(1000),
+      remainingGrams: const Value(375),
       colorName: const Value('星空蓝'),
       colorHex: const Value('#2244CC'),
     ),
@@ -166,8 +166,8 @@ Future<PersonalStockReceipt> _receivedStock(
     materialType: 'PLA',
     colorHex: '#2244CC',
     colorName: '星空蓝',
-    totalGrams: 2000,
-    remainingGrams: 2000,
+    totalGrams: 1000,
+    remainingGrams: 1000,
     createdAt: DateTime.utc(2026, 9, 9),
     updatedAt: DateTime.utc(2026, 9, 9),
   ),
@@ -233,7 +233,7 @@ void main() {
         expect(await _aliasCount(db), 0);
         expect(await db.select(db.consumables).get(), hasLength(1));
         final roll = (await db.consumableDao.getById(id))!;
-        expect(roll.remainingGrams, 1375);
+        expect(roll.remainingGrams, 375);
         expect(await twin.getTimeline(rfidSpoolLedgerKey(roll.uid)), isEmpty);
       },
     );
@@ -260,7 +260,7 @@ void main() {
       expect(resolved.requiresConfirmation, isTrue);
       expect(resolved.isPersonalTag, isFalse);
       expect(resolved.currentConsumableId, isNull);
-      expect((await db.consumableDao.getById(id))!.remainingGrams, 1375);
+      expect((await db.consumableDao.getById(id))!.remainingGrams, 375);
     },
   );
 
@@ -387,7 +387,7 @@ void main() {
       expect(await db.printerDao.getConsumableIdByChannel(printer, 0), isNull);
       expect((await db.select(db.consumables).get()).length, 1);
       final roll = (await db.consumableDao.getById(id))!;
-      expect(roll.remainingGrams, 1375);
+      expect(roll.remainingGrams, 375);
       expect(roll.manufacturer, 'eSUN');
       expect(roll.materialType, 'PLA');
       expect(await twin.getTimeline(rfidSpoolLedgerKey(roll.uid)), isEmpty);
@@ -428,8 +428,8 @@ void main() {
       final roll = (await db.consumableDao.getById(id))!;
       expect(await _aliasCount(db), 1);
       expect(await db.printerDao.getConsumableIdByChannel(printer, 0), id);
-      expect(roll.remainingGrams, 1375);
-      expect(roll.totalGrams, 2000);
+      expect(roll.remainingGrams, 375);
+      expect(roll.totalGrams, 1000);
       expect(roll.trayUuid, isNull);
       expect(
         (await twin.getTimeline(rfidSpoolLedgerKey(roll.uid))).isNotEmpty,
@@ -552,10 +552,10 @@ void main() {
     final oldId = await _spool(db);
     final printer = await _printer(db);
     await _confirm(db, printer, oldId);
-    await db.consumableDao.adjustGrams(oldId, 1375);
+    await db.consumableDao.adjustGrams(oldId, 375);
     final replacement = await db.consumableDao.replacePersonalRfidSpool(
       consumableId: oldId,
-      initialGrams: 2000,
+      initialGrams: 1000,
     );
     await db.close();
     db = AppDatabase.forTesting(NativeDatabase(file));
@@ -571,7 +571,7 @@ void main() {
       (await db.consumableDao.getById(
         replacement.consumableId,
       ))!.remainingGrams,
-      2000,
+      1000,
     );
     expect(
       (await PersonalAmsIdentityResolver.load(
@@ -618,7 +618,7 @@ void main() {
           await twin.getTimeline(rfidSpoolLedgerKey('other-roll')),
           isEmpty,
         );
-        expect((await db.consumableDao.getById(otherId))!.remainingGrams, 1375);
+        expect((await db.consumableDao.getById(otherId))!.remainingGrams, 375);
       }
     },
   );
@@ -653,7 +653,7 @@ void main() {
       await _confirm(db, printer, first);
       final next = await db.consumableDao.replacePersonalRfidSpool(
         consumableId: first,
-        initialGrams: 2000,
+        initialGrams: 1000,
       );
       await db.consumableDao.setOwnerAccount(next.consumableId, _owner);
       var identity = (await PersonalAmsIdentityResolver.load(
@@ -893,7 +893,7 @@ void main() {
       );
       expect((await db.select(db.consumables).get()), hasLength(2));
       final roll = (await db.consumableDao.getById(selectedId))!;
-      expect(roll.remainingGrams, 2000);
+      expect(roll.remainingGrams, 1000);
       expect(roll.trayUuid, isNull);
     },
   );
@@ -918,7 +918,7 @@ void main() {
         sourceTagType: 'CUID',
         sourceOwnerAccount: _owner,
       );
-      await db.consumableDao.adjustGrams(firstId, 1500);
+      await db.consumableDao.adjustGrams(firstId, 500);
       await db.printerDao.bindSpoolReplacement(
         printerId: printer,
         channelIndex: 0,
@@ -1016,7 +1016,7 @@ void main() {
         (await db.consumableDao.getRfidSpoolBindingById(id))!.tagUid,
         _tag,
       );
-      expect((await db.consumableDao.getById(id))!.remainingGrams, 1375);
+      expect((await db.consumableDao.getById(id))!.remainingGrams, 375);
     },
   );
 
@@ -1075,7 +1075,7 @@ void main() {
       await tester.tap(find.textContaining(receipt.inventoryUids.last));
       await tester.pumpAndSettle();
       expect(find.text('已选库存卷：${receipt.inventoryUids.last}'), findsOneWidget);
-      expect(find.textContaining('本卷 2kg'), findsOneWidget);
+      expect(find.textContaining('本卷 1kg'), findsOneWidget);
       final selectedConfirm = find.widgetWithText(FilledButton, '确认同款新卷并绑定');
       expect(tester.widget<FilledButton>(selectedConfirm).onPressed, isNotNull);
       await tester.tap(selectedConfirm);
@@ -1141,7 +1141,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.textContaining('手机 UID $_tag'), findsOneWidget);
-      expect(find.textContaining('1375.0g'), findsOneWidget);
+      expect(find.textContaining('375.0g'), findsOneWidget);
       await tester.tap(find.textContaining('eSUN · PLA+'));
       await tester.pumpAndSettle();
       expect(find.textContaining('手机登记 UID：$_tag'), findsOneWidget);
@@ -1153,7 +1153,7 @@ void main() {
       expect(await db.printerDao.getConsumableIdByChannel(printer, 0), id);
       final roll = (await db.consumableDao.getById(id))!;
       expect(roll.materialType, 'PLA');
-      expect(roll.remainingGrams, 1375);
+      expect(roll.remainingGrams, 375);
       expect(roll.trayUuid, isNull);
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpAndSettle();

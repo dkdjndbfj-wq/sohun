@@ -49,7 +49,7 @@ void main() {
             model: 'PLA',
             materialType: 'PLA',
             colorHex: '#0000FF',
-            totalGrams: 750,
+            totalGrams: 1000,
             remainingGrams: 700,
             createdAt: spool.createdAt,
             updatedAt: spool.updatedAt,
@@ -231,11 +231,11 @@ void main() {
       await tester.enterText(find.byType(TextFormField), '0');
       await tester.tap(find.text('确认换卷'));
       await tester.pump();
-      expect(find.text('请输入大于 0 且不超过 1000 g 的剩余克数'), findsOneWidget);
+      expect(find.text('请输入大于 30 且不超过 1000 g 的剩余克数'), findsOneWidget);
       await tester.enterText(find.byType(TextFormField), '1001');
       await tester.tap(find.text('确认换卷'));
       await tester.pump();
-      expect(find.text('请输入大于 0 且不超过 1000 g 的剩余克数'), findsOneWidget);
+      expect(find.text('请输入大于 30 且不超过 1000 g 的剩余克数'), findsOneWidget);
       await tester.enterText(find.byType(TextFormField), '750');
       await tester.tap(find.text('确认换卷'));
       await tester.pumpAndSettle();
