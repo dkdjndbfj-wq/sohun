@@ -340,6 +340,13 @@ class _StudioFarmWorkspaceState
                           ),
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      _FarmTelemetryStrip(
+                        signedIn: auth.isSignedIn,
+                        syncing: sync.isSyncing,
+                        activeStreams: videoRelay.activeStreams,
+                        mode: isStaff ? '成员生产' : '管理员生产',
+                      ),
                       if (_shouldShowVerificationBanner(auth.session, profile))
                         _FarmVerificationBanner(
                           status: _profileStatus(profile.valueOrNull),
@@ -463,7 +470,9 @@ class _FarmNavigationPanel extends StatelessWidget {
           ? Duration.zero
           : const Duration(milliseconds: 180),
       curve: Curves.easeOutCubic,
-      width: collapsed ? 82 : 232,
+      width: collapsed
+          ? FarmPalette.sidebarCollapsedWidth
+          : FarmPalette.sidebarWidth,
       padding: const EdgeInsets.fromLTRB(10, 10, 8, 10),
       child: FarmShellChrome(
         padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
@@ -732,8 +741,7 @@ class _FarmTopBar extends StatelessWidget {
       height: FarmPalette.topBarHeight,
       padding: const EdgeInsets.symmetric(horizontal: 18),
       decoration: BoxDecoration(
-        color: scheme.surface,
-        border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
+      color: Colors.transparent,
       ),
       child: Row(
         children: [
@@ -797,6 +805,122 @@ class _FarmNavItem {
   final String group;
   final Widget page;
   final bool adminOnly;
+}
+
+class _FarmTelemetryStrip extends StatelessWidget {
+  const _FarmTelemetryStrip({
+    required this.signedIn,
+    required this.syncing,
+    required this.activeStreams,
+    required this.mode,
+  });
+
+  final bool signedIn;
+  final bool syncing;
+  final int activeStreams;
+  final String mode;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      height: 46,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: scheme.surface.withValues(alpha: 0.88),
+        border: Border.all(color: scheme.outlineVariant),
+        borderRadius: BorderRadius.circular(FarmPalette.controlRadius),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _FarmTelemetryCell(
+              icon: Icons.tune_rounded,
+              label: '运行模式',
+              value: mode,
+              color: scheme.primary,
+            ),
+            const _FarmTelemetryDivider(),
+            _FarmTelemetryCell(
+              icon: Icons.cloud_done_outlined,
+              label: '云端连接',
+              value: signedIn ? '已认证' : '未登录',
+              color: signedIn ? FarmPalette.success : FarmPalette.warning,
+            ),
+            const _FarmTelemetryDivider(),
+            _FarmTelemetryCell(
+              icon: syncing ? Icons.sync_rounded : Icons.sync_disabled_rounded,
+              label: '数据同步',
+              value: syncing ? '同步中' : signedIn ? '已就绪' : '仅本地',
+              color: syncing ? FarmPalette.info : scheme.onSurfaceVariant,
+            ),
+            const _FarmTelemetryDivider(),
+            _FarmTelemetryCell(
+              icon: Icons.videocam_outlined,
+              label: '实时画面',
+              value: activeStreams == 0 ? '无活动' : '$activeStreams 路活动',
+              color: activeStreams == 0
+                  ? scheme.onSurfaceVariant
+                  : FarmPalette.info,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FarmTelemetryCell extends StatelessWidget {
+  const _FarmTelemetryCell({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 17, color: color),
+        const SizedBox(width: 7),
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(width: 6),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FarmTelemetryDivider extends StatelessWidget {
+  const _FarmTelemetryDivider();
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 18),
+    child: SizedBox(
+      height: 20,
+      child: VerticalDivider(
+        width: 1,
+        thickness: 1,
+        color: Theme.of(context).colorScheme.outlineVariant,
+      ),
+    ),
+  );
 }
 
 List<_FarmNavItem> _itemsForSession(AppAuthSession? session) {
@@ -1007,6 +1131,13 @@ class _FarmGuestWorkspaceState extends ConsumerState<_FarmGuestWorkspace> {
                         child: _FarmGuestTopBar(pageLabel: current.label),
                       ),
                       const SizedBox(height: 8),
+                      const _FarmTelemetryStrip(
+                        signedIn: false,
+                        syncing: false,
+                        activeStreams: 0,
+                        mode: '访客设备',
+                      ),
+                      const SizedBox(height: 8),
                       Container(
                         width: double.infinity,
                         decoration: BoxDecoration(
@@ -1072,10 +1203,10 @@ class _FarmGuestWorkspaceState extends ConsumerState<_FarmGuestWorkspace> {
                             ),
                           ),
                         ),
-                      ),
                     ),
                   ],
                 ),
+              ),
               ),
             ],
           ),
@@ -1317,8 +1448,7 @@ class _FarmGuestTopBar extends ConsumerWidget {
       height: FarmPalette.topBarHeight,
       padding: const EdgeInsets.symmetric(horizontal: 18),
       decoration: BoxDecoration(
-        color: scheme.surface,
-        border: Border(bottom: BorderSide(color: scheme.outlineVariant)),
+        color: Colors.transparent,
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {

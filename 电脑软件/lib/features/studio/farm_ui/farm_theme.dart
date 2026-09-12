@@ -11,30 +11,30 @@ abstract final class FarmPalette {
   static const info = Color(0xFF2563EB);
   static const violet = Color(0xFF6D5BD0);
 
-  static const lightCanvas = Color(0xFFF4F6F5);
-  static const lightSurface = Color(0xFFFFFFFF);
-  static const lightSurfaceMuted = Color(0xFFF1F4F2);
-  static const lightSurfaceSelected = Color(0xFFE8F5ED);
-  static const lightText = Color(0xFF18211C);
-  static const lightTextSoft = Color(0xFF59645D);
-  static const lightMuted = Color(0xFF87918B);
-  static const lightLine = Color(0xFFE0E7E2);
+  static const lightCanvas = Color(0xFFE8EFEB);
+  static const lightSurface = Color(0xFFF8FBF9);
+  static const lightSurfaceMuted = Color(0xFFDDE8E1);
+  static const lightSurfaceSelected = Color(0xFFD2F0DB);
+  static const lightText = Color(0xFF122019);
+  static const lightTextSoft = Color(0xFF4D6255);
+  static const lightMuted = Color(0xFF718579);
+  static const lightLine = Color(0xFFC5D5CA);
 
-  static const darkCanvas = Color(0xFF171A18);
-  static const darkSurface = Color(0xFF252B28);
-  static const darkSurfaceMuted = Color(0xFF2D3530);
+  static const darkCanvas = Color(0xFF0B110E);
+  static const darkSurface = Color(0xFF151D18);
+  static const darkSurfaceMuted = Color(0xFF1D2921);
   static const darkSurfaceSelected = Color(0xFF173825);
   static const darkText = Color(0xFFF2F6F3);
   static const darkTextSoft = Color(0xFFB4BDB7);
   static const darkMuted = Color(0xFF7F8A83);
   static const darkLine = Color(0xFF343D37);
 
-  static const radius = 16.0;
-  static const controlRadius = 12.0;
-  static const dialogRadius = 22.0;
-  static const sidebarWidth = 224.0;
-  static const sidebarCollapsedWidth = 68.0;
-  static const topBarHeight = 58.0;
+  static const radius = 8.0;
+  static const controlRadius = 8.0;
+  static const dialogRadius = 16.0;
+  static const sidebarWidth = 252.0;
+  static const sidebarCollapsedWidth = 72.0;
+  static const topBarHeight = 62.0;
   static const controlHeight = 38.0;
 
   static Color accent(BuildContext context) =>
@@ -147,8 +147,8 @@ abstract final class FarmThemeData {
         dark ? FarmPalette.darkTextSoft : FarmPalette.lightTextSoft;
     final line = dark ? FarmPalette.darkLine : FarmPalette.lightLine;
     final accent = dark ? const Color(0xFF70D795) : FarmPalette.primary;
-    final rim = dark ? const Color(0x24FFFFFF) : const Color(0xB3FFFFFF);
-    final field = dark ? const Color(0xB32D3530) : const Color(0xADFFFFFF);
+    final rim = dark ? const Color(0x32FFFFFF) : const Color(0xFFFFFFFF);
+    final field = dark ? const Color(0xFF1B271F) : const Color(0xFFFFFFFF);
     final scheme = ColorScheme(
       brightness: brightness,
       primary: accent,
@@ -158,7 +158,7 @@ abstract final class FarmThemeData {
           : FarmPalette.lightSurfaceSelected,
       onPrimaryContainer:
           dark ? const Color(0xFFB9F2CD) : const Color(0xFF0B5A2B),
-      secondary: FarmPalette.info,
+      secondary: dark ? const Color(0xFF65A5FF) : FarmPalette.info,
       onSecondary: Colors.white,
       secondaryContainer:
           dark ? const Color(0xFF1B304E) : const Color(0xFFEAF1FF),
@@ -272,6 +272,7 @@ abstract final class FarmThemeData {
         elevation: 0,
         margin: EdgeInsets.zero,
         surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.black.withValues(alpha: dark ? 0.30 : 0.08),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(FarmPalette.radius),
           side: BorderSide(color: rim),

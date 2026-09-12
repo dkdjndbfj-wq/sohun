@@ -1,14 +1,14 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
-/// Farm-only navigation surfaces. Content cards intentionally do not blur.
+/// Farm-only control-room surfaces. They stay crisp and opaque so dense
+/// production information remains readable while the personal workspace can
+/// keep its own glass treatment.
 class FarmShellChrome extends StatelessWidget {
   const FarmShellChrome({
     super.key,
     required this.child,
     this.padding = EdgeInsets.zero,
-    this.radius = 20,
+    this.radius = 14,
   });
 
   final Widget child;
@@ -21,40 +21,31 @@ class FarmShellChrome extends StatelessWidget {
     final dark = theme.brightness == Brightness.dark;
     final scheme = theme.colorScheme;
     final borderRadius = BorderRadius.circular(radius);
+    final fill = dark ? scheme.surface : scheme.surface.withValues(alpha: 0.96);
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: borderRadius,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: dark ? 0.12 : 0.035),
-            blurRadius: 22,
-            offset: const Offset(0, 5),
+            color: Colors.black.withValues(alpha: dark ? 0.26 : 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: ClipRRect(
         borderRadius: borderRadius,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: borderRadius,
-              border: Border.all(
-                color: dark
-                    ? Colors.white.withValues(alpha: 0.10)
-                    : Colors.white.withValues(alpha: 0.85),
-              ),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  scheme.surface.withValues(alpha: dark ? 0.78 : 0.76),
-                  scheme.surface.withValues(alpha: dark ? 0.60 : 0.54),
-                ],
-              ),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: borderRadius,
+            color: fill,
+            border: Border.all(
+              color: dark
+                  ? Colors.white.withValues(alpha: 0.12)
+                  : scheme.outlineVariant,
             ),
-            child: Padding(padding: padding, child: child),
           ),
+          child: Padding(padding: padding, child: child),
         ),
       ),
     );
@@ -78,31 +69,10 @@ class FarmShellBackground extends StatelessWidget {
           Positioned.fill(
             child: RepaintBoundary(
               child: IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: const Alignment(-1, -0.9),
-                      radius: 1.2,
-                      colors: [
-                        theme.colorScheme.primary.withValues(
-                          alpha: dark ? 0.13 : 0.09,
-                        ),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: RadialGradient(
-                        center: const Alignment(1, 0.85),
-                        radius: 1.1,
-                        colors: [
-                          theme.colorScheme.secondary.withValues(
-                            alpha: dark ? 0.08 : 0.06,
-                          ),
-                          Colors.transparent,
-                        ],
-                      ),
+                child: CustomPaint(
+                  painter: _FarmGridPainter(
+                    lineColor: theme.colorScheme.primary.withValues(
+                      alpha: dark ? 0.07 : 0.055,
                     ),
                   ),
                 ),
@@ -114,4 +84,28 @@ class FarmShellBackground extends StatelessWidget {
       ),
     );
   }
+}
+
+class _FarmGridPainter extends CustomPainter {
+  const _FarmGridPainter({required this.lineColor});
+
+  final Color lineColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 1;
+    const step = 28.0;
+    for (var x = 0.0; x <= size.width; x += step) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (var y = 0.0; y <= size.height; y += step) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _FarmGridPainter oldDelegate) =>
+      oldDelegate.lineColor != lineColor;
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-09-12T09:27:04.4809366+00:00",
+  "createdAt": "2026-09-12T09:44:46.1181849+00:00",
   "purpose": "Public source export; not a signed binary or third-party release clearance.",
   "coreAssets": true,
   "omittedAssetTrees": [
@@ -2382,8 +2382,8 @@
     },
     {
       "path": "电脑软件/lib/features/studio/farm_ui/farm_design.dart",
-      "bytes": 10931,
-      "sha256": "5851b5171796787edab9ffac372710fb9b2161a4c9f6755962d6e56d16fda61b"
+      "bytes": 11203,
+      "sha256": "d4de25969a41422d95da2b322aa399ea0b79cdce92d55fc3b6977f2fb2192e70"
     },
     {
       "path": "电脑软件/lib/features/studio/farm_ui/farm_feedback.dart",
@@ -2392,13 +2392,13 @@
     },
     {
       "path": "电脑软件/lib/features/studio/farm_ui/farm_shell_chrome.dart",
-      "bytes": 3550,
-      "sha256": "8452db73b5213c824d3a92b2dc958b44ab68c6f39bcd3990fc39336e6e8bbfc9"
+      "bytes": 3113,
+      "sha256": "fa1497fa521335a04ee2175ce13e6a53c51a1473624592e6cf4f08f3cd40ebfd"
     },
     {
       "path": "电脑软件/lib/features/studio/farm_ui/farm_theme.dart",
-      "bytes": 16146,
-      "sha256": "5e44dc90547090a53537ade1049dbc416bbe033beac1d3b23f7ea10a080c04ac"
+      "bytes": 16250,
+      "sha256": "4a07945b79f810b8388587a2291aed03f342c55e1159126e79750a5d64fca32e"
     },
     {
       "path": "电脑软件/lib/features/studio/farm_work_order_dialog.dart",
@@ -2412,8 +2412,8 @@
     },
     {
       "path": "电脑软件/lib/features/studio/studio_farm_shell.dart",
-      "bytes": 77176,
-      "sha256": "06b826fb8d7cfe4fcd21f8c5fa21fd6b1e8bdd16a8120109cb4878c24d02bc51"
+      "bytes": 81052,
+      "sha256": "1a3acfff4ff83dd1d9632f45bf62132184f34c2ba59a95b263630991c1f473df"
     },
     {
       "path": "电脑软件/lib/features/studio/studio_operations_screens.dart",
