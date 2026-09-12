@@ -2186,13 +2186,19 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
     ConsumablesCompanion entry, {
     required String workspaceId,
   }) async {
-    final id = await addConsumable(entry);
-    await setInventoryScope(
-      id,
-      scope: farmInventoryScope,
-      farmWorkspaceId: workspaceId,
-    );
-    return id;
+    // Insert and scope assignment must be one transaction.  Previously a
+    // malformed/empty workspace (or any later scope-update failure) left the
+    // newly inserted row in the personal inventory realm, making it visible
+    // to the wrong product/account on the same database.
+    return transaction(() async {
+      final id = await addConsumable(entry);
+      await setInventoryScope(
+        id,
+        scope: farmInventoryScope,
+        farmWorkspaceId: workspaceId,
+      );
+      return id;
+    });
   }
 
   /// 新增耗材并设置归属账号（多账号隔离用）。

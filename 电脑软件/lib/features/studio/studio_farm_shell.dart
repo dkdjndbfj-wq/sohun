@@ -67,7 +67,9 @@ class _StudioFarmWorkspaceState
   PrinterFleetConnectionManager? _fleetManager;
   bool _monitoringStarted = false;
   bool _guestMode = false;
-  bool _sidebarCollapsed = false;
+  // The farm opens as a clean canvas with a narrow tool rail. Labels remain
+  // available through tooltips and the rail can be expanded when needed.
+  bool _sidebarCollapsed = true;
 
   static const _items = <_FarmNavItem>[
     _FarmNavItem(
@@ -1997,50 +1999,163 @@ class _FarmGateScaffold extends StatelessWidget {
       backgroundColor: scheme.surfaceContainerLowest,
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(32),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 460),
-            child: Card(
-              margin: EdgeInsets.zero,
-              child: Padding(
-                padding: const EdgeInsets.all(28),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: scheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(FarmPalette.radius),
-                      ),
-                      child: Icon(icon, color: scheme.onPrimaryContainer),
-                    ),
-                    const SizedBox(height: 18),
-                    Text(
-                      title,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      description,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: scheme.onSurfaceVariant,
-                        height: 1.5,
+            constraints: const BoxConstraints(maxWidth: 920),
+            child: FrostPanel(
+              padding: EdgeInsets.zero,
+              elevated: true,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final wide = constraints.maxWidth >= 700;
+                  final intro = Container(
+                    padding: const EdgeInsets.all(28),
+                    decoration: BoxDecoration(
+                      color: scheme.primaryContainer.withValues(alpha: 0.72),
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(FarmPalette.radius),
+                        bottomLeft: Radius.circular(wide ? FarmPalette.radius : 0),
+                        topRight: Radius.circular(wide ? 0 : FarmPalette.radius),
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    child,
-                  ],
-                ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 46,
+                              height: 46,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: scheme.primary,
+                                borderRadius: BorderRadius.circular(
+                                  FarmPalette.controlRadius,
+                                ),
+                              ),
+                              child: Icon(icon, color: scheme.onPrimary),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'SOHUN FARM',
+                              style: Theme.of(context).textTheme.labelLarge
+                                  ?.copyWith(
+                                    color: scheme.onPrimaryContainer,
+                                    letterSpacing: 1.3,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 28),
+                        Text(
+                          title,
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          description,
+                          style: TextStyle(
+                            color: scheme.onPrimaryContainer,
+                            height: 1.55,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        _FarmGateSignal(
+                          icon: Icons.hub_outlined,
+                          label: '设备发现与状态',
+                          value: 'LAN READY',
+                        ),
+                        const SizedBox(height: 8),
+                        _FarmGateSignal(
+                          icon: Icons.shield_outlined,
+                          label: '业务数据访问',
+                          value: 'ACCOUNT REQUIRED',
+                        ),
+                      ],
+                    ),
+                  );
+                  final actions = Padding(
+                    padding: const EdgeInsets.all(28),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          '选择进入方式',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          '管理员管理完整生产链，成员按权限参与排产。',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 20),
+                        child,
+                      ],
+                    ),
+                  );
+                  return wide
+                      ? Row(
+                          // The gate is hosted in a SingleChildScrollView, so
+                          // its vertical constraints are unbounded. Stretching
+                          // children here would pass an infinite height to the
+                          // intro/actions panels and crash Flutter layout.
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: intro),
+                            Expanded(child: actions),
+                          ],
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [intro, actions],
+                        );
+                },
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _FarmGateSignal extends StatelessWidget {
+  const _FarmGateSignal({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(icon, size: 17, color: scheme.onPrimaryContainer),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(color: scheme.onPrimaryContainer, fontSize: 12),
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            color: scheme.primary,
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.6,
+          ),
+        ),
+      ],
     );
   }
 }

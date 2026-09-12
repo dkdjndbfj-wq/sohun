@@ -102,7 +102,10 @@ class _ConsumableTrackerAppState extends ConsumerState<ConsumableTrackerApp>
     _initTray();
     // 初始化本地通知服务（Windows Toast 通知）
     ref.read(notificationServiceProvider).init();
-    ref.read(printerFaultSyncServiceProvider);
+    // Farm faults stay in the farm product's local/remote realm. The personal
+    // fault API must never be started by a farm binary, even for an owner who
+    // authenticates with a shared Sohun account.
+    if (!AppVariant.isFarm) ref.read(printerFaultSyncServiceProvider);
     if (!AppVariant.isFarm) ref.read(deviceWorkbenchPublisherProvider);
     // 启动本地指标服务，并把四类问题线索接入可选的匿名诊断队列。
     // 上传开关仍默认关闭；未配置社区服务器时只保存在本地。
@@ -112,13 +115,21 @@ class _ConsumableTrackerAppState extends ConsumerState<ConsumableTrackerApp>
         CameraDiagnosticsTelemetry.attachTelemetry(service);
       }),
     );
-    // P1-创新1: 启动耗材干燥提醒服务（启动 30 秒后首次检查，之后每 6 小时一次）
-    ref.read(dryingReminderServiceProvider).start();
-    unawaited(_syncPersonalInventoryAfterAuth());
-    _personalInventorySyncTimer = Timer.periodic(
-      const Duration(minutes: 2),
-      (_) => unawaited(_syncPersonalInventoryAfterAuth()),
-    );
+    // P1-创新1: personal product drying reminders. Farm stock has its own
+    // inventory lifecycle and must not be scanned by this personal service.
+    if (!AppVariant.isFarm) {
+      ref.read(dryingReminderServiceProvider).start();
+    }
+    // The farm product has its own inventory realm.  Do not start the
+    // personal-account synchronizer (or its timer) in that binary, even when
+    // an administrator signs in with a normal Sohun account to manage a farm.
+    if (!AppVariant.isFarm) {
+      unawaited(_syncPersonalInventoryAfterAuth());
+      _personalInventorySyncTimer = Timer.periodic(
+        const Duration(minutes: 2),
+        (_) => unawaited(_syncPersonalInventoryAfterAuth()),
+      );
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(
         _showWhatsNewAfterStartup().whenComplete(() {
@@ -160,7 +171,7 @@ class _ConsumableTrackerAppState extends ConsumerState<ConsumableTrackerApp>
   /// write becomes visible without requiring a manual restart. The service
   /// merges local edits and uses the server revision as an optimistic lock.
   Future<void> _syncPersonalInventoryAfterAuth() async {
-    if (!mounted || _personalInventorySyncRunning) return;
+    if (AppVariant.isFarm || !mounted || _personalInventorySyncRunning) return;
     final authNotifier = ref.read(appAuthProvider.notifier);
     await authNotifier.ready;
     if (!mounted) return;
@@ -846,7 +857,7 @@ class _ConsumableTrackerAppState extends ConsumerState<ConsumableTrackerApp>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _setWindowActive(state == AppLifecycleState.resumed);
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.resumed && !AppVariant.isFarm) {
       unawaited(_syncPersonalInventoryAfterAuth());
     }
     if (state == AppLifecycleState.detached) {
@@ -986,7 +997,9 @@ class _ConsumableTrackerAppState extends ConsumerState<ConsumableTrackerApp>
     ref.listen<AppAuthState>(appAuthProvider, (_, next) {
       if (next.isSignedIn) {
         _showNextPendingWorkflow();
-        unawaited(_syncPersonalInventoryAfterAuth());
+        if (!AppVariant.isFarm) {
+          unawaited(_syncPersonalInventoryAfterAuth());
+        }
       }
     });
     ref.listen<bool>(studioModeEnabledProvider, (_, __) {

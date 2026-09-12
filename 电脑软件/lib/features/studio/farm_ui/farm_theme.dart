@@ -121,7 +121,9 @@ class FarmThemeScope extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
+    // Farm is a high-visibility operations surface. Keep it white even when
+    // the personal workspace follows the system dark-mode preference.
+    const brightness = Brightness.light;
     FarmVisual.configure(brightness);
     FarmVisual.mono = FarmVisual.mono.copyWith(
       color: brightness == Brightness.dark

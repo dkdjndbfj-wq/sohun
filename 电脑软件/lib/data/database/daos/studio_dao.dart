@@ -11,6 +11,7 @@ import 'package:uuid/uuid.dart';
 import '../database.dart';
 import '../models/studio_models.dart';
 import '../../external/slicer/production_package_inspector.dart';
+import '../../../core/constants/personal_spool_policy.dart';
 
 export '../models/studio_models.dart';
 
@@ -53,7 +54,7 @@ class StudioDao extends DatabaseAccessor<AppDatabase> {
        _farmInventoryOverride = farmInventory;
 
   static const _uuid = Uuid();
-  static const double _farmRollGrams = 1000;
+  static const double _farmRollGrams = personalSpoolCapacityGrams;
 
   /// The selected production plate follows its work order into the queue.
   /// Do not silently send plate 1 from a shared multi-plate 3MF.
@@ -2341,6 +2342,11 @@ class StudioDao extends DatabaseAccessor<AppDatabase> {
           }
           if (channel.read<int>('farm_roll_paused') > 0) {
             throw StateError('所选槽位的耗材正在维修暂存，不能排产');
+          }
+          if (_usesFarmInventory &&
+              channel.read<double>('loaded_remaining_grams') <=
+                  minimumReusableSpoolGrams) {
+            throw StateError('所选槽位余量必须大于 30g 才能继续排产');
           }
           demandByChannel.update(
             channelId,

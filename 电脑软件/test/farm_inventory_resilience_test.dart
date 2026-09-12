@@ -4,6 +4,7 @@ import 'package:consumable_tracker_desktop/data/database/daos/studio_dao.dart';
 import 'package:consumable_tracker_desktop/data/database/database.dart';
 import 'package:consumable_tracker_desktop/data/external/printer/bambu_printer_models.dart';
 import 'package:consumable_tracker_desktop/features/studio/farm_inventory_stock.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -41,6 +42,25 @@ void main() {
       MaterialIdentityService.normalize('Bambu Support For PLA').family,
       'SUPPORT-PLA',
     );
+  });
+
+  test('农场库存绑定工作区失败时不会遗留个人库存行', () async {
+    final database = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(database.close);
+    await expectLater(
+      database.consumableDao.addFarmConsumable(
+        ConsumablesCompanion.insert(
+          uid: const Value('rollback-farm-row'),
+          manufacturer: 'Bambu Lab',
+          model: 'PLA Basic',
+          totalGrams: const Value(1000),
+          remainingGrams: const Value(1000),
+        ),
+        workspaceId: '   ',
+      ),
+      throwsArgumentError,
+    );
+    expect(await database.consumableDao.getAll(), isEmpty);
   });
 
   test('品牌别名标准化，颜色名称不参与库存分组', () async {

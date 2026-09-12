@@ -12,6 +12,7 @@ import '../../providers/filament_cost_provider.dart';
 import '../../providers/printer_provider.dart';
 import '../../providers/scheduler_provider.dart';
 import '../../providers/studio_provider.dart';
+import '../../ui/workspace_navigation.dart';
 import 'farm_ui/farm_design.dart';
 import 'farm_ui/farm_theme.dart';
 import 'farm_ui/farm_feedback.dart';
@@ -88,6 +89,14 @@ class StudioOverviewScreen extends ConsumerWidget {
             });
           return ListView(
             children: [
+              FarmPrinterSpatialCanvas(
+                printers: printers,
+                onPrinterTap: (_) {
+                  ref.read(workspaceNavigationRequestProvider.notifier).state =
+                      WorkspacePageIds.studioMaterials;
+                },
+              ),
+              const SizedBox(height: 14),
               LayoutBuilder(
                 builder: (context, constraints) {
                   final columns = constraints.maxWidth >= 1080

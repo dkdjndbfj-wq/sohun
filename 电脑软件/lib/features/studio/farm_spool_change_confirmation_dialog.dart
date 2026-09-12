@@ -194,7 +194,9 @@ class _FarmSpoolChangeContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final available = groupFarmWarehouseMaterials(items)
-        .where((group) => group.availableRolls > 0)
+        // Partial retained balances are kept for audit but cannot satisfy a
+        // fresh 1000g enrollment request.
+        .where((group) => group.nextWholeRoll != null)
         .toList(growable: false);
     final tray = event.current;
     return Column(

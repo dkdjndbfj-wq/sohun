@@ -1,5 +1,6 @@
 import '../../data/database/database.dart';
 import '../../core/services/farm_brand_catalog_service.dart';
+import '../../core/constants/personal_spool_policy.dart';
 
 /// A farm warehouse row represents one material SKU, never one physical roll
 /// or one inbound-batch row. Physical rolls are deducted from the oldest
@@ -21,8 +22,7 @@ class FarmWarehouseMaterialGroup {
 
   int get availableRolls => items.fold<int>(
         0,
-        (sum, item) =>
-            sum + (item.remainingGrams / farmWarehouseRollGrams).floor(),
+        (sum, item) => sum + farmUsableRollCount(item.remainingGrams),
       );
 
   double get availableGrams => items.fold<double>(
@@ -55,7 +55,20 @@ class FarmWarehouseMaterialGroup {
   }
 }
 
-const double farmWarehouseRollGrams = 1000;
+const double farmWarehouseRollGrams = personalSpoolCapacityGrams;
+
+/// Counts usable physical rolls represented by an aggregate farm row. A
+/// remainder is a usable roll only when it is strictly above the shared
+/// 30&nbsp;g reuse threshold; balances at or below the threshold remain visible
+/// for audit but must not be offered for production.
+int farmUsableRollCount(double remainingGrams) {
+  if (!remainingGrams.isFinite || remainingGrams <= minimumReusableSpoolGrams) {
+    return 0;
+  }
+  final full = (remainingGrams / farmWarehouseRollGrams).floor();
+  final remainder = remainingGrams - full * farmWarehouseRollGrams;
+  return full + (remainder > minimumReusableSpoolGrams ? 1 : 0);
+}
 
 List<FarmWarehouseMaterialGroup> groupFarmWarehouseMaterials(
   Iterable<Consumable> source,

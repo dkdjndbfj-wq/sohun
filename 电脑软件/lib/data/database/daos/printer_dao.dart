@@ -82,7 +82,7 @@ class PrinterDao extends DatabaseAccessor<AppDatabase> with _$PrinterDaoMixin {
   PrinterDao(super.db);
 
   static const _uuid = Uuid();
-  static const double _farmRollGrams = 1000;
+  static const double _farmRollGrams = personalSpoolCapacityGrams;
 
   /// 耗材 DAO 引用（用于拓竹原厂料自动绑定和 RFID 残量同步）。
   late final ConsumableDao _consumableDao = ConsumableDao(attachedDatabase);
@@ -1289,9 +1289,14 @@ class PrinterDao extends DatabaseAccessor<AppDatabase> with _$PrinterDaoMixin {
       variables: [Variable(channelId)],
     ).getSingleOrNull();
     if (row == null) return false;
-    if (row.read<String>('inventory_scope') == 'farm') return true;
     final remaining = row.read<double>('remaining_grams');
     final loaded = row.read<double>('loaded_remaining_grams');
+    if (row.read<String>('inventory_scope') == 'farm') {
+      // Farm slots keep their own physical-roll balance. Reusing or
+      // continuing a paused roll is subject to the shared strict >30g policy;
+      // the warehouse aggregate balance is not authoritative for this slot.
+      return canReusePersonalSpool(loaded);
+    }
     final individual = await _consumableDao.isIndividualPersonalSpool(
       row.read<int>('consumable_id'),
     );
@@ -1322,7 +1327,7 @@ class PrinterDao extends DatabaseAccessor<AppDatabase> with _$PrinterDaoMixin {
     int? expectedConsumableId,
   }) async {
     final row = await customSelect(
-      'SELECT pc.id, pc.consumable_id, c.inventory_scope '
+      'SELECT pc.id, pc.consumable_id, pc.farm_roll_paused, c.inventory_scope '
       'FROM printer_channels pc '
       'LEFT JOIN consumables c ON c.id = pc.consumable_id '
       'WHERE pc.printer_id = ? AND pc.channel_index = ? LIMIT 1',
@@ -1336,14 +1341,15 @@ class PrinterDao extends DatabaseAccessor<AppDatabase> with _$PrinterDaoMixin {
       return false;
     }
     final normalized = remainingGrams.clamp(0.0, _farmRollGrams).toDouble();
+    final holdState = row.read<int?>('farm_roll_paused') ?? 0;
     await customUpdate(
       'UPDATE printer_channels SET loaded_remaining_grams = ?, '
-      'farm_roll_paused = 0, updated_at = ? '
-      'WHERE id = ?',
+      'updated_at = ? WHERE id = ? AND farm_roll_paused = ?',
       variables: [
         Variable(normalized),
         Variable(DateTime.now().millisecondsSinceEpoch ~/ 1000),
         Variable(row.read<int>('id')),
+        Variable(holdState),
       ],
       updates: {printerChannels},
     );
@@ -1388,8 +1394,7 @@ class PrinterDao extends DatabaseAccessor<AppDatabase> with _$PrinterDaoMixin {
           physicalSpoolUid?.trim().isNotEmpty == true &&
           loadedSpoolUid != physicalSpoolUid!.trim();
       if (ch.consumableId == newConsumableId && !replacingPhysicalSpool) {
-        if (!await _consumableDao.isFarmConsumable(newConsumableId) &&
-            ch.loadedRemainingGrams > 0 &&
+        if (ch.loadedRemainingGrams > 0 &&
             !await _canResumePersonalChannel(channelId)) {
           throw StateError('继续使用的余量必须大于 30g；每卷固定 1000g，请先核对库存');
         }
@@ -1540,7 +1545,7 @@ class PrinterDao extends DatabaseAccessor<AppDatabase> with _$PrinterDaoMixin {
         consumableId,
       );
       if (consumable != null) {
-        const rollGrams = 1000.0;
+        const rollGrams = personalSpoolCapacityGrams;
         final farmInventory = await _consumableDao.isFarmConsumable(
           consumableId,
         );

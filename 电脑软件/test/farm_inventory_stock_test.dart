@@ -16,6 +16,15 @@ void main() {
     await database.close();
   });
 
+  test('聚合库存按 30g 严格阈值统计可用卷数', () {
+    expect(farmUsableRollCount(0), 0);
+    expect(farmUsableRollCount(30), 0);
+    expect(farmUsableRollCount(31), 1);
+    expect(farmUsableRollCount(1020), 1);
+    expect(farmUsableRollCount(1500), 2);
+    expect(farmUsableRollCount(4500), 5);
+  });
+
   test('同款农场耗材按品种聚合，并从最早入库记录取一卷', () async {
     final studioDao = StudioDao(database);
     addTearDown(studioDao.dispose);

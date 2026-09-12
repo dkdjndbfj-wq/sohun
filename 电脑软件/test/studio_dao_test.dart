@@ -1002,6 +1002,20 @@ void main() {
           .loadedRemainingGrams,
       350,
     );
+    await database.printerDao.syncFarmChannelLoadedRemaining(
+      printerId: printerId,
+      channelIndex: channel.channel.channelIndex,
+      remainingGrams: 30,
+      expectedConsumableId: consumable.id,
+    );
+    await database.printerDao.pauseFarmChannelRollForMaintenance(
+      channel.channel.id,
+    );
+    await expectLater(
+      database.printerDao.resumeFarmChannelRoll(channel.channel.id),
+      throwsStateError,
+      reason: '农场槽位余量达到 30g 时不能继续使用',
+    );
   });
 
   test('仓库最后一卷装机后仍由槽位独立使用，耗尽时不重复扣仓库', () async {

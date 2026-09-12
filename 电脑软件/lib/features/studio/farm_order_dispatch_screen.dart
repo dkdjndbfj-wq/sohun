@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/services/printer_fleet_connection_manager.dart';
+import '../../core/constants/personal_spool_policy.dart';
 import '../../core/services/material_identity_service.dart';
 import '../../core/services/printer_model_normalizer.dart';
 import '../../core/services/slice_artifact_hash_service.dart';
@@ -1534,7 +1535,7 @@ Future<Map<int, ChannelWithConsumable>?> _showMaterialMappingDialog(
     final consumable = slot.consumable;
     if (consumable == null ||
         slot.farmRollPaused ||
-        slot.channel.loadedRemainingGrams <= 0 ||
+        slot.channel.loadedRemainingGrams <= minimumReusableSpoolGrams ||
         !farmStockIds.contains(consumable.id)) return false;
     final external = isExternalFeedChannel(slot.channel.channelIndex);
     if (!external && amsState != AmsDetectionState.present) return false;

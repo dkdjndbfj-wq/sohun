@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-09-12T09:44:46.1181849+00:00",
+  "createdAt": "2026-09-12T13:37:26.1443876+00:00",
   "purpose": "Public source export; not a signed binary or third-party release clearance.",
   "coreAssets": true,
   "omittedAssetTrees": [
@@ -28,7 +28,7 @@
     "related tests and build scripts"
   ],
   "resourceReview": "THIRD_PARTY_NOTICES.md remains authoritative. Keeping attributed source data is not a clearance declaration for a distributable binary.",
-  "fileCount": 926,
+  "fileCount": 927,
   "files": [
     {
       "path": ".agents/skills/sohun-validation/SKILL.md",
@@ -1057,8 +1057,8 @@
     },
     {
       "path": "电脑软件/lib/app.dart",
-      "bytes": 40426,
-      "sha256": "5fdf7529bd904a6dc1c058e379e61b71207243fc15af0dfc9890d41c60b31368"
+      "bytes": 41102,
+      "sha256": "4b0bea4292342cece41e7c7252d06f8c42760633eabd567888c1a1b16dcbd9a9"
     },
     {
       "path": "电脑软件/lib/core/app_identity.dart",
@@ -1432,8 +1432,8 @@
     },
     {
       "path": "电脑软件/lib/data/database/daos/consumable_dao.dart",
-      "bytes": 112700,
-      "sha256": "6136ef9c8a7fb969af5b6f06c2fbf873c715575f823e224faca40793d7475da2"
+      "bytes": 113031,
+      "sha256": "73c6ada0dda3fad9f4d152306bae019e4ef4acc12da91f7f689f23aae9be6a0c"
     },
     {
       "path": "电脑软件/lib/data/database/daos/consumable_dao.g.dart",
@@ -1477,8 +1477,8 @@
     },
     {
       "path": "电脑软件/lib/data/database/daos/printer_dao.dart",
-      "bytes": 107960,
-      "sha256": "a4e2307e28b96fa9df1bb374e6afe2be56eed1ed66962fe7326de93043bac632"
+      "bytes": 108283,
+      "sha256": "0b7af62b6678f416e989f817c2b50aa7f1fe69be3a949148c2ebe16a71b1f80d"
     },
     {
       "path": "电脑软件/lib/data/database/daos/printer_dao.g.dart",
@@ -1502,8 +1502,8 @@
     },
     {
       "path": "电脑软件/lib/data/database/daos/studio_dao.dart",
-      "bytes": 203942,
-      "sha256": "57eda19242391f5ea8c2b93e69dbd0a8fc6ab847c0704e8a6faa47b6717c60a9"
+      "bytes": 204265,
+      "sha256": "0d2cbe577defb7e64308a4ea7743ebed6a500de0aaa29d8a4557c73c50adcf3a"
     },
     {
       "path": "电脑软件/lib/data/database/daos/studio_quote_config_dao.dart",
@@ -2302,8 +2302,8 @@
     },
     {
       "path": "电脑软件/lib/features/studio/farm_inventory_stock.dart",
-      "bytes": 3453,
-      "sha256": "bf4f429adae0fb7e0e9230d7b88d9fa1b5ed5112fed57f9a1dc98dd0fc84a491"
+      "bytes": 4138,
+      "sha256": "0ed361bd9b8a46f11089414bf9e9a9cb7bc3fc62717c5fb3a77e00e671d101c1"
     },
     {
       "path": "电脑软件/lib/features/studio/farm_lan_bulk_import_dialog.dart",
@@ -2317,8 +2317,8 @@
     },
     {
       "path": "电脑软件/lib/features/studio/farm_order_dispatch_screen.dart",
-      "bytes": 70762,
-      "sha256": "b52208c239b9789534621308581a0a5734018a1991a0d9aadc4dc93af8abf12b"
+      "bytes": 70844,
+      "sha256": "4352cd70ab7b28e51c6575d7cc1cb1a6a36c6e1ce1a67771c726b91de996aaf5"
     },
     {
       "path": "电脑软件/lib/features/studio/farm_print_removal_confirmation_dialog.dart",
@@ -2337,13 +2337,13 @@
     },
     {
       "path": "电脑软件/lib/features/studio/farm_printer_materials_screen.dart",
-      "bytes": 53433,
-      "sha256": "0ebdb02318f9a3a22669ac74bc707ab4ec1d0f80d9a0c41188f957013bd1119e"
+      "bytes": 53686,
+      "sha256": "84d4c89126ebb956c2a2de1ddaaf0eb1b514b7dec744b51ed0f427674d9771e7"
     },
     {
       "path": "电脑软件/lib/features/studio/farm_settings_screen.dart",
-      "bytes": 6477,
-      "sha256": "1e2eadfd6a5443c26f024e8b57bb5bab78aecdd147469316e2875ae2fbf40322"
+      "bytes": 6663,
+      "sha256": "08301ec76d15ddc961c9db54674c2112f0e52e5b911619f57b025c8549ee1c0f"
     },
     {
       "path": "电脑软件/lib/features/studio/farm_slice_intake_dialog.dart",
@@ -2362,8 +2362,8 @@
     },
     {
       "path": "电脑软件/lib/features/studio/farm_spool_change_confirmation_dialog.dart",
-      "bytes": 10377,
-      "sha256": "e75991dcfad6c31e69de4078f005fbf721034711c6483e44b7531662adf17e5e"
+      "bytes": 10500,
+      "sha256": "a8a76f23e9320bd496cf37dc7c21f9d5130fe51924edafe9cd85b02df0871b4b"
     },
     {
       "path": "电脑软件/lib/features/studio/farm_ui/farm_account_flows.dart",
@@ -2382,8 +2382,8 @@
     },
     {
       "path": "电脑软件/lib/features/studio/farm_ui/farm_design.dart",
-      "bytes": 11203,
-      "sha256": "d4de25969a41422d95da2b322aa399ea0b79cdce92d55fc3b6977f2fb2192e70"
+      "bytes": 37596,
+      "sha256": "7a3b57f7eb73ca43d8c1b75c582f4128f1162cd4ee46fa759ed00e1ddbb43946"
     },
     {
       "path": "电脑软件/lib/features/studio/farm_ui/farm_feedback.dart",
@@ -2397,8 +2397,8 @@
     },
     {
       "path": "电脑软件/lib/features/studio/farm_ui/farm_theme.dart",
-      "bytes": 16250,
-      "sha256": "4a07945b79f810b8388587a2291aed03f342c55e1159126e79750a5d64fca32e"
+      "bytes": 16386,
+      "sha256": "65985d06fce0d37121486fb642c261f5cc15233dc3ab486ed549199415904db0"
     },
     {
       "path": "电脑软件/lib/features/studio/farm_work_order_dialog.dart",
@@ -2412,13 +2412,13 @@
     },
     {
       "path": "电脑软件/lib/features/studio/studio_farm_shell.dart",
-      "bytes": 81052,
-      "sha256": "1a3acfff4ff83dd1d9632f45bf62132184f34c2ba59a95b263630991c1f473df"
+      "bytes": 85809,
+      "sha256": "25f00e20873d11a426d0334b0357a17fce784310fee2f1939d00656ed77c9c63"
     },
     {
       "path": "电脑软件/lib/features/studio/studio_operations_screens.dart",
-      "bytes": 201148,
-      "sha256": "7fe7c13b9f2c1f63d471ef646102f4fa3ee5be91a1c8f1ff817f581cd285e061"
+      "bytes": 201959,
+      "sha256": "7c65129af01eb22d7fc91886ab16673fc93330dde28c9fef487e6187ec5cc193"
     },
     {
       "path": "电脑软件/lib/features/studio/studio_plate_filament_summary.dart",
@@ -2432,8 +2432,8 @@
     },
     {
       "path": "电脑软件/lib/features/studio/studio_screens.dart",
-      "bytes": 89027,
-      "sha256": "cafd06db7596c777df2a877f87d7d61b2cab69d19fd0e2833d0694138895769e"
+      "bytes": 89398,
+      "sha256": "890023283f76399f6e959862011c0b1e56842807c6d1493f2912820152585c27"
     },
     {
       "path": "电脑软件/lib/features/studio/studio_work_order_materials.dart",
@@ -3437,13 +3437,13 @@
     },
     {
       "path": "电脑软件/test/farm_inventory_resilience_test.dart",
-      "bytes": 5776,
-      "sha256": "22e48b4dacdcb3e35fd5441c50f2814780dc85c4717aa16e722c596f9a1ef9db"
+      "bytes": 6469,
+      "sha256": "24ea5d8ce50792689bc3af78db518cf34b68cb8904ad8c9ef5fcae2cd6ed57ca"
     },
     {
       "path": "电脑软件/test/farm_inventory_stock_test.dart",
-      "bytes": 4606,
-      "sha256": "4523667c9dfef8f82a6cef9c567d2c6e3db9621c8a84779f82fd093beabbad7b"
+      "bytes": 4924,
+      "sha256": "b093a07231301491a54b5c4d4d898c1c541e23c6768f8dd2843a93898b03532d"
     },
     {
       "path": "电脑软件/test/farm_lan_bulk_import_dialog_test.dart",
@@ -3499,6 +3499,11 @@
       "path": "电脑软件/test/farm_slicing_workflow_test.dart",
       "bytes": 3033,
       "sha256": "8d376ca71f45c1dfeb544ea947978e8c267cbed650a33691b6dcce7d747717fc"
+    },
+    {
+      "path": "电脑软件/test/farm_spatial_canvas_test.dart",
+      "bytes": 5034,
+      "sha256": "721f27ce3232a179e749a44d7d5420f7b63358a9093582ee6ee57a5e6f1d4e98"
     },
     {
       "path": "电脑软件/test/farm_spool_dialog_isolation_test.dart",
@@ -4062,8 +4067,8 @@
     },
     {
       "path": "电脑软件/test/studio_dao_test.dart",
-      "bytes": 69763,
-      "sha256": "0d793c2172a5eddf103093182f0eece19f7e5ad77c31b6ae669f26640b478fc2"
+      "bytes": 70269,
+      "sha256": "22c4ce10cfc26d7a2fd7766f2a4a4cc6f6bc79657e837662cdd4958254d2c1c2"
     },
     {
       "path": "电脑软件/test/studio_dispatch_service_test.dart",
@@ -4612,8 +4617,8 @@
     },
     {
       "path": "scripts/public_core_build.ps1",
-      "bytes": 18610,
-      "sha256": "e791ceb47ac8a8ab9ca405888134974f06ff5b16ee54bf4b5e522ae2234de4ac"
+      "bytes": 18884,
+      "sha256": "091768309c4fd15e49a9905a0c0853f7381be43d8aa18cd3cf46f6494cb64bde"
     },
     {
       "path": "scripts/tests/test_core_build.ps1",

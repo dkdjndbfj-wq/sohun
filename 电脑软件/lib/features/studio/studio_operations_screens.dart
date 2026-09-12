@@ -34,6 +34,8 @@ import '../../providers/farm_slicing_preset_provider.dart';
 import '../../providers/farm_material_type_catalog_provider.dart';
 import '../../providers/farm_brand_catalog_provider.dart';
 import '../../providers/farm_consumable_metadata_provider.dart';
+import 'farm_inventory_stock.dart';
+import '../../ui/workspace_navigation.dart';
 import 'farm_ui/farm_design.dart';
 import 'farm_ui/farm_theme.dart';
 import 'farm_ui/farm_feedback.dart';
@@ -87,6 +89,8 @@ class StudioFarmOverviewScreen extends ConsumerWidget {
     final tasks = ref.watch(schedulerTasksProvider).valueOrNull ?? const [];
     final consumables =
         ref.watch(farmConsumablesProvider).valueOrNull ?? const [];
+    final printers =
+        ref.watch(printersWithChannelsProvider).valueOrNull ?? const [];
     final deferredSlices = ref.watch(farmSliceIntakeProvider).deferred;
     return _FarmPage(
       title: '总控台',
@@ -137,7 +141,7 @@ class StudioFarmOverviewScreen extends ConsumerWidget {
               tasks.where((item) => !item.status.isTerminal).toList();
           final warehouseRolls = consumables.fold<int>(
             0,
-            (sum, item) => sum + (item.remainingGrams / 1000).floor(),
+            (sum, item) => sum + farmUsableRollCount(item.remainingGrams),
           );
           return Column(
             children: [
@@ -153,8 +157,22 @@ class StudioFarmOverviewScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               Expanded(
-                child: Row(
+                child: Column(
                   children: [
+                    Expanded(
+                      flex: 3,
+                      child: FarmPrinterSpatialCanvas(
+                        printers: printers,
+                        onPrinterTap: (_) => ref
+                            .read(workspaceNavigationRequestProvider.notifier)
+                            .state = WorkspacePageIds.studioMaterials,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      flex: 2,
+                      child: Row(
+                        children: [
                     Expanded(
                       child: _FarmPanel(
                         title: '需处理',
@@ -300,6 +318,9 @@ class StudioFarmOverviewScreen extends ConsumerWidget {
                                   );
                                 },
                               ),
+                      ),
+                    ),
+                        ],
                       ),
                     ),
                   ],
@@ -3097,9 +3118,7 @@ class _FarmInventoryGroup {
     for (var index = 0; index < items.length; index++) {
       final item = items[index];
       final batch = batchItems[index];
-      final available = item.remainingGrams <= 0
-          ? 0
-          : math.max(1, (item.remainingGrams / 1000).ceil());
+      final available = farmUsableRollCount(item.remainingGrams);
       result += batch == null ? available : available.clamp(0, batch.rollCount);
     }
     return result;
@@ -5147,7 +5166,7 @@ class _FarmPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 18, 24, 20),
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -5172,7 +5191,7 @@ class _FarmSummaryBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 64,
+      height: 56,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerLow,
         border: Border.all(color: Theme.of(context).dividerColor),
@@ -5183,7 +5202,7 @@ class _FarmSummaryBar extends StatelessWidget {
           for (var index = 0; index < items.length; index++) ...[
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -5199,7 +5218,7 @@ class _FarmSummaryBar extends StatelessWidget {
                     Text(
                       items[index].$2,
                       style: const TextStyle(
-                        fontSize: 17,
+                        fontSize: 15,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -5228,12 +5247,13 @@ class _FarmEmpty extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 36, color: Theme.of(context).colorScheme.outline),
-          const SizedBox(height: 10),
+          Icon(icon, size: 30, color: Theme.of(context).colorScheme.outline),
+          const SizedBox(height: 7),
           Text(
             text,
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 12,
             ),
           ),
         ],

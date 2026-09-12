@@ -112,7 +112,8 @@ class FarmPrinterMaterialsScreen extends ConsumerWidget {
                     '仓库库存',
                     '${stockItems.fold<int>(
                       0,
-                      (sum, item) => sum + (item.remainingGrams / 1000).floor(),
+                      (sum, item) =>
+                          sum + farmUsableRollCount(item.remainingGrams),
                     )} 卷'
                   ),
                 ],
@@ -1384,7 +1385,10 @@ class _FarmSlotRow extends ConsumerWidget {
       legacySingleExternal: legacySingleExternal,
     );
     final available = groupFarmWarehouseMaterials(stock)
-        .where((group) => group.availableRolls > 0)
+        // Manual enrollment consumes one fresh 1000g roll. A SKU may still
+        // have only a retained partial remainder (counted for inventory
+        // visibility), but it is not a valid candidate for this flow.
+        .where((group) => group.nextWholeRoll != null)
         .toList(growable: false);
     if (available.isEmpty) {
       showSnack(context, '农场库存没有可绑定的耗材，请先入库。', error: true);

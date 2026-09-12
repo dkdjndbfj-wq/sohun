@@ -130,21 +130,26 @@ class _FarmSettingsScreenState extends ConsumerState<FarmSettingsScreen> {
       return;
     }
     setState(() => _saving = true);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_lowStockKey, threshold.round());
-    await prefs.setBool(_cameraPortalKey, _cameraPortal);
-    await recordCurrentFarmActivity(
-      ref,
-      actionCode: 'farm_settings.updated',
-      entityType: 'workspace',
-      entityId: 'farm_settings',
-      summary:
-          '保存农场设置：低库存阈值 ${threshold.round()}g，客户摄像头${_cameraPortal ? '开启' : '关闭'}',
-    );
-    if (mounted) {
-      ref.invalidate(farmLowStockThresholdProvider);
-      setState(() => _saving = false);
-      showSnack(context, '农场设置已保存');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_lowStockKey, threshold.round());
+      await prefs.setBool(_cameraPortalKey, _cameraPortal);
+      await recordCurrentFarmActivity(
+        ref,
+        actionCode: 'farm_settings.updated',
+        entityType: 'workspace',
+        entityId: 'farm_settings',
+        summary:
+            '保存农场设置：低库存阈值 ${threshold.round()}g，客户摄像头${_cameraPortal ? '开启' : '关闭'}',
+      );
+      if (mounted) {
+        ref.invalidate(farmLowStockThresholdProvider);
+        showSnack(context, '农场设置已保存');
+      }
+    } catch (error) {
+      if (mounted) showSnack(context, '农场设置保存失败：$error', error: true);
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 }
