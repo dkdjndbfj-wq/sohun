@@ -242,7 +242,7 @@ void main() {
       final current = (await db.consumableDao.getById(
         history.first.consumableId,
       ))!;
-      expect(current.totalGrams, 375);
+      expect(current.totalGrams, 1000);
       expect(current.remainingGrams, 375);
       expect(
         (await db.consumableDao.getById(fixture.itemA.id))!.remainingGrams,

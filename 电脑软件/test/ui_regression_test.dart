@@ -3,6 +3,7 @@ import 'package:consumable_tracker_desktop/data/database/database.dart';
 import 'package:consumable_tracker_desktop/data/database/models/printer_feed_models.dart';
 import 'package:consumable_tracker_desktop/features/printers/channel_slot.dart';
 import 'package:consumable_tracker_desktop/features/printers/printer_card.dart';
+import 'package:consumable_tracker_desktop/providers/consumable_provider.dart';
 import 'package:consumable_tracker_desktop/ui/aurora_design.dart';
 import 'package:consumable_tracker_desktop/widgets/empty_state.dart';
 import 'package:consumable_tracker_desktop/widgets/glass_card.dart';
@@ -94,22 +95,19 @@ void main() {
                 width: 560,
                 height: 470,
                 child: PrinterCard(
-                  data: PrinterWithChannels(
-                    printer,
-                    [
-                      ChannelWithConsumable(
-                        PrinterChannel(
-                          id: 20,
-                          printerId: printer.id,
-                          channelIndex: externalFeedRightChannel,
-                          label: '外挂料位',
-                          loadedRemainingGrams: 0,
-                          updatedAt: now,
-                        ),
-                        null,
+                  data: PrinterWithChannels(printer, [
+                    ChannelWithConsumable(
+                      PrinterChannel(
+                        id: 20,
+                        printerId: printer.id,
+                        channelIndex: externalFeedRightChannel,
+                        label: '外挂料位',
+                        loadedRemainingGrams: 0,
+                        updatedAt: now,
                       ),
-                    ],
-                  ),
+                      null,
+                    ),
+                  ]),
                 ),
               ),
             ),
@@ -190,11 +188,7 @@ void main() {
   });
 
   testWidgets('工作台物理料位的单卷显示永不超过 1000g', (tester) async {
-    await _pumpPrinterCard(
-      tester,
-      channelCount: 1,
-      remainingGrams: 2500,
-    );
+    await _pumpPrinterCard(tester, channelCount: 1, remainingGrams: 2500);
 
     expect(find.text('1000g'), findsOneWidget);
     expect(find.text('2500g'), findsNothing);
@@ -256,7 +250,7 @@ Future<void> _pumpPrinterCard(
               model: 'PLA',
               materialType: 'PLA',
               colorHex: '#22C55E',
-              totalGrams: remainingGrams,
+              totalGrams: 1000,
               remainingGrams: remainingGrams,
               createdAt: now,
               updatedAt: now,
@@ -267,15 +261,18 @@ Future<void> _pumpPrinterCard(
 
   await tester.pumpWidget(
     ProviderScope(
+      overrides: [
+        personalInventoryAccountScopeProvider.overrideWithValue(
+          const PersonalInventoryAccountScope(enforce: false, ownerAccount: ''),
+        ),
+      ],
       child: MaterialApp(
         home: Scaffold(
           body: Center(
             child: SizedBox(
               width: 420,
               height: 470,
-              child: PrinterCard(
-                data: PrinterWithChannels(printer, channels),
-              ),
+              child: PrinterCard(data: PrinterWithChannels(printer, channels)),
             ),
           ),
         ),

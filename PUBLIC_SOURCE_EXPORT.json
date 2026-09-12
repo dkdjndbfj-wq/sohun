@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-09-12T08:07:57.2657630+00:00",
+  "createdAt": "2026-09-12T09:27:04.4809366+00:00",
   "purpose": "Public source export; not a signed binary or third-party release clearance.",
   "coreAssets": true,
   "omittedAssetTrees": [
@@ -2412,8 +2412,8 @@
     },
     {
       "path": "电脑软件/lib/features/studio/studio_farm_shell.dart",
-      "bytes": 75167,
-      "sha256": "c1ec02c32ef31128c046c761b48326fca55cbe7b15bed7e2d25e39f5aa434c30"
+      "bytes": 77176,
+      "sha256": "06b826fb8d7cfe4fcd21f8c5fa21fd6b1e8bdd16a8120109cb4878c24d02bc51"
     },
     {
       "path": "电脑软件/lib/features/studio/studio_operations_screens.dart",
@@ -3407,8 +3407,8 @@
     },
     {
       "path": "电脑软件/test/external_multicolor_dialog_test.dart",
-      "bytes": 12037,
-      "sha256": "ec3a6066883541063677b1e8e47129cbf2fc4cd31db6af202cd0c9af38fbc654"
+      "bytes": 12444,
+      "sha256": "f522a60c1b7c53f2f6d1e5a353d719997871f63a29f74e0900e343e92f7fe08c"
     },
     {
       "path": "电脑软件/test/external_multicolor_workflow_test.dart",
@@ -3697,8 +3697,8 @@
     },
     {
       "path": "电脑软件/test/mobile_replacement_intake_test.dart",
-      "bytes": 9972,
-      "sha256": "5681b51d319784c474bbe690519c23ba8507147a24935380ecd24eff2cde465d"
+      "bytes": 9973,
+      "sha256": "a7896bc6b8109b4893ae9703bb042e5c1c93ff964526fc69283c76f6cc699fdd"
     },
     {
       "path": "电脑软件/test/mobile_rfid_account_app_test.dart",
@@ -3717,8 +3717,8 @@
     },
     {
       "path": "电脑软件/test/mobile_stock_history_ui_test.dart",
-      "bytes": 5461,
-      "sha256": "43695d964ae9c3560a1aa91ba1b9b5cfb70be47244fdd4dcf2e47d7dc11620d3"
+      "bytes": 5458,
+      "sha256": "7128f8ebcd0eff1452fb6e9f26c3d699f6740b56a3334eab5a253032c780c112"
     },
     {
       "path": "电脑软件/test/mobile_tag_registration_layout_test.dart",
@@ -4152,8 +4152,8 @@
     },
     {
       "path": "电脑软件/test/ui_regression_test.dart",
-      "bytes": 8537,
-      "sha256": "886b038289c76e34a550730dbc6b41f061be04d9721c7fe3666e495cdd5a7147"
+      "bytes": 8649,
+      "sha256": "fdd794f0cbf8cd45574d4eb7124e3eacf1cf3801acc3782a98adeeb05545a744"
     },
     {
       "path": "电脑软件/test/unattended_mode_preference_test.dart",

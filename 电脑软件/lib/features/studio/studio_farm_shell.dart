@@ -314,46 +314,60 @@ class _StudioFarmWorkspaceState
                           .setEnabled(false),
               ),
               Expanded(
-                child: Column(
-                  children: [
-                    _FarmTopBar(
-                      farmName: snapshot?.workspace.name ?? '打印农场',
-                      pageLabel: items[index].label,
-                      sync: sync,
-                      signedIn: auth.isSignedIn,
-                      onSync: sync.isSyncing
-                          ? null
-                          : () => ref
-                                .read(studioSyncControllerProvider.notifier)
-                                .requestNow(),
-                      activeStreams: videoRelay.activeStreams,
-                      accountMenu: _FarmAccountMenu(
-                        session: auth.session!,
-                        user: auth.user!,
-                        profile: profile.valueOrNull,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 10, 10, 10),
+                  child: Column(
+                    children: [
+                      FarmShellChrome(
+                        padding: EdgeInsets.zero,
+                        child: _FarmTopBar(
+                          farmName: snapshot?.workspace.name ?? '打印农场',
+                          pageLabel: items[index].label,
+                          sync: sync,
+                          signedIn: auth.isSignedIn,
+                          onSync: sync.isSyncing
+                              ? null
+                              : () => ref
+                                    .read(
+                                      studioSyncControllerProvider.notifier,
+                                    )
+                                    .requestNow(),
+                          activeStreams: videoRelay.activeStreams,
+                          accountMenu: _FarmAccountMenu(
+                            session: auth.session!,
+                            user: auth.user!,
+                            profile: profile.valueOrNull,
+                          ),
+                        ),
                       ),
-                    ),
-                    if (_shouldShowVerificationBanner(auth.session, profile))
-                      _FarmVerificationBanner(
-                        status: _profileStatus(profile.valueOrNull),
+                      if (_shouldShowVerificationBanner(auth.session, profile))
+                        _FarmVerificationBanner(
+                          status: _profileStatus(profile.valueOrNull),
+                        ),
+                      const SizedBox(height: 8),
+                      Expanded(
+                        // Keep the selected farm page painted independently of
+                        // desktop window visibility. A route-wide opacity tween
+                        // can be paused at zero while the window is occluded,
+                        // leaving a functional farm shell with a blank body.
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                            FarmPalette.radius,
+                          ),
+                          child: IndexedStack(
+                            index: index,
+                            children: [
+                              for (final item in items)
+                                _built.contains(item.id) ||
+                                        item.id == items[index].id
+                                    ? item.page
+                                    : const SizedBox.shrink(),
+                            ],
+                          ),
+                        ),
                       ),
-                    Expanded(
-                      // Keep the selected farm page painted independently of
-                      // desktop window visibility. A route-wide opacity tween
-                      // can be paused at zero while the window is occluded,
-                      // leaving a functional farm shell with a blank body.
-                      child: IndexedStack(
-                        index: index,
-                        children: [
-                          for (final item in items)
-                            _built.contains(item.id) ||
-                                    item.id == items[index].id
-                                ? item.page
-                                : const SizedBox.shrink(),
-                        ],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -984,51 +998,78 @@ class _FarmGuestWorkspaceState extends ConsumerState<_FarmGuestWorkspace> {
                       ),
               ),
               Expanded(
-                child: Column(
-                  children: [
-                    _FarmGuestTopBar(pageLabel: current.label),
-                    Container(
-                      width: double.infinity,
-                      color: scheme.secondaryContainer,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 10, 10, 10),
+                  child: Column(
+                    children: [
+                      FarmShellChrome(
+                        padding: EdgeInsets.zero,
+                        child: _FarmGuestTopBar(pageLabel: current.label),
                       ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            size: 16,
-                            color: scheme.onSecondaryContainer,
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: scheme.secondaryContainer.withValues(
+                            alpha: 0.78,
                           ),
-                          const SizedBox(width: 8),
-                          const Expanded(
-                            child: Text(
-                              '访客模式仅开放本机设备发现与查看；登录后可使用订单、库存、客户、财务、团队和云端生产数据。',
-                              style: TextStyle(fontSize: 12),
+                          borderRadius: BorderRadius.circular(
+                            FarmPalette.controlRadius,
+                          ),
+                          border: Border.all(
+                            color: scheme.onSecondaryContainer.withValues(
+                              alpha: 0.10,
                             ),
                           ),
-                        ],
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              size: 16,
+                              color: scheme.onSecondaryContainer,
+                            ),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                '访客模式仅开放本机设备发现与查看；登录后可使用订单、库存、客户、财务、团队和云端生产数据。',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: TweenAnimationBuilder<double>(
-                        key: ValueKey(current.id),
-                        tween: Tween(begin: 0, end: 1),
-                        duration: const Duration(milliseconds: 160),
-                        curve: Curves.easeOutCubic,
-                        child: current.available
-                            ? current.id == WorkspacePageIds.studioMaterials
-                                  ? const FarmPrinterMaterialsScreen(
-                                      allowGuestEnrollment: true,
-                                    )
-                                  : const _FarmGuestOverview()
-                            : _FarmGuestLockedPage(featureName: current.label),
-                        builder: (context, value, child) => Opacity(
-                          opacity: value,
-                          child: Transform.translate(
-                            offset: Offset(8 * (1 - value), 0),
-                            child: child,
+                      const SizedBox(height: 8),
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                            FarmPalette.radius,
+                          ),
+                          child: TweenAnimationBuilder<double>(
+                            key: ValueKey(current.id),
+                            tween: Tween(begin: 0, end: 1),
+                            duration: const Duration(milliseconds: 160),
+                            curve: Curves.easeOutCubic,
+                            child: current.available
+                                ? current.id == WorkspacePageIds.studioMaterials
+                                      ? const FarmPrinterMaterialsScreen(
+                                          allowGuestEnrollment: true,
+                                        )
+                                      : const _FarmGuestOverview()
+                                : _FarmGuestLockedPage(
+                                    featureName: current.label,
+                                  ),
+                            builder: (context, value, child) => Opacity(
+                              opacity: value,
+                              child: Transform.translate(
+                                offset: Offset(8 * (1 - value), 0),
+                                child: child,
+                              ),
+                            ),
                           ),
                         ),
                       ),

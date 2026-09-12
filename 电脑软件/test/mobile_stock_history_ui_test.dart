@@ -49,7 +49,7 @@ void main() {
           'https://inventory.example.com',
           template.copyWith(
             uid: item.uid,
-            remainingGrams: 1800,
+            remainingGrams: 800,
             sourceRfidTagUid: 'D021B75E',
             sourceRfidTagType: 'CUID',
             stockReceiptUid: operation,
@@ -96,13 +96,13 @@ void main() {
       await tester.ensureVisible(find.text('核对余量'));
       await tester.tap(find.text('核对余量'));
       await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField).last, '1777.5');
+      await tester.enterText(find.byType(TextField).last, '777.5');
       await tester.tap(find.text('确认实际余量'));
       await tester.pumpAndSettle();
       await tester.runAsync(() async {
         expect(
           (await db.consumableDao.getById(item.id))!.remainingGrams,
-          1777.5,
+          777.5,
         );
         expect(
           await db.consumableDao.readInventoryBalanceConflicts(
