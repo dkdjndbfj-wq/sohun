@@ -2,9 +2,9 @@
 
 面向个人 3D 打印用户的耗材库存、实物卷追踪、打印机与设备工作台。Windows 桌面端负责日常管理，Android 客户端负责移动查看与 NFC 标签操作；两端可以使用同一个 sohun 个人账号同步。
 
-[访问官网](https://sohun.top) · [下载安装器](https://github.com/dkdjndbfj-wq/sohun/releases/download/core-v1.0.1%2B2/sohun-core-preview-setup-1.0.1-2-windows-x64.exe) · [下载便携版](https://github.com/dkdjndbfj-wq/sohun/releases/download/core-v1.0.1%2B2/sohun-core-preview-1.0.1-2-windows-x64.zip) · [下载 Android 调试版](https://github.com/dkdjndbfj-wq/sohun/releases/download/core-v1.0.1%2B2/sohun-core-preview-1.0.1-2-android-debug.apk) · [查看版本说明](https://github.com/dkdjndbfj-wq/sohun/releases/tag/core-v1.0.1%2B2)
+[访问官网](https://sohun.top) · [下载安装器](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.1%2B2/sohun-setup-1.0.1-2-windows-x64.exe) · [下载便携版](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.1%2B2/sohun-1.0.1-2-windows-x64.zip) · [下载 Android 版](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.1%2B2/sohun-1.0.1-2-android.apk) · [查看版本说明](https://github.com/dkdjndbfj-wq/sohun/releases/tag/v1.0.1%2B2)
 
-当前公开版本为 **1.0.1+2 Core Preview**，标签为 **`core-v1.0.1+2`**。这是用于公开体验与验证的预发布版本：Windows 包没有 Authenticode 发布者签名，Android APK 使用调试证书。具体手机、标签、打印机和固件的兼容性仍需实机确认。
+当前版本为 **1.0.1+2，首个正式公开版本**，标签为 **`v1.0.1+2`**。Windows 提供 Release 安装器与便携包，Android 提供使用稳定密钥签名的 Release APK。Windows 尚无 Authenticode 发布者签名；具体手机、标签、打印机和固件的兼容性仍需实机确认。
 
 本次已完成库存、标签职责、账号隔离、启动交接和原生 NFC 的专项回归，具体范围见 [验证记录](docs/release-validation-1.0.1.md)。欢迎在 [Issues](https://github.com/dkdjndbfj-wq/sohun/issues) 反馈问题，注明版本、设备和复现步骤；请勿附带账号密码、密钥或真实个人数据。
 
@@ -101,19 +101,19 @@ Windows 和 Android 可以登录同一个 sohun 个人账号。个人库存的�
 
 ## 下载与安装
 
-安装包发布在 [GitHub Releases](https://github.com/dkdjndbfj-wq/sohun/releases/tag/core-v1.0.1%2B2)，也可以从 [官网下载区](https://sohun.top/#download) 选择平台。对应的 [SHA-256 校验清单](https://github.com/dkdjndbfj-wq/sohun/releases/download/core-v1.0.1%2B2/SHA256SUMS.txt) 与安装包在同一版本页面提供。
+安装包发布在 [GitHub Releases](https://github.com/dkdjndbfj-wq/sohun/releases/tag/v1.0.1%2B2)，也可以从 [官网下载区](https://sohun.top/#download) 选择平台。对应的 [SHA-256 校验清单](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.1%2B2/SHA256SUMS.txt) 与安装包在同一版本页面提供。
 
 ### Windows 10/11 x64 安装器
 
-下载 [`sohun-core-preview-setup-1.0.1-2-windows-x64.exe`](https://github.com/dkdjndbfj-wq/sohun/releases/download/core-v1.0.1%2B2/sohun-core-preview-setup-1.0.1-2-windows-x64.exe)，核对 GitHub Release 中的版本和校验信息后运行安装器。Core Preview 安装器当前没有 Authenticode 发布者签名，Windows 可能显示未知发布者提示。
+下载 [`sohun-setup-1.0.1-2-windows-x64.exe`](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.1%2B2/sohun-setup-1.0.1-2-windows-x64.exe)，核对 GitHub Release 中的版本和校验信息后运行安装器。Windows 安装器当前没有 Authenticode 发布者签名，Windows 可能显示未知发布者提示。
 
 ### Windows 10/11 x64 便携版
 
-下载 [`sohun-core-preview-1.0.1-2-windows-x64.zip`](https://github.com/dkdjndbfj-wq/sohun/releases/download/core-v1.0.1%2B2/sohun-core-preview-1.0.1-2-windows-x64.zip)，完整解压到可写目录，再运行其中的 `sohun.exe`。不要只从压缩包内单独启动 EXE，也不要把新版 EXE 覆盖进旧目录，以免混用不同版本的 DLL 和资源。
+下载 [`sohun-1.0.1-2-windows-x64.zip`](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.1%2B2/sohun-1.0.1-2-windows-x64.zip)，完整解压到可写目录，再运行其中的 `sohun.exe`。不要只从压缩包内单独启动 EXE，也不要把新版 EXE 覆盖进旧目录，以免混用不同版本的 DLL 和资源。
 
-### Android 调试 APK
+### Android Release APK
 
-下载 [`sohun-core-preview-1.0.1-2-android-debug.apk`](https://github.com/dkdjndbfj-wq/sohun/releases/download/core-v1.0.1%2B2/sohun-core-preview-1.0.1-2-android-debug.apk)，在 Android 系统安装页确认安装。该 APK 使用调试证书，适合 Core Preview 功能验证。使用 CUID/FUID 或 NTAG213 需要支持相应 NFC 能力的 Android 设备；不同厂商系统、标签批次和 NFC 芯片仍需现场测试。
+下载 [`sohun-1.0.1-2-android.apk`](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.1%2B2/sohun-1.0.1-2-android.apk)，在 Android 系统安装页确认安装。该 APK 使用长期保存的发行密钥签名，后续版本沿用同一签名；遇到与旧调试包签名不一致的提示时，请先备份或同步库存，不要直接卸载丢失本地数据。使用 CUID/FUID 或 NTAG213 需要支持相应 NFC 能力的 Android 设备；不同厂商系统、标签批次和 NFC 芯片仍需现场测试。
 
 项目目前没有 macOS 或 iOS 交付入口。
 
@@ -143,9 +143,9 @@ Windows 和 Android 可以登录同一个 sohun 个人账号。个人库存的�
 
 登录不同 sohun 个人账号时，本地库存、用量、供料位选择和打印操作按账号隔离。退出账号后不会把前一个账号的库存当作匿名库存展示。
 
-### Core Preview 是完整签名的正式发行版吗？
+### 正式发布是否代表所有安装包都有平台认证签名？
 
-不是。当前 Windows 包未做 Authenticode 签名，Android APK 使用调试证书，并以 GitHub Prerelease 发布。它用于公开体验和验证现有功能边界。
+这是首个正式公开版本，GitHub Release 不标为预发布。Android 为稳定密钥签名的 Release APK；Windows 未做 Authenticode 签名，安装时可能提示未知发布者。正式发布不等同于完成所有硬件实测。
 
 ### 自动化测试通过是否代表我的硬件一定兼容？
 
@@ -166,10 +166,12 @@ npm ci
 npm test
 ```
 
-构建固定清单的 Core Preview Windows 安装器、便携包和 Android 调试 APK：
+正式公开构建使用固定清单，生成 Windows 安装器、便携包和 Android Release APK；Android 签名材料由受保护的 GitHub Secrets 临时提供：
 
 ```powershell
-./scripts/public_core_build.ps1 -Target All -Installer -RunTests
+# 本地正式 Android 构建需在环境中指定仓库外的 key.properties 路径和预期证书 SHA-256。
+# GitHub 的 Public Release 工作流会从受保护的 Secrets 与变量中提供这些配置。
+./scripts/public_core_build.ps1 -Target All -Installer -PublicRelease -ExpectedTag 'v1.0.1+2' -RunTests
 ```
 
 脚本会导出独立源码快照、使用英文临时路径构建、检查成品边界并生成 SHA-256 清单。更完整的命令与验收范围见 [开发与验证工作流](docs/development-workflow.md)，部署配置见 [DEPLOYMENT.md](DEPLOYMENT.md)，公开构建限制见 [PUBLIC_RELEASE_MANIFEST.md](PUBLIC_RELEASE_MANIFEST.md)。
@@ -191,4 +193,4 @@ npm test
 
 项目源码按 [MIT License](LICENSE) 发布。品牌名、商标、产品图片和其他第三方资源仍归各自权利人所有，其存在不等于随 MIT 源码重新授权；来源与说明以 [`电脑软件/THIRD_PARTY_NOTICES.md`](电脑软件/THIRD_PARTY_NOTICES.md) 为准。
 
-Core Preview 不包含未完成公开分发审查的 Bambu 私有资源、预置校准模型、离线故障资料、私有网络组件以及 FFmpeg/libmpv 等二进制。公开仓库和构建清单也排除数据库、日志、账号令牌、SMTP 密码、GitHub PAT、代码签名私钥与 `.env` 文件。详细范围和发布门禁见 [公开仓库发布边界](PUBLIC_RELEASE_MANIFEST.md)。
+正式公开核心版不包含未完成公开分发审查的 Bambu 私有资源、预置校准模型、离线故障资料、私有网络组件以及 FFmpeg/libmpv 等二进制。公开仓库和构建清单也排除数据库、日志、账号令牌、SMTP 密码、GitHub PAT、代码签名私钥与 `.env` 文件。详细范围和发布门禁见 [公开仓库发布边界](PUBLIC_RELEASE_MANIFEST.md)。

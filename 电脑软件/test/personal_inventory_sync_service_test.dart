@@ -225,6 +225,41 @@ void main() {
   );
 
   test(
+    'sync canonicalizes an imported legacy single-spool capacity without changing its balance',
+    () async {
+      final session = _session();
+      final owner = PersonalInventorySyncService.ownerAccountFor(session);
+      final legacy = record(
+        'legacy-sync',
+        tag: '04A1B2C3',
+      ).copyWith(totalGrams: 750, remainingGrams: 415);
+      final aggregate = record(
+        'aggregate-sync',
+      ).copyWith(totalGrams: 3000, remainingGrams: 2415);
+      final api = _FakeInventoryApi(
+        PersonalInventorySnapshot(revision: 4, records: [legacy, aggregate]),
+      );
+      final result = await PersonalInventorySyncService(
+        dao: dao,
+        api: api,
+      ).synchronize(session: session);
+      expect(result.importedCount, 2);
+      final imported = await dao.getPersonalForOwnerAccount(owner);
+      final byUid = {for (final row in imported) row.uid: row};
+      expect(byUid['legacy-sync']!.totalGrams, 1000);
+      expect(byUid['legacy-sync']!.remainingGrams, 415);
+      expect(byUid['aggregate-sync']!.totalGrams, 3000);
+      expect(byUid['aggregate-sync']!.remainingGrams, 2415);
+      expect(
+        api.snapshot.records
+            .singleWhere((r) => r.uid == 'legacy-sync')
+            .totalGrams,
+        1000,
+      );
+    },
+  );
+
+  test(
     'account rebind rolls back the local tag and event if cloud upload fails',
     () async {
       final session = _session();

@@ -12,7 +12,7 @@ const sourceKeys = ['sourceRfidTagUid', 'sourceRfidTagType', 'stockReceiptUid',
   'stockReceiptIndex', 'stockReceiptQuantity'];
 function stock(overrides = {}) {
   return { uid: 'manual-spool-1', manufacturer: 'eSUN', model: 'PLA', materialType: 'PLA',
-    colorHex: '#112233', totalGrams: 2000, remainingGrams: 2000,
+    colorHex: '#112233', totalGrams: 1000, remainingGrams: 1000,
     createdAt: '2026-09-09T00:00:00.000Z', updatedAt: '2026-09-09T00:00:00.000Z',
     sourceRfidTagUid: null, sourceRfidTagType: null, stockReceiptUid: receipt,
     stockReceiptIndex: 0, stockReceiptQuantity: 2, ...overrides };

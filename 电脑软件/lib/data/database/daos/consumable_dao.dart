@@ -2005,13 +2005,30 @@ class ConsumableDao extends DatabaseAccessor<AppDatabase>
     bool preserveLegacyWeights = false,
   }) async {
     return transaction(() async {
-      final source = PersonalRfidStockSource.fromRecord(
-        record,
-        preserveLegacyWeights: preserveLegacyWeights,
-      );
       final existing = await getPersonalByUid(
         record.uid,
         ownerAccount: ownerAccount,
+      );
+      final existingBinding = existing == null
+          ? null
+          : await getRfidSpoolBindingById(existing.id);
+      final existingSource = existing == null
+          ? null
+          : (await getPersonalRfidStockSourcesMap([existing.id]))[existing.id];
+      if (preserveLegacyWeights) {
+        final total = canonicalPersonalSpoolCapacityGrams(
+          rfidTagUid: record.rfidTagUid ?? existingBinding?.tagUid,
+          stockReceiptUid: record.stockReceiptUid ?? existingSource?.receiptUid,
+          totalGrams: record.totalGrams,
+          remainingGrams: record.remainingGrams,
+        );
+        if (total != record.totalGrams) {
+          record = record.copyWith(totalGrams: total);
+        }
+      }
+      final source = PersonalRfidStockSource.fromRecord(
+        record,
+        preserveLegacyWeights: preserveLegacyWeights,
       );
       final individual =
           record.rfidTagUid?.trim().isNotEmpty == true ||

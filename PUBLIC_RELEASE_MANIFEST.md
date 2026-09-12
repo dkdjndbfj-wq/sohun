@@ -19,7 +19,7 @@
   导入的离线故障文案与预置校准模型：当前
   [`电脑软件/THIRD_PARTY_NOTICES.md`](电脑软件/THIRD_PARTY_NOTICES.md) 标记为未完成再分发许可审查。
 
-这些目录已在根 `.gitignore` 中阻止误提交。正式 Release 工作流会从受保护的
+这些目录已在根 `.gitignore` 中阻止误提交。完整厂商集成 Release 工作流会从受保护的
 GitHub Secret 临时注入已审核的资源和清单；没有清单与代码签名证书时，工作流
 会 fail-closed，不会生成公开安装包。
 
@@ -31,11 +31,27 @@ GitHub Secret 临时注入已审核的资源和清单；没有清单与代码签
 ## 发布门禁
 
 在 Bambu 资源取得书面再分发依据、补齐对应许可证文本和来源清单前，不得把
-个人版安装包或这些二进制推送到公开 GitHub Release。`build_release.ps1` 的
-`Test-ReleaseClearance.ps1` 是正式分发门禁；`release-clearance.example.json`
+包含这些资源的安装包或这些二进制推送到公开 GitHub Release。`build_release.ps1` 的
+`Test-ReleaseClearance.ps1` 是完整厂商集成版本的分发门禁；`release-clearance.example.json`
 只是失败示例，不是许可证明。
 
-## Core 预览边界
+完整厂商集成工作流保留为手动入口，不再截获正式公开核心版的版本标签。
+公开核心版使用单独的 `Public Release` 工作流。
+
+## 首个正式公开版本
+
+`1.0.1+2` 按项目所有者的发布决定作为首个正式公开版本。使用
+`scripts/export_public_source.ps1 -CoreAssets` 导出完整安全清单，
+在 `scripts/public_core_build.ps1` 中加 `-PublicRelease` 构建。
+它只包含可公开分发的核心功能，继续拒绝上述未审查资源及任何私密数据。
+
+- 正式标签为 `v<版本+构建号>`，版本必须匹配 `pubspec.yaml`，GitHub Release 不设置为 Prerelease。
+- Windows 使用 Release 编译；没有 Authenticode 证书时明确标注未签名，不伪称已认证发布者。
+- Android 必须使用稳定发行密钥构建 Release APK，验证签名及证书指纹，禁止用调试 APK 冒充正式包。
+- 签名私钥、口令和 `key.properties` 只允许在私有目录或 GitHub Secrets 中保存，临时注入构建目录并清理，绝不进入源码导出和发布附件。
+- 源码完整清单、隐私、资源边界和成品校验继续执行；正式发布不替代真实 NFC/AMS 兼容性验收。
+
+## 历史 Core 预览边界
 
 Core 预览是单独标记的未签名预发布变体。它只能从
 `scripts/export_public_source.ps1 -CoreAssets` 生成的完整文件清单快照构建；导出和成品检查会

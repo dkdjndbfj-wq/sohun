@@ -11,7 +11,7 @@ const secondReceipt = '8bccb30f-5da8-48d0-988f-ab01e23b0b02';
 const path = '/v1/me/inventory/snapshot';
 function stock(overrides = {}) {
   return { uid: 'received-spool-one', manufacturer: 'eSUN', model: 'PLA', materialType: 'PLA',
-    colorHex: '#112233', totalGrams: 2000, remainingGrams: 2000,
+    colorHex: '#112233', totalGrams: 1000, remainingGrams: 1000,
     createdAt: '2026-09-08T00:00:00.000Z', updatedAt: '2026-09-08T00:00:00.000Z',
     sourceRfidTagUid: 'D021B75E', sourceRfidTagType: 'CUID', stockReceiptUid: receipt,
     stockReceiptIndex: 0, stockReceiptQuantity: 2, ...overrides };
@@ -56,8 +56,8 @@ test('one CUID card receives multiple independent spools and repeated batches', 
   assert.equal(first.status, 200, JSON.stringify(first.json));
   assert.equal(first.json.records.length, 2);
   assert.ok(first.json.records.every((r) => r.rfidTagUid == null && r.sourceRfidTagUid === 'D021B75E'));
-  const updated = first.json.records.map((r, index) => ({ ...r, remainingGrams: index ? 2000 : 750 }));
-  const second = await put(app, [...updated, stock({ uid: 'next-batch', totalGrams: 500, remainingGrams: 500,
+  const updated = first.json.records.map((r, index) => ({ ...r, remainingGrams: index ? 1000 : 750 }));
+  const second = await put(app, [...updated, stock({ uid: 'next-batch', totalGrams: 1000, remainingGrams: 500,
     stockReceiptUid: secondReceipt, stockReceiptQuantity: 1 })], 1);
   assert.equal(second.status, 200, JSON.stringify(second.json));
   assert.equal(second.json.records.find((r) => r.uid === 'received-spool-one').remainingGrams, 750);

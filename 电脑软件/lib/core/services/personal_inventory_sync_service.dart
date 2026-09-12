@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart' show Variable;
 
 import '../../data/database/database.dart';
+import '../constants/personal_spool_policy.dart';
 import '../../data/database/personal_inventory_balance_sync.dart';
 import '../../data/external/community/community_api_client.dart';
 import '../../data/external/slicer/material_catalog_service.dart';
@@ -602,7 +603,23 @@ class PersonalInventorySyncService {
             : successor.updatedAt,
       );
     }
-    return byUid.values.toList(growable: false);
+    return [
+      for (final record in byUid.values) _canonicalizeLegacyCapacity(record),
+    ];
+  }
+
+  static PersonalInventoryRecord _canonicalizeLegacyCapacity(
+    PersonalInventoryRecord record,
+  ) {
+    final total = canonicalPersonalSpoolCapacityGrams(
+      rfidTagUid: record.rfidTagUid,
+      stockReceiptUid: record.stockReceiptUid,
+      totalGrams: record.totalGrams,
+      remainingGrams: record.remainingGrams,
+    );
+    return total == record.totalGrams
+        ? record
+        : record.copyWith(totalGrams: total);
   }
 
   static PersonalInventoryRecord _mergeRecord(

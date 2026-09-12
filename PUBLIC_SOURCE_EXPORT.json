@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-09-11T14:06:14.9274138+00:00",
+  "createdAt": "2026-09-12T08:07:57.2657630+00:00",
   "purpose": "Public source export; not a signed binary or third-party release clearance.",
   "coreAssets": true,
   "omittedAssetTrees": [
@@ -28,7 +28,7 @@
     "related tests and build scripts"
   ],
   "resourceReview": "THIRD_PARTY_NOTICES.md remains authoritative. Keeping attributed source data is not a clearance declaration for a distributable binary.",
-  "fileCount": 924,
+  "fileCount": 926,
   "files": [
     {
       "path": ".agents/skills/sohun-validation/SKILL.md",
@@ -46,9 +46,14 @@
       "sha256": "a44cfb7f8bd0f98a1a40fd6f415227423e9f1598ec69dbfd7bb80ab64cdcb622"
     },
     {
+      "path": ".github/workflows/public-release.yml",
+      "bytes": 8940,
+      "sha256": "977c8b06823d9b2d89f0d9c499591e476e05d5abab257980dac29ca3154ec1c0"
+    },
+    {
       "path": ".github/workflows/release.yml",
-      "bytes": 14690,
-      "sha256": "01ecda6120f0cac520ea0c26347b7983e326c7553ff0bec0d890c3ad126e0aeb"
+      "bytes": 14691,
+      "sha256": "767938c0d19dd005ec44d1886dcb60b565efda8d3049fd1c1a9c374f9b6dd74a"
     },
     {
       "path": ".gitignore",
@@ -238,7 +243,7 @@
     {
       "path": "电脑软件/android/gradle.properties",
       "bytes": 997,
-      "sha256": "29608441ea845b48d85fbb883ac00d0a5d121fa87961a5b6ab802ca270b61d18"
+      "sha256": "42bf62dd1548a38737c11dd2d20eb0f55edf0cb5a08e5fa99f192ac46ac6d194"
     },
     {
       "path": "电脑软件/android/gradle/wrapper/gradle-wrapper.properties",
@@ -932,8 +937,8 @@
     },
     {
       "path": "电脑软件/community_server/src/server.js",
-      "bytes": 210763,
-      "sha256": "d248396291cf0cc39f291a145b509ae191cf2b26be78425ecb59c52b9d995a19"
+      "bytes": 212496,
+      "sha256": "ea1ee9ae715b03a9e574e749e2164345a53ba749eb135a0dc7d41846bf78d44d"
     },
     {
       "path": "电脑软件/community_server/src/site_assets/app-workbench-v2.png",
@@ -978,17 +983,17 @@
     {
       "path": "电脑软件/community_server/test/manual_stock_receipts.test.js",
       "bytes": 8988,
-      "sha256": "113d23fc5c277620d571db66604ca392452727eccf878e5b83946232e31131b0"
+      "sha256": "6ff230fda1a6d6f0343462f8e729483f678857ccd0da1701143a41035d73b5ba"
     },
     {
       "path": "电脑软件/community_server/test/personal_inventory_tag_purpose.test.js",
-      "bytes": 9202,
-      "sha256": "f2ae84221f2391b68ff0de843cfb92e8d9e3cef4bd59bf4d8fa9595dd1e37ddb"
+      "bytes": 9205,
+      "sha256": "63f136e69a7e8bf46dec41674f044f7b18f9b6f195728223ef93ead3c88fad22"
     },
     {
       "path": "电脑软件/community_server/test/personal_stock_receipts.test.js",
-      "bytes": 8650,
-      "sha256": "3f70a8d15b0c6279e09d691765bb7f62a4276547d8bde9c2915a9c21d679fa5e"
+      "bytes": 8651,
+      "sha256": "a50c364e589bdfb944dcb5dcf33c0cb460177d7827b58aa6c32e8019a9e1ca62"
     },
     {
       "path": "电脑软件/community_server/test/printer_faults.test.js",
@@ -1002,8 +1007,8 @@
     },
     {
       "path": "电脑软件/community_server/test/server.test.js",
-      "bytes": 158127,
-      "sha256": "31526a28b97fe157511c5182b76e132262b3e3a87500cdaf8872aad6ff3ceccc"
+      "bytes": 160660,
+      "sha256": "519f5ef165d6bb4b9d21d633c0134c0c1460ee3c75646d4c3a3e9709cfda2685"
     },
     {
       "path": "电脑软件/core-build.json",
@@ -1072,8 +1077,8 @@
     },
     {
       "path": "电脑软件/lib/core/constants/personal_spool_policy.dart",
-      "bytes": 589,
-      "sha256": "202f85baf01055ce3e3603937463a2729729baed6540092001e01aba92f686e4"
+      "bytes": 2675,
+      "sha256": "46ee002442dac541244a6998c234171fcf971404b1c730fd0297cdfd4ed8f75d"
     },
     {
       "path": "电脑软件/lib/core/releases/app_release_notes.dart",
@@ -1182,8 +1187,8 @@
     },
     {
       "path": "电脑软件/lib/core/services/personal_inventory_sync_service.dart",
-      "bytes": 35850,
-      "sha256": "074eabe9e5c216c88b6f794e8606c3b37442877348e1949558ad21f2842ca308"
+      "bytes": 36387,
+      "sha256": "31cb94bc7b1b7887c157fccae23e92ebf2f2605a9f574b96a9e4f67152a5a551"
     },
     {
       "path": "电脑软件/lib/core/services/preset_diff_service.dart",
@@ -1427,8 +1432,8 @@
     },
     {
       "path": "电脑软件/lib/data/database/daos/consumable_dao.dart",
-      "bytes": 111960,
-      "sha256": "a24ef55b6746558a8c83d8e089e779b5a542764e901412ff1bb69af353348d3b"
+      "bytes": 112700,
+      "sha256": "6136ef9c8a7fb969af5b6f06c2fbf873c715575f823e224faca40793d7475da2"
     },
     {
       "path": "电脑软件/lib/data/database/daos/consumable_dao.g.dart",
@@ -1527,8 +1532,8 @@
     },
     {
       "path": "电脑软件/lib/data/database/database.dart",
-      "bytes": 118260,
-      "sha256": "d0c124ff5d0ad77f5c2aa7dc323ace8d3d4c8deb9a22b86907500555125fb154"
+      "bytes": 120591,
+      "sha256": "b3b07e63439ee53f851a39dcfa88eaefbcc033f33a7b20ca2dd96672a08df939"
     },
     {
       "path": "电脑软件/lib/data/database/database.g.dart",
@@ -1627,8 +1632,8 @@
     },
     {
       "path": "电脑软件/lib/data/database/personal_rfid_stock.dart",
-      "bytes": 22600,
-      "sha256": "06cafba870cbdd56b433ead45a6d70e22a3c6f696c6854f0c698b9d6ddadbc0e"
+      "bytes": 22718,
+      "sha256": "d787498fa5ff8ff11c518f69ea24835e86dc067b6068f3bb342646f4a5bb6cbd"
     },
     {
       "path": "电脑软件/lib/data/database/personal_spool_handoff.dart",
@@ -3017,8 +3022,8 @@
     },
     {
       "path": "电脑软件/scripts/build_installer.ps1",
-      "bytes": 5183,
-      "sha256": "16d7ccddcba0fc7a0e673028417f0b2b04a1d07c0fe945ac95fd21335deaac71"
+      "bytes": 5704,
+      "sha256": "b4283f7848ccebbbb27b06fdc1be25e9414078e76023527a80ad11d14c883bc8"
     },
     {
       "path": "电脑软件/scripts/build_native_account_tools.ps1",
@@ -3802,8 +3807,8 @@
     },
     {
       "path": "电脑软件/test/personal_inventory_sync_service_test.dart",
-      "bytes": 28657,
-      "sha256": "2b8a4cf635d9d40cda4553e713339cd6471c4e8d02049ccf0fac99900771a174"
+      "bytes": 29988,
+      "sha256": "015ffd85d01906dc61c32d4ca238bc53f4c8ecaad2ac77203b44dea2177f70a8"
     },
     {
       "path": "电脑软件/test/personal_pending_spool_action_ui_test.dart",
@@ -3822,8 +3827,8 @@
     },
     {
       "path": "电脑软件/test/personal_rfid_stock_test.dart",
-      "bytes": 27342,
-      "sha256": "2e4d90c31e2bf239356e57fb4d86e6b0d22d31483a5d6bd13b18158aec5e9af2"
+      "bytes": 29655,
+      "sha256": "2dea033f67dfee5c43b5ba15cb386522212fb48e8ac7654da790d29142e5938a"
     },
     {
       "path": "电脑软件/test/personal_spool_continuation_threshold_test.dart",
@@ -4177,8 +4182,8 @@
     },
     {
       "path": "电脑软件/THIRD_PARTY_NOTICES.md",
-      "bytes": 9463,
-      "sha256": "3cd3bda04996970a7e5dd3ee27e846588ae5f3211b23280b98ca19631b4cf303"
+      "bytes": 10000,
+      "sha256": "208404b8a4fe89142f0261fa31fb0c4661a0c8428e1789ae7765556b44bba38a"
     },
     {
       "path": "电脑软件/windows/.gitignore",
@@ -4567,8 +4572,8 @@
     },
     {
       "path": "docs/release-validation-1.0.1.md",
-      "bytes": 3060,
-      "sha256": "32b3523f7f3c614398a17775b92a4d00199182ccfe78f23fd79227a029be4212"
+      "bytes": 3588,
+      "sha256": "47f4a96f6763dada99452c2279b0e9812ed79169c10512cf05af855f48fff54b"
     },
     {
       "path": "docs/windows-build-repair-2026-09-06.md",
@@ -4582,13 +4587,13 @@
     },
     {
       "path": "PUBLIC_RELEASE_MANIFEST.md",
-      "bytes": 2832,
-      "sha256": "4d515ad3567650176a76ef81137f4f2b62f4430094555f8ef42f1829e67cf499"
+      "bytes": 4086,
+      "sha256": "f59ff6ee91f5752a2c1c3b7b93f304a5eb83105fdf895fd438f79e90f79115bb"
     },
     {
       "path": "README.md",
-      "bytes": 14626,
-      "sha256": "ead05fb7d655c323653b6fb74d38ba47b064e11ffe8dd7d28fb10dd2b8b4848d"
+      "bytes": 15008,
+      "sha256": "fdaea5e285c8902e765a8b2f14d51107f082240dc9509fca499d4b8ef1d6f8bc"
     },
     {
       "path": "scripts/analyze_dart.ps1",
@@ -4607,13 +4612,18 @@
     },
     {
       "path": "scripts/public_core_build.ps1",
-      "bytes": 10110,
-      "sha256": "2947eea3ff8c4b435e3f31d27146313790844afab15fc50499b285ccb6ee68b9"
+      "bytes": 18610,
+      "sha256": "e791ceb47ac8a8ab9ca405888134974f06ff5b16ee54bf4b5e522ae2234de4ac"
     },
     {
       "path": "scripts/tests/test_core_build.ps1",
       "bytes": 5250,
       "sha256": "a69f3abb0d31368a72b91df6572603e5d5f1259599c8eec53708e3bd428f9414"
+    },
+    {
+      "path": "scripts/tests/test_public_release.ps1",
+      "bytes": 5406,
+      "sha256": "7f492654a23bbfd8200863526589c1bd03de82f6b9197c6840669d5640b5fd37"
     },
     {
       "path": "scripts/tests/test_public_source.ps1",

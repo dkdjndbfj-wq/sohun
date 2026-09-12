@@ -16,7 +16,7 @@ function spool(overrides = {}) {
     model: 'PLA',
     materialType: 'PLA',
     colorHex: '#112233',
-    totalGrams: 750,
+    totalGrams: 1000,
     remainingGrams: 123,
     createdAt: '2026-09-08T00:00:00.000Z',
     updatedAt: '2026-09-08T00:00:00.000Z',
@@ -104,7 +104,7 @@ for (const type of ['CUID', ' fuid ', 'ams']) {
     const response = await put(app, [record]);
     assert.equal(response.status, 200, JSON.stringify(response.json));
     assert.equal(response.json.records[0].uid, record.uid);
-    assert.equal(response.json.records[0].totalGrams, 750);
+    assert.equal(response.json.records[0].totalGrams, 1000);
     assert.equal(response.json.records[0].remainingGrams, 123);
   });
 }
@@ -139,7 +139,7 @@ for (const type of ['NTAG213', 'unknown', 'CLASSIC', null]) {
     const archived = await put(app, [{ ...roundTrip.json.records[0], lifecycleStatus: 'retired' }], 8);
     assert.equal(archived.status, 200, JSON.stringify(archived.json));
     assert.equal(archived.json.records[0].uid, record.uid);
-    assert.equal(archived.json.records[0].totalGrams, 750);
+    assert.equal(archived.json.records[0].totalGrams, 1000);
     assert.equal(archived.json.records[0].remainingGrams, 123);
     assert.equal(archived.json.records[0].lifecycleStatus, 'retired');
   });
@@ -156,7 +156,7 @@ test('known NTAG history cannot change consumable data, weight, tag or declared 
     { note: 'attempted NFC metadata rewrite' },
     { remainingGrams: 120 },
     { remainingGrams: 130 },
-    { totalGrams: 1000 },
+    { totalGrams: 2000 },
     { rfidTagUid: '04BB0002' },
     { rfidTagType: 'CUID' },
     { rfidTagType: 'FUID' },

@@ -1432,6 +1432,59 @@ test('旧非 1kg 实物卷原样保留且禁止继续扣料或新建异常规格
   assert.equal(archived.json.records[0].remainingGrams, 1875);
 });
 
+test('旧余量入库的小容量独立卷只规范名义容量并保留余量', async (t) => {
+  const app = await startServer();
+  t.after(app.close);
+  const user = await registerUser(app, 'legacy-remainder@example.com', 'legacy_remainder', '旧余量');
+  const put = (revision, records) => jsonRequest(app.baseUrl, '/v1/me/inventory/snapshot', {
+    method: 'PUT', token: user.token, body: { revision, records },
+  });
+  const saved = await put(0, [personalInventoryRecord({ remainingGrams: 415 })]);
+  assert.equal(saved.status, 200, JSON.stringify(saved.json));
+  const legacy = { ...saved.json.records[0], totalGrams: 750, remainingGrams: 415 };
+  const database = new DatabaseSync(app.databasePath);
+  database.prepare('UPDATE personal_inventory_snapshots SET records_json = ? WHERE user_id = ?')
+    .run(JSON.stringify([legacy]), user.userId);
+  database.close();
+
+  const fetched = await jsonRequest(app.baseUrl, '/v1/me/inventory/snapshot', { token: user.token });
+  assert.equal(fetched.json.records[0].totalGrams, 1000);
+  assert.equal(fetched.json.records[0].remainingGrams, 415);
+  const roundTrip = await put(1, [legacy]);
+  assert.equal(roundTrip.status, 200, JSON.stringify(roundTrip.json));
+  assert.equal(roundTrip.json.records[0].totalGrams, 1000);
+  assert.equal(roundTrip.json.records[0].remainingGrams, 415);
+  const ended = await put(2, [{ ...roundTrip.json.records[0], lifecycleStatus: 'replaced' }]);
+  assert.equal(ended.status, 200, JSON.stringify(ended.json));
+  const reusable = await put(3, [ended.json.records[0], {
+    ...ended.json.records[0],
+    uid: 'legacy-remainder-next',
+    rfidTagCycle: 2,
+    previousConsumableUid: ended.json.records[0].uid,
+    remainingGrams: 31,
+    lifecycleStatus: 'active',
+  }]);
+  assert.equal(reusable.status, 200, JSON.stringify(reusable.json));
+  const endedAgain = await put(4, [reusable.json.records[0], {
+    ...reusable.json.records[1], lifecycleStatus: 'replaced',
+  }]);
+  assert.equal(endedAgain.status, 200, JSON.stringify(endedAgain.json));
+  const belowThreshold = await put(5, [
+    endedAgain.json.records[0],
+    endedAgain.json.records[1],
+    {
+      ...endedAgain.json.records[1],
+      uid: 'legacy-remainder-next-2',
+      rfidTagCycle: 3,
+      previousConsumableUid: endedAgain.json.records[1].uid,
+      remainingGrams: 30,
+      lifecycleStatus: 'active',
+    },
+  ]);
+  assert.equal(belowThreshold.status, 409, JSON.stringify(belowThreshold.json));
+  assert.equal(belowThreshold.json.error.code, 'inventory_spool_not_reusable');
+});
+
 test('个人库存快照按账号隔离、使用 revision 乐观锁并拒绝 RFID 敏感字段', async (t) => {
   const app = await startServer();
   t.after(app.close);

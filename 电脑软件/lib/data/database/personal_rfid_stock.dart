@@ -68,7 +68,9 @@ class PersonalRfidStockSource {
             record.totalGrams != personalSpoolCapacityGrams) ||
         !record.remainingGrams.isFinite ||
         record.remainingGrams < 0 ||
-        record.remainingGrams > record.totalGrams) {
+        (!preserveLegacyWeights &&
+            record.remainingGrams > personalSpoolCapacityGrams) ||
+        (preserveLegacyWeights && record.remainingGrams > 100000)) {
       throw ArgumentError('每卷规格固定为 1000 g，余量须在 0 至 1000 g；旧数据请先核对');
     }
     return PersonalRfidStockSource(

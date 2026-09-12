@@ -313,6 +313,64 @@ void main() {
   );
 
   test(
+    'opening a database canonicalizes legacy single-spool capacity only',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'sohun_legacy_capacity_',
+      );
+      final file = File('${directory.path}/inventory.sqlite');
+      final old = AppDatabase.forTestingAtVersion(NativeDatabase(file), 55);
+      await old.customStatement('''
+        INSERT INTO consumables(
+          uid, manufacturer, model, material_type, color_hex,
+          total_grams, remaining_grams, inventory_scope,
+          rfid_tag_uid, rfid_tag_type, rfid_tag_cycle, lifecycle_status,
+          created_at, updated_at
+        ) VALUES
+          ('legacy-350', 'Legacy', 'PLA', 'PLA', '#FFFFFF',
+           350, 350, 'personal', '04AABBCC', 'CUID', 1, 'active', 1, 1),
+          ('legacy-750', 'Legacy', 'PLA', 'PLA', '#FFFFFF',
+           750, 415, 'personal', '04AABBDD', 'FUID', 1, 'active', 1, 1),
+          ('aggregate-750', 'Legacy', 'PLA', 'PLA', '#FFFFFF',
+           750, 750, 'personal', NULL, NULL, 1, 'active', 1, 1),
+          ('legacy-over', 'Legacy', 'PLA', 'PLA', '#FFFFFF',
+           2000, 1875, 'personal', '04AABBEE', 'CUID', 1, 'active', 1, 1)
+      ''');
+      await old.close();
+
+      final upgraded = AppDatabase.forTesting(NativeDatabase(file));
+      try {
+        final rows = await upgraded.consumableDao.getPersonal();
+        final byUid = {for (final row in rows) row.uid: row};
+        expect(byUid['legacy-350']!.totalGrams, 1000);
+        expect(byUid['legacy-350']!.remainingGrams, 350);
+        expect(byUid['legacy-750']!.totalGrams, 1000);
+        expect(byUid['legacy-750']!.remainingGrams, 415);
+        expect(byUid['aggregate-750']!.totalGrams, 750);
+        expect(byUid['legacy-over']!.totalGrams, 2000);
+        expect(byUid['legacy-over']!.remainingGrams, 1875);
+
+        await upgraded.consumableDao.setRfidSpoolBinding(
+          byUid['legacy-350']!.id,
+          tagUid: '04AABBCC',
+          tagType: 'CUID',
+          cycle: 1,
+          status: 'active',
+        );
+        expect(
+          (await upgraded.consumableDao.getById(
+            byUid['legacy-350']!.id,
+          ))!.totalGrams,
+          1000,
+        );
+      } finally {
+        await upgraded.close();
+        await directory.delete(recursive: true);
+      }
+    },
+  );
+
+  test(
     'AMS only suggests already received stock until explicit selection',
     () async {
       final receipt = await receive();

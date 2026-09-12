@@ -1,9 +1,7 @@
-name: Windows Release
+name: Vendor Integration Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
 
 permissions:
   contents: write

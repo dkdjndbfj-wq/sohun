@@ -5,11 +5,15 @@ param(
     [string]$ReleaseDir = "",
     [string]$CompilerPath = "",
     [switch]$Core,
+    [switch]$PublicRelease,
     [ValidateSet("Personal", "Farm")]
     [string]$Product = "Personal"
 )
 
 $ErrorActionPreference = "Stop"
+if ($PublicRelease -and (-not $Core -or $Product -ne 'Personal')) {
+    throw 'PublicRelease packages only the explicitly cleared personal core build; pass -Core -Product Personal.'
+}
 $projectRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Set-Location $projectRoot
 
@@ -78,7 +82,15 @@ $installerDir = Join-Path $projectRoot "dist\installer"
 New-Item -ItemType Directory -Force -Path $installerDir | Out-Null
 $scriptPath = Join-Path $projectRoot "installer\sohun.iss"
 
-if ($Core) {
+if ($PublicRelease) {
+    $productDefines = @(
+        '/DMyProductDisplayName=sohun',
+        '/DMyProductSlug=sohun',
+        '/DMyProductInstallName=sohun',
+        '/DMySetupAppId={{51358463-A026-4AB6-8D95-C6CDB8AA0B3E}'
+    )
+    $expectedOutputName = "sohun-setup-$packageVersion-windows-x64.exe"
+} elseif ($Core) {
     $productDefines = @(
         '/DMyProductDisplayName=sohun Core Preview (unsigned)',
         '/DMyProductSlug=sohun-core-preview',

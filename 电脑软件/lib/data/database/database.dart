@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../../core/app_variant.dart';
+import '../../core/constants/personal_spool_policy.dart';
 import '../../core/utils/sqlite_snapshot.dart';
 import 'tables.dart';
 import 'personal_inventory_event_schema.dart';
@@ -646,6 +647,7 @@ class AppDatabase extends _$AppDatabase {
         );
       }
       await _repairFarmInventoryBatchLinksOnOpen();
+      await _repairLegacyPersonalSpoolCapacitiesOnOpen();
     },
   );
 
@@ -865,6 +867,55 @@ class AppDatabase extends _$AppDatabase {
          WHERE item.batch_id = studio_inventory_batches.id$activeJoinedItemCondition
        )
     ''');
+  }
+
+  /// Repairs the nominal capacity of legacy personal spools at every open.
+  ///
+  /// Older releases wrote the measured remainder as the spool capacity, so a
+  /// real 1 kg roll could sit at `total_grams = 350` with `remaining_grams =
+  /// 350`. After the fixed 1 kg rule those rows were rejected as abnormal even
+  /// though their balance is still usable.
+  ///
+  /// Only the nominal capacity is rewritten. The measured remainder, inventory
+  /// UID, receipt provenance, tag cycle, history and event ledger stay exactly
+  /// as recorded; aggregate rows and capacities above one roll are untouched,
+  /// so a genuine anomaly is still surfaced for review instead of truncated.
+  ///
+  /// The statement is idempotent: once repaired, no row matches again.
+  Future<void> _repairLegacyPersonalSpoolCapacitiesOnOpen() async {
+    final requiredTables = await customSelect(
+      "SELECT COUNT(*) AS count FROM sqlite_master WHERE type = 'table' "
+      "AND name = 'consumables'",
+    ).getSingle();
+    if (requiredTables.read<int>('count') != 1) return;
+    final columns = (await customSelect(
+      'PRAGMA table_info(consumables)',
+    ).get()).map((row) => row.read<String>('name')).toSet();
+    if (!columns.containsAll({
+      'total_grams',
+      'remaining_grams',
+      'rfid_tag_uid',
+      'stock_receipt_uid',
+    })) {
+      return;
+    }
+    // A tag or explicit receipt identifies one physical spool. A capacity
+    // below one roll with a balance that already fits one roll can only be the
+    // old nominal-capacity mistake; anything else keeps its recorded weight.
+    await customUpdate(
+      'UPDATE consumables SET total_grams = ? '
+      "WHERE inventory_scope = 'personal' "
+      'AND total_grams > 0 AND total_grams < ? '
+      'AND remaining_grams >= 0 AND remaining_grams <= ? '
+      "AND (stock_receipt_uid IS NOT NULL AND trim(stock_receipt_uid) != '' "
+      "  OR (rfid_tag_uid IS NOT NULL AND trim(rfid_tag_uid) != ''))",
+      variables: [
+        const Variable<double>(personalSpoolCapacityGrams),
+        const Variable<double>(personalSpoolCapacityGrams),
+        const Variable<double>(personalSpoolCapacityGrams),
+      ],
+      updates: {consumables},
+    );
   }
 
   Future<void> _createLocalPresetTables(Migrator m) async {

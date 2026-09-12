@@ -166,12 +166,12 @@ shipping an installer; sign the generated setup executable for public use.
 
 ## Release gate
 
-Do not publish or commercially distribute the current build until all entries
+Do not publish or commercially distribute a build containing uncleared resources until all entries
 marked "not cleared" have been resolved and the resulting source, notices, and
 license texts are included as required. This gate does not remove or disable
 the retained integration during private testing.
 
-The formal `build_release.ps1` script enforces this rule. It requires a
+The full vendor-integration `build_release.ps1` script enforces this rule. It requires a
 machine-readable manifest accepted by `scripts/Test-ReleaseClearance.ps1` and
 a real Windows code-signing certificate. `release-clearance.example.json` is
 an intentionally failing template, not evidence of permission and not a
@@ -183,3 +183,11 @@ manifest verifier and `scripts/Test-CoreBundle.ps1` must confirm that all
 uncleared material above is absent. Its unsigned Windows artifacts and Android
 debug APK may only be published as a GitHub prerelease; this does not clear or
 relax the formal release gate.
+
+The first formal public core release is built with
+`scripts/public_core_build.ps1 -PublicRelease` from the same sanitized source
+boundary. It continues to exclude every uncleared resource above. Windows
+Release artifacts are explicitly unsigned; the Android Release APK requires a
+persistent signing key and certificate fingerprint verification. Source-export,
+private-data and bundle checks remain mandatory. Signing secrets are injected
+only into temporary build locations and are never shipped.

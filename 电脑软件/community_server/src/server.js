@@ -990,15 +990,47 @@ function canReusePersonalSpool(record) {
     && record.remainingGrams > MINIMUM_REUSABLE_SPOOL_GRAMS;
 }
 
+function isIndividualPersonalSpool(record) {
+  return record?.rfidTagUid != null || record?.stockReceiptUid != null;
+}
+
+function canCanonicalizeLegacyPersonalSpool(record) {
+  return isIndividualPersonalSpool(record)
+    && Number.isFinite(record.totalGrams)
+    && record.totalGrams > 0
+    && record.totalGrams < PERSONAL_SPOOL_CAPACITY_GRAMS
+    && Number.isFinite(record.remainingGrams)
+    && record.remainingGrams >= 0
+    && record.remainingGrams <= PERSONAL_SPOOL_CAPACITY_GRAMS;
+}
+
+function canonicalizeLegacyPersonalSpool(record) {
+  return canCanonicalizeLegacyPersonalSpool(record)
+    ? { ...record, totalGrams: PERSONAL_SPOOL_CAPACITY_GRAMS }
+    : record;
+}
+
+function canonicalizeLegacyPersonalSpools(records) {
+  return (Array.isArray(records) ? records : []).map(canonicalizeLegacyPersonalSpool);
+}
+
+function canonicalizePersonalInventoryRecordAgainstStored(record, stored) {
+  if (!stored || !isIndividualPersonalSpool(stored)
+      || !Number.isFinite(stored.totalGrams) || stored.totalGrams <= 0
+      || stored.totalGrams > PERSONAL_SPOOL_CAPACITY_GRAMS
+      || !Number.isFinite(stored.remainingGrams) || stored.remainingGrams < 0
+      || stored.remainingGrams > PERSONAL_SPOOL_CAPACITY_GRAMS) {
+    return record;
+  }
+  return canonicalizeLegacyPersonalSpool(record);
+}
+
 function assertPersonalSpoolCapacity(records, currentRecords) {
   const current = personalInventoryRecordMap(currentRecords);
   for (const record of records) {
     const stored = current.get(uidForRecord(record));
-    const individual = record.rfidTagUid != null || record.stockReceiptUid != null
-      || stored?.rfidTagUid != null || stored?.stockReceiptUid != null;
-    if (!individual || isStandardPersonalSpool(record)) continue;
-    // Preserve existing non-standard historical balances verbatim. They may
-    // be archived, but cannot become new stock, be refilled or be reactivated.
+    const individual = isIndividualPersonalSpool(record) || isIndividualPersonalSpool(stored);
+    if (!individual) continue;
     const preservingHistory = stored && !isStandardPersonalSpool(stored)
       && record.totalGrams === stored.totalGrams
       && record.remainingGrams === stored.remainingGrams
@@ -1006,10 +1038,15 @@ function assertPersonalSpoolCapacity(records, currentRecords) {
       && JSON.stringify(record.rfidTagHistory ?? []) === JSON.stringify(stored.rfidTagHistory ?? [])
       && STOCK_SOURCE_KEYS.every((key) => record[key] === stored[key])
       && (record.lifecycleStatus === stored.lifecycleStatus || record.lifecycleStatus === 'retired');
-    if (!preservingHistory) {
-      throw new ApiError(409, 'inventory_spool_capacity_conflict',
-        '每卷规格固定为 1000 g，余量须在 0 至 1000 g；历史异常重量已保留，请先核对');
+    if (individual && record.remainingGrams > record.totalGrams && !preservingHistory) {
+      throw new ApiError(400, 'invalid_inventory_record', '带 RFID 标签的单卷余量不能大于初始净重');
     }
+    if (isStandardPersonalSpool(record) && (stored == null || isStandardPersonalSpool(stored))) continue;
+    if (preservingHistory) continue;
+    // Preserve existing non-standard historical balances verbatim. They may
+    // be archived, but cannot become new stock, be refilled or be reactivated.
+    throw new ApiError(409, 'inventory_spool_capacity_conflict',
+      '每卷规格固定为 1000 g，余量须在 0 至 1000 g；历史异常重量已保留，请先核对');
   }
 }
 
@@ -1105,9 +1142,6 @@ function normalizePersonalInventoryRecord(record) {
       '没有 RFID 标签的库存记录只能使用周期 1 且不能填写前驱卷',
     );
   }
-  if ((rawTagUid != null || stockSource.stockReceiptUid) && remainingGrams > totalGrams) {
-    throw new ApiError(400, 'invalid_inventory_record', '带 RFID 标签的单卷余量不能大于初始净重');
-  }
   if (lifecycleStatus === 'active' && remainingGrams <= 0) {
     throw new ApiError(400, 'invalid_inventory_record', 'active 耗材必须仍有可用余量');
   }
@@ -1149,7 +1183,7 @@ function normalizePersonalInventoryRecord(record) {
   };
 }
 
-function normalizePersonalInventoryRecords(records) {
+function normalizePersonalInventoryRecords(records, currentRecords = []) {
   if (!Array.isArray(records)) {
     throw new ApiError(400, 'invalid_inventory_snapshot', 'records必须是数组');
   }
@@ -1164,8 +1198,12 @@ function normalizePersonalInventoryRecords(records) {
   const seenTagCycles = new Set();
   const activeTags = new Set();
   const tagTypes = new Map();
+  const current = personalInventoryRecordMap(currentRecords);
   const normalizedRecords = records.map((record) => {
-    const normalized = normalizePersonalInventoryRecord(record);
+    const uid = typeof record?.uid === 'string' ? record.uid.trim().toLowerCase() : '';
+    const normalized = normalizePersonalInventoryRecord(
+      canonicalizePersonalInventoryRecordAgainstStored(record, current.get(uid)),
+    );
     const uidKey = normalized.uid.toLowerCase();
     if (seenUids.has(uidKey)) {
       throw new ApiError(400, 'duplicate_inventory_uid', '个人库存中不能有重复的 uid');
@@ -3095,15 +3133,16 @@ export function createCommunityServer(options = {}) {
             FROM personal_inventory_snapshots
             WHERE user_id = ?
           `).get(user.id);
-          const records = row == null ? [] : parseJson(row.records_json, null);
+          const storedRecords = row == null ? [] : parseJson(row.records_json, null);
           const materialCatalog = row == null ? [] : parseJson(row.catalog_json, null);
           const deletedUids = row == null ? {} : parseJson(row.deleted_json || '{}', null);
           const events = readPersonalInventoryEventPage(database, user.id).events;
-          if (!Array.isArray(records) || !Array.isArray(materialCatalog)
+          if (!Array.isArray(storedRecords) || !Array.isArray(materialCatalog)
               || !deletedUids || typeof deletedUids !== 'object' || Array.isArray(deletedUids)
               || !Array.isArray(events)) {
             throw new Error('personal inventory snapshot is corrupted');
           }
+          const records = canonicalizeLegacyPersonalSpools(storedRecords);
           sendJson(response, 200, {
             revision: Number(row?.revision ?? 0),
             updatedAt: row?.updated_at ?? null,
@@ -3122,11 +3161,12 @@ export function createCommunityServer(options = {}) {
           const revision = personalInventoryInteger(body.revision, 'revision', {
             required: true,
           });
-          const records = normalizePersonalInventoryRecords(body.records);
+          const rawRecords = body.records;
           const materialCatalog = normalizePersonalMaterialCatalog(body.materialCatalog);
           const deletedUids = normalizePersonalInventoryDeletions(body.deletedUids);
           const incomingEvents = normalizePersonalInventoryEvents(body.events);
           const timestamp = nowIso();
+          let records;
 
           database.exec('BEGIN IMMEDIATE');
           try {
@@ -3146,10 +3186,11 @@ export function createCommunityServer(options = {}) {
             }
             const currentRecords = current == null
               ? []
-              : parseJson(current.records_json, []);
+              : canonicalizeLegacyPersonalSpools(parseJson(current.records_json, []));
             if (!Array.isArray(currentRecords)) {
               throw new Error('personal inventory snapshot is corrupted');
             }
+            records = normalizePersonalInventoryRecords(rawRecords, currentRecords);
             retainAndRecordPersonalStockReceipts(database, user.id, records, currentRecords, timestamp);
             assertPersonalSpoolCapacity(records, currentRecords);
             assertPersonalInventoryHistoryRetained(

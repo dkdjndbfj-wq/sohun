@@ -1,0 +1,172 @@
+name: Public Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_tests:
+        description: 'Run the full automated suite before packaging'
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  public-release:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require an explicitly selected public version tag
+        shell: powershell
+        run: |
+          if ($env:GITHUB_REF -notmatch '^refs/tags/v\d+\.\d+\.\d+\+\d+$') {
+            throw 'Select the exact v<version>+<build> tag for an explicit public release.'
+          }
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.4
+          channel: stable
+          cache: true
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('电脑软件/android/**/*.gradle*', '电脑软件/android/**/gradle-wrapper.properties', '电脑软件/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install source-boundary scanner
+        shell: powershell
+        run: |
+          choco install ripgrep --no-progress -y
+          if ($LASTEXITCODE -ne 0) { throw 'ripgrep installation failed.' }
+      - name: Install installer compiler
+        shell: powershell
+        run: |
+          if (-not (Get-Command ISCC.exe -ErrorAction SilentlyContinue) -and
+              -not (Test-Path -LiteralPath "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) {
+            choco install innosetup --no-progress -y
+            if ($LASTEXITCODE -ne 0) { throw 'Inno Setup installation failed.' }
+          }
+      - name: Verify public release and core packaging boundaries
+        shell: powershell
+        run: |
+          ./scripts/tests/test_public_release.ps1
+          ./scripts/tests/test_core_build.ps1
+      - name: Restore Android signing outside the checkout
+        shell: powershell
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($name in @('ANDROID_KEYSTORE_BASE64', 'ANDROID_STORE_PASSWORD', 'ANDROID_KEY_ALIAS', 'ANDROID_KEY_PASSWORD')) {
+            if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) {
+              throw "Required Android signing secret is missing: $name"
+            }
+          }
+          $signingRoot = Join-Path $env:RUNNER_TEMP ('sohun-android-signing-' + [guid]::NewGuid().ToString('N'))
+          New-Item -ItemType Directory -Path $signingRoot | Out-Null
+          # Record cleanup location before decoding or writing secret material.
+          [IO.File]::AppendAllText($env:GITHUB_ENV, "SOHUN_ANDROID_SIGNING_ROOT=$signingRoot`n", [Text.UTF8Encoding]::new($false))
+          $keystore = Join-Path $signingRoot 'sohun-release.jks'
+          [IO.File]::WriteAllBytes($keystore, [Convert]::FromBase64String($env:ANDROID_KEYSTORE_BASE64))
+          if ((Get-Item -LiteralPath $keystore).Length -eq 0) { throw 'Android keystore is empty.' }
+          function ConvertTo-JavaProperty([string]$Value) {
+            # Properties.load uses Java escapes. This preserves punctuation,
+            # whitespace and Unicode without printing any credential values.
+            return (($Value.ToCharArray() | ForEach-Object { '\u' + ([int]$_).ToString('x4') }) -join '')
+          }
+          $properties = Join-Path $signingRoot 'key.properties'
+          $text = @(
+            'storeFile=' + $keystore.Replace('\', '/')
+            'storePassword=' + (ConvertTo-JavaProperty $env:ANDROID_STORE_PASSWORD)
+            'keyAlias=' + (ConvertTo-JavaProperty $env:ANDROID_KEY_ALIAS)
+            'keyPassword=' + (ConvertTo-JavaProperty $env:ANDROID_KEY_PASSWORD)
+          ) -join "`n"
+          [IO.File]::WriteAllText($properties, $text + "`n", [Text.UTF8Encoding]::new($false))
+          [IO.File]::AppendAllText($env:GITHUB_ENV, "SOHUN_ANDROID_SIGNING_PROPERTIES=$properties`n", [Text.UTF8Encoding]::new($false))
+      - name: Build the sanitized public release
+        shell: powershell
+        env:
+          SOHUN_RUN_TESTS: ${{ inputs.run_tests }}
+          SOHUN_ANDROID_SIGNING_CERT_SHA256: ${{ vars.ANDROID_SIGNING_CERT_SHA256 }}
+        run: |
+          $flags = @{}
+          if ($env:SOHUN_RUN_TESTS -eq 'true') { $flags.RunTests = $true }
+          ./scripts/public_core_build.ps1 -PublicRelease -Target All -Installer @flags -ExpectedTag $env:GITHUB_REF_NAME -OutputDirectory ./artifacts/public-release-ci
+      - name: Verify final release identity and checksums
+        shell: powershell
+        env:
+          EXPECTED_ANDROID_CERT: ${{ vars.ANDROID_SIGNING_CERT_SHA256 }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $output = Join-Path (Get-Location) 'artifacts/public-release-ci'
+          $manifest = Get-Content -LiteralPath (Join-Path $output 'release-manifest.json') -Raw | ConvertFrom-Json
+          if ($manifest.product -ne 'sohun-core' -or $manifest.prerelease -ne $false -or
+              $manifest.releaseTag -ne $env:GITHUB_REF_NAME -or $manifest.sourceCommit -ne $env:GITHUB_SHA -or
+              $manifest.windowsSigning -ne 'WindowsNotSigned' -or $manifest.androidSigning -ne 'AndroidReleaseSigned' -or
+              $manifest.androidDebuggable -ne $false -or
+              $manifest.androidSigningCertificateSha256 -ne ($env:EXPECTED_ANDROID_CERT -replace ':|\s', '').ToLowerInvariant()) {
+            throw 'Release manifest identity, signing or debuggability verification failed.'
+          }
+          $version = $manifest.version.Replace('+', '-')
+          $expected = @("sohun-setup-$version-windows-x64.exe", "sohun-$version-windows-x64.zip", "sohun-$version-android.apk")
+          if (@($manifest.artifacts).Count -ne 3) { throw 'Exactly three public install artifacts are required.' }
+          foreach ($artifact in $manifest.artifacts) {
+            if ($artifact.file -notin $expected) { throw 'Unexpected public artifact name.' }
+            $file = Join-Path $output $artifact.file
+            if (-not (Test-Path -LiteralPath $file -PathType Leaf) -or
+                (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant() -ne $artifact.sha256) {
+              throw 'Public artifact checksum verification failed.'
+            }
+          }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sohun-public-release
+          path: artifacts/public-release-ci/*
+          if-no-files-found: error
+      - name: Publish the public release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: sohun ${{ github.ref_name }}
+          prerelease: false
+          draft: false
+          body: |
+            sohun 首个正式公开版本：Windows 个人版和 Android 个人版。
+
+            每卷规格固定 1 kg；CUID/FUID 资料卡可重复使用，支持确认数量后批量入库，保留实际余量，大于 30 g 可继续使用。NTAG213 只用于独立设备工作台。
+
+            Android APK 使用长期发布密钥签名；Windows 安装包及便携包没有 Authenticode 发布者签名。两者的签名状态及 Android 证书指纹记录于 release-manifest.json。
+
+            本次公开的是精简核心版，未包含受限制的厂商闭源组件。验证记录见仓库 docs/release-validation-1.0.1.md；真机 NFC/AMS 兼容性以实际设备验证为准。
+
+            官网：https://sohun.top
+          files: artifacts/public-release-ci/*
+          fail_on_unmatched_files: true
+      - name: Remove temporary Android signing material
+        if: always()
+        shell: powershell
+        run: |
+          if (-not [string]::IsNullOrWhiteSpace($env:SOHUN_ANDROID_SIGNING_ROOT)) {
+            $signingRoot = [IO.Path]::GetFullPath($env:SOHUN_ANDROID_SIGNING_ROOT)
+            $temporaryRoot = [IO.Path]::GetFullPath($env:RUNNER_TEMP).TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
+            if (-not $signingRoot.StartsWith($temporaryRoot, [StringComparison]::OrdinalIgnoreCase) -or
+                (Split-Path -Leaf $signingRoot) -notmatch '^sohun-android-signing-[0-9a-f]{32}$') {
+              throw 'Unexpected signing cleanup path.'
+            }
+            if (Test-Path -LiteralPath $signingRoot) { Remove-Item -LiteralPath $signingRoot -Recurse -Force }
+          }
