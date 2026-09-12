@@ -213,7 +213,7 @@ CUID/FUID：可重复使用的耗材资料卡；确认数量后按每卷固定 1
             $certificateOutput = Invoke-ApkVerificationTool $apksigner.FullName @('verify', '--verbose', '--print-certs', $apk)
             if ($certificateOutput -match '(?i)CN\s*=\s*Android Debug') { throw 'Public APK used the Android debug identity.' }
             $certificateMatches = [regex]::Matches(
-                $certificateOutput,
+                ($certificateOutput -replace "`r", ''),
                 '(?im)^[ \t]*Signer[ \t]+#\d+[ \t]+certificate[ \t]+SHA-256[ \t]+digest:[ \t]*([0-9a-f](?:[0-9a-f:]|[ \t])*[0-9a-f])[ \t]*$'
             )
             if ($certificateMatches.Count -ne 1) { throw 'Unable to identify the public APK signing certificate.' }
