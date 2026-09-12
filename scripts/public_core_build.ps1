@@ -212,13 +212,16 @@ CUID/FUID：可重复使用的耗材资料卡；确认数量后按每卷固定 1
             if ($null -eq $apksigner) { throw 'Android SDK apksigner is required to verify the public APK.' }
             $certificateOutput = Invoke-ApkVerificationTool $apksigner.FullName @('verify', '--verbose', '--print-certs', $apk)
             if ($certificateOutput -match '(?i)CN\s*=\s*Android Debug') { throw 'Public APK used the Android debug identity.' }
+            $certificateText = $certificateOutput -replace '\x1b\[[0-?]*[ -/]*[@-~]', ''
             $certificateMatches = [regex]::Matches(
-                ($certificateOutput -replace "`r", ''),
-                '(?im)^[ \t]*Signer[ \t]+#\d+[ \t]+certificate[ \t]+SHA-256[ \t]+digest:[ \t]*([0-9a-f](?:[0-9a-f:]|[ \t])*[0-9a-f])[ \t]*$'
+                $certificateText,
+                '(?is)Signer\s+#\d+\s+certificate\s+SHA-256\s+digest\s*:\s*((?:[0-9a-f]{2}[\s:]*?){32})(?![0-9a-f])'
             )
-            if ($certificateMatches.Count -ne 1) { throw 'Unable to identify the public APK signing certificate.' }
-            $androidCertificateSha256 = ($certificateMatches[0].Groups[1].Value -replace '[:\s]', '').ToLowerInvariant()
-            if ($androidCertificateSha256 -notmatch '^[0-9a-f]{64}$') { throw 'Unable to identify the public APK signing certificate.' }
+            $certificateDigests = @($certificateMatches | ForEach-Object {
+                ($_.Groups[1].Value -replace '[^0-9a-fA-F]', '').ToLowerInvariant()
+            } | Where-Object { $_ -match '^[0-9a-f]{64}$' } | Select-Object -Unique)
+            if ($certificateDigests.Count -ne 1) { throw 'Unable to identify the public APK signing certificate.' }
+            $androidCertificateSha256 = $certificateDigests[0]
             if ($androidCertificateSha256 -ne $expectedAndroidCertificateSha256) { throw 'Public APK does not match the configured long-term Android signing identity.' }
             $aapt = Join-Path $apksigner.Directory.FullName 'aapt.exe'
             if (-not (Test-Path -LiteralPath $aapt -PathType Leaf)) { throw 'Android SDK aapt is required to verify release debuggability.' }
