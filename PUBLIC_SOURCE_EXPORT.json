@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-09-13T05:17:54.7425048+00:00",
+  "createdAt": "2026-09-13T06:04:20.3933193+00:00",
   "purpose": "Public source export; not a signed binary or third-party release clearance.",
   "coreAssets": true,
   "omittedAssetTrees": [
@@ -4617,8 +4617,8 @@
     },
     {
       "path": "scripts/public_core_build.ps1",
-      "bytes": 20471,
-      "sha256": "d6d256b4de9e9d5243a2ee4e1fb79f9259e902f7c37706935b186df8417901b5"
+      "bytes": 19272,
+      "sha256": "1153614bbf0410008da1212a1719b99eada6d393e7971b54fdb13463a0bf13d9"
     },
     {
       "path": "scripts/tests/test_core_build.ps1",

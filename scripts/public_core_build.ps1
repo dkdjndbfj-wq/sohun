@@ -215,39 +215,17 @@ CUID/FUID：可重复使用的耗材资料卡；确认数量后按每卷固定 1
             $certificateText = $certificateText -replace '[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', ' '
             $certificateText = $certificateText.Replace([char]0xA0, ' ')
             if ($certificateText -match '(?i)CN\s*=\s*Android Debug') { throw 'Public APK used the Android debug identity.' }
-            $certificateLines = $certificateText -split '\r\n?|\n'
-            $certificateDigests = [Collections.Generic.List[string]]::new()
-            $markerPattern = '(?i)Signer\s*#\s*\d+\s+certificate\s+SHA-256\s+digest\s*:'
-            $markers = [regex]::Matches($certificateText, $markerPattern)
-            foreach ($marker in $markers) {
-                # Some apksigner/JVM combinations emit the digest as a separate
-                # line or append control/warning text. Bound the search to this
-                # marker and the next certificate field, then accept only one
-                # complete 64-hex fingerprint.
-                $start = $marker.Index + $marker.Length
-                $nextMarker = $certificateText.Length
-                foreach ($candidateMarker in $markers) {
-                    if ($candidateMarker.Index -gt $marker.Index) {
-                        $nextMarker = $candidateMarker.Index
-                        break
-                    }
-                }
-                $segment = $certificateText.Substring($start, $nextMarker - $start)
-                $pairMatch = [regex]::Match($segment, '(?is)(?:[0-9a-f]{2}[\s:.-]*){32}')
-                $digest = if ($pairMatch.Success) {
-                    ($pairMatch.Value -replace '[^0-9a-fA-F]', '')
-                } else {
-                    $hexOnly = $segment -replace '[^0-9a-fA-F]', ''
-                    if ($hexOnly.Length -ge 64) { $hexOnly.Substring(0, 64) } else { '' }
-                }
-                if ($digest -match '^[0-9a-fA-F]{64}$') {
-                    $certificateDigests.Add($digest.ToLowerInvariant())
-                }
+            $digestMarkers = [regex]::Matches($certificateText, '(?i)certificate\s+SHA[\s-]+256\s+digest\s*:')
+            if ($digestMarkers.Count -ne 1) { throw 'Unable to identify the public APK signing certificate.' }
+            $expectedPairs = for ($index = 0; $index -lt $expectedAndroidCertificateSha256.Length; $index += 2) {
+                [regex]::Escape($expectedAndroidCertificateSha256.Substring($index, 2))
             }
-            $certificateDigests = @($certificateDigests | Select-Object -Unique)
-            if ($certificateDigests.Count -ne 1) { throw 'Unable to identify the public APK signing certificate.' }
-            $androidCertificateSha256 = $certificateDigests[0]
-            if ($androidCertificateSha256 -ne $expectedAndroidCertificateSha256) { throw 'Public APK does not match the configured long-term Android signing identity.' }
+            $expectedDigestPattern = $expectedPairs -join '[\s:.-]*'
+            $digestPattern = '(?is)certificate\s+SHA[\s-]+256\s+digest\s*:\s*[^0-9a-fA-F]*' + $expectedDigestPattern
+            if (-not [regex]::IsMatch($certificateText, $digestPattern)) {
+                throw 'Public APK does not match the configured long-term Android signing identity.'
+            }
+            $androidCertificateSha256 = $expectedAndroidCertificateSha256
             $aapt = Join-Path $apksigner.Directory.FullName 'aapt.exe'
             if (-not (Test-Path -LiteralPath $aapt -PathType Leaf)) { throw 'Android SDK aapt is required to verify release debuggability.' }
             $apkBadging = Invoke-ApkVerificationTool $aapt @('dump', 'badging', $apk)
