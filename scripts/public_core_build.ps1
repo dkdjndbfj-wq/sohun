@@ -1,4 +1,4 @@
-# Builds core previews or explicit public releases from a fixed sanitized snapshot.
+﻿# Builds core previews or explicit public releases from a fixed sanitized snapshot.
 [CmdletBinding()]
 param(
     [ValidateSet('Windows', 'Android', 'All')][string]$Target = 'All',
