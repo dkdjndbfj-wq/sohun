@@ -501,7 +501,8 @@ class _MobileAppShellState extends ConsumerState<_MobileAppShell> {
               ownerAccount: widget.ownerAccount,
               tagRepository: widget.tagRepository,
               onAccountTap: (_) => _selectPage(3),
-              pageTitle: '耗材标签登记',
+              pageTitle: '耗材标签',
+              readerFirst: true,
             ),
           ),
           _MobileTab(
@@ -555,7 +556,7 @@ class _MobileAppShellState extends ConsumerState<_MobileAppShell> {
               NavigationDestination(
                 icon: Icon(Icons.nfc_outlined),
                 selectedIcon: Icon(Icons.nfc_rounded),
-                label: '标签登记',
+                label: '标签读写',
               ),
               NavigationDestination(
                 icon: Icon(Icons.inventory_2_outlined),

@@ -396,7 +396,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining(vault.template.uid), findsOneWidget);
       expect(nfc.statusChecks, 0);
-      Navigator.of(tester.element(find.byType(BottomSheet))).pop();
+      expect(find.byType(Dialog), findsOneWidget);
+      expect(find.byType(BottomSheet), findsNothing);
+      Navigator.of(tester.element(find.byType(Dialog))).pop();
       await tester.pumpAndSettle();
     },
   );

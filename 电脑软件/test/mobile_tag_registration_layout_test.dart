@@ -241,7 +241,8 @@ void main() {
 
     await tester.tap(find.byTooltip('登记帮助'));
     await tester.pumpAndSettle();
-    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.byType(BottomSheet), findsNothing);
     expect(find.text('先选模板，再填耗材'), findsOneWidget);
     expect(find.text('每次登记当前 1 卷'), findsOneWidget);
     expect(find.textContaining('AMS 识别仍需实机验证'), findsOneWidget);
@@ -252,7 +253,7 @@ void main() {
     await tester.ensureVisible(find.text('知道了'));
     await tester.tap(find.text('知道了'));
     await tester.pumpAndSettle();
-    expect(find.byType(BottomSheet), findsNothing);
+    expect(find.byType(Dialog), findsNothing);
     expect(find.text('先选模板，再填耗材'), findsNothing);
     expect(
       tester.widget<TextField>(find.byKey(_brandKey)).controller!.text,
@@ -276,7 +277,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     final helpScroll = find.descendant(
-      of: find.byType(BottomSheet),
+      of: find.byType(Dialog),
       matching: find.byType(Scrollable),
     );
     expect(helpScroll, findsOneWidget);
@@ -293,7 +294,7 @@ void main() {
     expect(find.text('知道了').hitTestable(), findsOneWidget);
     await tester.tap(find.text('知道了'));
     await tester.pumpAndSettle();
-    expect(find.byType(BottomSheet), findsNothing);
+    expect(find.byType(Dialog), findsNothing);
     expect(
       tester.widget<TextField>(find.byKey(_brandKey)).controller!.text,
       '小屏测试品牌',

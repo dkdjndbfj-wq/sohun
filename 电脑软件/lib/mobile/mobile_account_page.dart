@@ -109,11 +109,8 @@ class _MobileAccountPageState extends ConsumerState<MobileAccountPage> {
     var effects = _effects;
     var saving = false;
     String? error;
-    await showMobileGlassBottomSheet<void>(
+    await showMobileGlassDialog<void>(
       context: context,
-      useSafeArea: true,
-      isScrollControlled: true,
-      showDragHandle: true,
       builder: (context) => StatefulBuilder(
         builder: (context, update) {
           Future<void> save({ThemeMode? newMode, bool? newEffects}) async {

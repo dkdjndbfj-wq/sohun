@@ -50,7 +50,7 @@ void main() {
     );
   });
 
-  testWidgets('玻璃弹层复用桌面卡片与模糊，可滚动且关闭后返回原页面', (tester) async {
+  testWidgets('居中玻璃弹窗复用桌面卡片与模糊，可滚动且关闭后返回原页面', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: buildMobileTheme(AppTheme.light()),
@@ -58,11 +58,8 @@ void main() {
           body: Builder(
             builder: (context) => Center(
               child: TextButton(
-                onPressed: () => showMobileGlassBottomSheet<void>(
+                onPressed: () => showMobileGlassDialog<void>(
                   context: context,
-                  useSafeArea: true,
-                  isScrollControlled: true,
-                  showDragHandle: true,
                   builder: (_) => SizedBox(
                     height: 360,
                     child: ListView(
@@ -84,12 +81,81 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(BackdropFilter), findsWidgets);
     expect(find.byType(GlassCard), findsOneWidget);
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.byType(BottomSheet), findsNothing);
+    final surface = tester.getRect(find.byType(GlassCard));
+    expect(surface.center, const Offset(400, 300));
+    expect(surface.width, lessThanOrEqualTo(560));
     await tester.drag(find.byType(ListView), const Offset(0, -800));
     await tester.pumpAndSettle();
     expect(find.text('条目 15').hitTestable(), findsOneWidget);
     Navigator.of(tester.element(find.byType(ListView))).pop();
     await tester.pumpAndSettle();
     expect(find.text('打开').hitTestable(), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('小屏键盘和两倍字号下居中弹窗可滚动到确认操作', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    tester.view.viewInsets = const FakeViewPadding(bottom: 240);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: const TextScaler.linear(2)),
+          child: child!,
+        ),
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showMobileGlassDialog<void>(
+                context: context,
+                builder: (context) => SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      const Text('编辑耗材资料'),
+                      for (var i = 0; i < 8; i++)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: TextField(
+                            decoration: InputDecoration(labelText: '资料 $i'),
+                          ),
+                        ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('确认保存'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              child: const Text('打开'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('打开'));
+    await tester.pumpAndSettle();
+    final surface = tester.getRect(find.byType(GlassCard));
+    expect(surface.left, greaterThanOrEqualTo(16));
+    expect(surface.right, lessThanOrEqualTo(304));
+    expect(surface.bottom, lessThanOrEqualTo(376));
+    expect(tester.takeException(), isNull);
+    await tester.scrollUntilVisible(
+      find.text('确认保存'),
+      180,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('确认保存'));
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

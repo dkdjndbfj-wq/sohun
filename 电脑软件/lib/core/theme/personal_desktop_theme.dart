@@ -62,14 +62,10 @@ ThemeData buildPersonalDesktopTheme(
 }) {
   if (!personalProduct || studioMode) return base;
   final dark = base.brightness == Brightness.dark;
-  final families = AppTypography.chineseFontFamily
-      .split(',')
-      .map((s) => s.trim())
-      .toList();
   TextStyle? normalize(TextStyle? style) => style?.copyWith(
-    fontFamily: families.first,
+    fontFamily: AppTypography.chineseFontFamily,
     fontFamilyFallback: [
-      ...families.skip(1),
+      ...AppTypography.chineseFontFamilyFallback,
       'Noto Sans CJK SC',
       'Noto Sans SC',
     ],
@@ -109,7 +105,23 @@ ThemeData buildPersonalDesktopTheme(
       textTheme: text,
       primaryTextTheme: text,
       scaffoldBackgroundColor: personalDesktopCanvas(base.brightness),
+      iconTheme: IconThemeData(
+        color: base.iconTheme.color,
+        size: base.iconTheme.size,
+      ),
+      primaryIconTheme: IconThemeData(
+        color: base.primaryIconTheme.color,
+        size: base.primaryIconTheme.size,
+      ),
       appBarTheme: base.appBarTheme.copyWith(
+        iconTheme: IconThemeData(
+          color: (base.appBarTheme.iconTheme ?? base.iconTheme).color,
+          size: (base.appBarTheme.iconTheme ?? base.iconTheme).size,
+        ),
+        actionsIconTheme: IconThemeData(
+          color: (base.appBarTheme.actionsIconTheme ?? base.iconTheme).color,
+          size: (base.appBarTheme.actionsIconTheme ?? base.iconTheme).size,
+        ),
         titleTextStyle: normalize(base.appBarTheme.titleTextStyle),
       ),
       inputDecorationTheme: base.inputDecorationTheme.copyWith(

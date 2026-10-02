@@ -109,7 +109,8 @@ class PrinterPreset {
     if (lite > 0 && (standard + ht) > 0 && !amsLiteCanCombineWithStandard) {
       return '$model 的 AMS Lite 不能与其他 AMS 混接';
     }
-    final maxUnits = maxAmsCount +
+    final maxUnits =
+        maxAmsCount +
         (lite > 0 && amsLiteCanCombineWithStandard ? maxAmsLiteCount : 0);
     if (types.length > maxUnits) return '$model 的常规 AMS 合计最多 $maxAmsCount 台';
     return null;
@@ -416,8 +417,11 @@ class PrinterPresets {
       if (brand != null &&
           preset.brand != brand &&
           !(preset.isBambu &&
-              ['bambulab', 'bambu']
-                  .contains(brand.replaceAll(' ', '').toLowerCase()))) continue;
+              [
+                'bambulab',
+                'bambu',
+              ].contains(brand.replaceAll(' ', '').toLowerCase())))
+        continue;
       if (PrinterModelNormalizer.normalize(preset.model) == normalized) {
         return preset;
       }
@@ -433,7 +437,7 @@ class PrinterPresets {
     '闪铸',
     '联泰',
     '极光尔沃',
-    '易生',
+    'eSUN',
     '三绿',
     '聚复',
     '爱乐酷',

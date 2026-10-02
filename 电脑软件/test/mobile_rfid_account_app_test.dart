@@ -13,7 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  testWidgets('隐藏 NFC 工具可打开返回，浏览页面不检测 NFC', (tester) async {
+  testWidgets('移动首页自动显示 NFC 状态且账号页可返回', (tester) async {
     SharedPreferences.setMockInitialValues({});
     await tester.binding.setSurfaceSize(const Size(390, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -56,13 +56,18 @@ void main() {
     await tester.tap(find.byTooltip('登录 sohun').first);
     await tester.pumpAndSettle();
     expect(find.text('NFC 标签工具'), findsNothing);
-    expect(nfcCalls, isEmpty);
+    expect(nfcCalls.where((method) => method == 'getStatus'), isNotEmpty);
     expect(find.text('我的').hitTestable(), findsWidgets);
     await tester.tap(find.byType(NavigationDestination).first);
     await tester.pumpAndSettle();
-    expect(find.text('耗材标签登记'), findsOneWidget);
+    expect(find.text('耗材标签'), findsOneWidget);
     expect(tester.takeException(), isNull);
-    expect(nfcCalls.where((method) => method != 'cancelScan'), isEmpty);
+    expect(
+      nfcCalls.where(
+        (method) => method != 'getStatus' && method != 'cancelScan',
+      ),
+      isEmpty,
+    );
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
   });

@@ -316,14 +316,22 @@ void main() {
     }
   });
 
-  test('原生首帧与Dart启动和主窗口均固定1440x900', () {
-    expect(StartupWindowController.mainSize, const Size(1440, 900));
+  test('原生首帧与Dart启动和主窗口均固定1280x800', () {
+    expect(StartupWindowController.mainSize, const Size(1280, 800));
     expect(
       StartupWindowController.splashSize,
       StartupWindowController.mainSize,
     );
+    expect(
+      StartupWindowController.initialSizeFor(const Size(1920, 1080)),
+      const Size(1280, 800),
+    );
+    expect(
+      StartupWindowController.initialSizeFor(const Size(1280, 720)),
+      const Size(1248, 688),
+    );
     final nativeEntry = File('windows/runner/main.cpp').readAsStringSync();
-    expect(nativeEntry, contains('Win32Window::Size size(1440, 900)'));
+    expect(nativeEntry, contains('Win32Window::Size size(1280, 800)'));
     final dartEntry = File('lib/main.dart').readAsStringSync();
     expect(dartEntry, contains('StartupWindowController.prepareSplashWindow('));
   });

@@ -240,6 +240,9 @@ try {
         & (Join-Path $projectRoot 'scripts\test_native_account_tools.ps1') `
             -BinDirectory (Join-Path $buildRoot 'assets\bin') `
             -RuntimeBundle (Join-Path $buildRoot "build\windows\x64\runner\$Configuration")
+        & (Join-Path $projectRoot 'scripts\Test-PersonalWindowsBundle.ps1') `
+            -BundlePath (Join-Path $buildRoot "build\windows\x64\runner\$Configuration") `
+            -Product $Product
     }
 
     # --- Step 4: Copy artifacts back to the project's build/ dir -------------
@@ -336,7 +339,13 @@ try {
     if (-not (Test-Path -LiteralPath $finalExe)) {
         throw "Expected product executable was not produced: $finalExe"
     }
-    if ($Core) { & (Join-Path $projectRoot 'scripts/Test-CoreBundle.ps1') -BundlePath $artifactDir }
+    if ($Core) {
+        & (Join-Path $projectRoot 'scripts/Test-CoreBundle.ps1') -BundlePath $artifactDir
+    } else {
+        & (Join-Path $projectRoot 'scripts\Test-PersonalWindowsBundle.ps1') `
+            -BundlePath $artifactDir `
+            -Product $Product
+    }
     Write-Host "Executable: $finalExe"
 
 } finally {

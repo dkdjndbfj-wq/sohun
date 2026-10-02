@@ -1,3 +1,5 @@
+import '../services/filament_brand_identity_service.dart';
+
 /// 耗材厂商商标工具。根据厂商名查找 assets/images/brands/ 下的商标图。
 /// 支持精确匹配 + 包含匹配；找不到返回 null（调用方用文字代替）。
 class BrandLogoUtils {
@@ -24,7 +26,9 @@ class BrandLogoUtils {
   /// 查找厂商商标。返回 asset 路径，找不到返回 null。
   /// 匹配规则：厂商名（小写）包含任一关键词即命中。
   static String? resolveAsset(String manufacturer) {
-    final name = manufacturer.trim().toLowerCase();
+    final name = FilamentBrandIdentityService.normalize(
+      manufacturer,
+    ).toLowerCase();
     if (name.isEmpty) return null;
     for (final entry in _brandMap.entries) {
       for (final keyword in entry.value) {

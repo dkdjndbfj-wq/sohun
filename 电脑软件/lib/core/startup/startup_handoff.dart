@@ -79,7 +79,7 @@ class StartupHandoffController extends ChangeNotifier {
 
   /// Waits until the preferred target has held the same bounds for two frames.
   ///
-  /// The application is mounted at its final 1440x900 layout before this is
+  /// The application is mounted at its final 1280x800 layout before this is
   /// called. Waiting for stable geometry avoids landing on an intermediate
   /// sidebar or font-layout position without adding an arbitrary splash delay.
   Future<Rect?> waitForStableLandingRect({

@@ -14,6 +14,7 @@ import 'ams_tag_template.dart';
 import 'ams_template_repository.dart';
 import 'ams_template_picker.dart';
 import 'mobile_rfid_models.dart';
+import 'mobile_rfid_home_page.dart';
 import 'mobile_inventory_sync.dart';
 import 'mobile_visual_theme.dart';
 import 'mobile_rfid_tag_repository.dart';
@@ -44,6 +45,10 @@ class MobileRfidWriterPage extends StatefulWidget {
   /// a clearer AMS registration label.
   final String pageTitle;
 
+  /// Enables the simplified reader-first Android home while preserving this
+  /// widget as the stable host surface used by the account shell and tests.
+  final bool readerFirst;
+
   const MobileRfidWriterPage({
     super.key,
     this.nfc,
@@ -57,6 +62,7 @@ class MobileRfidWriterPage extends StatefulWidget {
     this.amsTemplateRepository,
     this.isActive = true,
     this.pageTitle = '写入 RFID',
+    this.readerFirst = false,
   });
 
   @override
@@ -271,11 +277,8 @@ class _MobileRfidWriterPageState extends State<MobileRfidWriterPage>
         unique.putIfAbsent(key, () => record);
       }
       final records = unique.values.toList();
-      final selected = await showModalBottomSheet<RfidTagRecord>(
+      final selected = await showMobileGlassDialog<RfidTagRecord>(
         context: context,
-        isScrollControlled: true,
-        useSafeArea: true,
-        showDragHandle: true,
         builder: (context) => SizedBox(
           height: MediaQuery.sizeOf(context).height * 0.65,
           child: Padding(
@@ -752,11 +755,8 @@ class _MobileRfidWriterPageState extends State<MobileRfidWriterPage>
 
   Future<void> _pickMaterial() async {
     _materialSearchController.clear();
-    final selected = await showModalBottomSheet<String>(
+    final selected = await showMobileGlassDialog<String>(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      showDragHandle: true,
       builder: (context) => _MaterialPickerSheet(
         materials: _materials,
         controller: _materialSearchController,
@@ -794,11 +794,8 @@ class _MobileRfidWriterPageState extends State<MobileRfidWriterPage>
 
   Future<void> _showRegistrationHelp() async {
     FocusManager.instance.primaryFocus?.unfocus();
-    await showMobileGlassBottomSheet<void>(
+    await showMobileGlassDialog<void>(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      showDragHandle: true,
       builder: (context) => SafeArea(
         top: false,
         child: SingleChildScrollView(
@@ -815,7 +812,8 @@ class _MobileRfidWriterPageState extends State<MobileRfidWriterPage>
               ),
               const _RegistrationHelpItem(
                 title: '每次登记当前 1 卷',
-                body: '每卷规格固定 1000 g；余料填写实际剩余克数，大于 30 g 且不超过 1000 g 才可写卡续用。写入与回读校验通过后才保存库存。',
+                body:
+                    '每卷规格固定 1000 g；余料填写实际剩余克数，大于 30 g 且不超过 1000 g 才可写卡续用。写入与回读校验通过后才保存库存。',
               ),
               const _RegistrationHelpItem(
                 title: '后续到货，去库存批量添加',
@@ -919,6 +917,21 @@ class _MobileRfidWriterPageState extends State<MobileRfidWriterPage>
 
   @override
   Widget build(BuildContext context) {
+    if (widget.readerFirst) {
+      return MobileRfidHomePage(
+        nfc: _nfc,
+        sync: widget.sync,
+        loadMaterials: widget.loadMaterials ?? MaterialCatalogService.load,
+        accountLabel: widget.accountLabel,
+        accountIdentity: widget.accountIdentity,
+        ownerAccount: widget.ownerAccount,
+        onAccountTap: widget.onAccountTap,
+        tagRepository: widget.tagRepository,
+        amsTemplateRepository: widget.amsTemplateRepository,
+        isActive: widget.isActive,
+        pageTitle: widget.pageTitle,
+      );
+    }
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textPrimary = isDark
         ? AppColors.textPrimaryDark

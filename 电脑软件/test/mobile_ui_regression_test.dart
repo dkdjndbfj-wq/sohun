@@ -9,6 +9,7 @@ import 'package:consumable_tracker_desktop/data/external/community/app_auth_sess
 import 'package:consumable_tracker_desktop/data/external/community/community_api_client.dart';
 import 'package:consumable_tracker_desktop/data/models/app_auth.dart';
 import 'package:consumable_tracker_desktop/data/prefs/community_server_settings.dart';
+import 'package:consumable_tracker_desktop/features/color_picker/color_picker_panel.dart';
 import 'package:consumable_tracker_desktop/mobile/ams_tag_template.dart';
 import 'package:consumable_tracker_desktop/mobile/ams_template_repository.dart';
 import 'package:consumable_tracker_desktop/mobile/mobile_inventory_page.dart';
@@ -35,29 +36,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'support/ams_template_fixture.dart';
 
 void main() {
-  testWidgets('切换底部导航保留品牌、型号和库存搜索，快捷入口返回登记页', (tester) async {
+  testWidgets('切换底部导航保留库存搜索，快捷入口返回单按钮读卡首页', (tester) async {
     final calls = await _mountApp(tester);
-    await tester.enterText(find.byType(TextField).first, '测试品牌');
-    await tester.tap(find.text('选择型号'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byType(ListTile).first);
-    await tester.pumpAndSettle();
-    final selectedModel = tester
-        .widgetList<Text>(find.byType(Text))
-        .map((text) => text.data)
-        .toList();
-    FocusManager.instance.primaryFocus?.unfocus();
+    expect(find.byKey(const ValueKey('mobile-reader-primary')), findsOneWidget);
     await tester.tap(find.byType(NavigationDestination).at(1));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).hitTestable().first, 'PETG');
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.tap(find.byTooltip('写入耗材标签'));
     await tester.pumpAndSettle();
-    expect(find.text('测试品牌'), findsOneWidget);
-    expect(find.text('选择型号'), findsNothing);
+    expect(find.byKey(const ValueKey('mobile-reader-primary')), findsOneWidget);
     expect(
-      tester.widgetList<Text>(find.byType(Text)).map((text) => text.data),
-      containsAll(selectedModel.whereType<String>()),
+      find.byKey(const ValueKey('mobile-reader-nfc-status')),
+      findsOneWidget,
     );
     expect(
       tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
@@ -66,7 +57,39 @@ void main() {
     await tester.tap(find.byType(NavigationDestination).at(1));
     await tester.pumpAndSettle();
     expect(find.text('PETG'), findsOneWidget);
-    expect(calls, isEmpty, reason: '普通切页不能销毁写入页并触发 NFC 取消');
+    expect(
+      calls,
+      everyElement(isIn(['getStatus', 'isAvailable', 'isEnabled'])),
+      reason: '返回首页可刷新 NFC 状态，普通切页不触发标签读写或取消',
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('小屏大字号批量库存与颜色选择均居中显示，取消颜色后保留库存表单', (tester) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    await _mountApp(tester, size: const Size(320, 640));
+    await tester.tap(find.byType(NavigationDestination).at(1));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('mobile-add-inventory')));
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.ensureVisible(find.text('#FFFFFF'));
+    await tester.tap(find.text('#FFFFFF'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ColorPickerPanel), findsOneWidget);
+    expect(find.byType(BottomSheet), findsNothing);
+    await tester.tap(find.text('取消').last);
+    await tester.pumpAndSettle();
+    expect(find.byType(ColorPickerPanel), findsNothing);
+    expect(
+      find.descendant(of: find.byType(Dialog), matching: find.text('批量加库存')),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
@@ -306,10 +329,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('eSUN · PLA+'), findsOneWidget);
     expect(tester.takeException(), isNull);
-    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(find.byType(Dialog), findsOneWidget);
+    expect(find.byType(BottomSheet), findsNothing);
     expect(
       find.descendant(
-        of: find.byType(BottomSheet),
+        of: find.byType(Dialog),
         matching: find.byType(SingleChildScrollView),
       ),
       findsOneWidget,
@@ -449,7 +473,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(find.byType(Dialog), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
@@ -554,46 +578,11 @@ void main() {
             find.byType(MaterialApp),
             matchesGoldenFile('../build/mobile-ui/writer-${mode.name}.png'),
           );
-          await tester.ensureVisible(find.text('靠近标签并写入'));
-          await tester.pumpAndSettle();
-          await expectLater(
-            find.byType(MaterialApp),
-            matchesGoldenFile(
-              '../build/mobile-ui/writer-actions-${mode.name}.png',
-            ),
-          );
           if (const bool.fromEnvironment('CAPTURE_MOBILE_WRITER_ONLY')) {
-            await tester.tap(find.byTooltip('登记帮助'));
-            await tester.pumpAndSettle();
-            await expectLater(
-              find.byType(MaterialApp),
-              matchesGoldenFile(
-                '../build/mobile-ui/writer-help-${mode.name}.png',
-              ),
+            expect(
+              nfcCalls,
+              everyElement(isIn(['getStatus', 'isAvailable', 'isEnabled'])),
             );
-            Navigator.of(tester.element(find.byType(BottomSheet))).pop();
-            await tester.pumpAndSettle();
-            await tester.tap(find.text('白色'));
-            await tester.pumpAndSettle();
-            await expectLater(
-              find.byType(MaterialApp),
-              matchesGoldenFile(
-                '../build/mobile-ui/writer-color-${mode.name}.png',
-              ),
-            );
-            await tester.tap(find.text('取消'));
-            await tester.pumpAndSettle();
-            await tester.tap(
-              find.byKey(const ValueKey('mobile-registration-remnant')),
-            );
-            await tester.pumpAndSettle();
-            await expectLater(
-              find.byType(MaterialApp),
-              matchesGoldenFile(
-                '../build/mobile-ui/writer-remnant-${mode.name}.png',
-              ),
-            );
-            expect(nfcCalls, isEmpty);
             expect(tester.takeException(), isNull);
             await tester.pumpWidget(const SizedBox.shrink());
             await tester.pumpAndSettle();
@@ -641,7 +630,7 @@ void main() {
               '../build/mobile-ui/inventory-add-${mode.name}.png',
             ),
           );
-          Navigator.of(tester.element(find.byType(BottomSheet))).pop();
+          Navigator.of(tester.element(find.byType(Dialog))).pop();
           await tester.pumpAndSettle();
           await tester.tap(find.widgetWithText(NavigationDestination, '我的'));
           await tester.pumpAndSettle();
@@ -667,7 +656,11 @@ void main() {
             matchesGoldenFile('../build/mobile-ui/register-${mode.name}.png'),
           );
           expect(find.byType(MobileAuthPage), findsOneWidget);
-          expect(nfcCalls, isEmpty, reason: '页面预览不发起标签读取、写入或权限请求');
+          expect(
+            nfcCalls,
+            everyElement(isIn(['getStatus', 'isAvailable', 'isEnabled'])),
+            reason: '首页可自动检查 NFC 状态，页面预览不发起标签读取、写入或权限请求',
+          );
           expect(tester.takeException(), isNull);
           await tester.pumpWidget(const SizedBox.shrink());
           await tester.pumpAndSettle();

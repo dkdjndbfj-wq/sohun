@@ -1,3 +1,5 @@
+import 'filament_brand_identity_service.dart';
+
 class FarmBrandOption {
   const FarmBrandOption({required this.code, required this.label});
 
@@ -20,9 +22,11 @@ class FarmBrandCatalogService {
   ];
 
   static FarmBrandOption normalize(String value) {
-    final raw = value.trim();
-    final lower =
-        raw.toLowerCase().replaceAll(RegExp(r'[^a-z0-9\u4e00-\u9fff]'), '');
+    final raw = FilamentBrandIdentityService.normalize(value);
+    final lower = raw.toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9\u4e00-\u9fff]'),
+      '',
+    );
     if (lower == '拓竹' ||
         lower == 'bambu' ||
         lower == 'bambulab' ||
@@ -30,8 +34,10 @@ class FarmBrandCatalogService {
       return known.first;
     }
     for (final option in known.skip(1)) {
-      final normalizedLabel =
-          option.label.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+      final normalizedLabel = option.label.toLowerCase().replaceAll(
+        RegExp(r'[^a-z0-9]'),
+        '',
+      );
       if (lower == option.code || lower == normalizedLabel) return option;
     }
     final label = raw.isEmpty ? '其他品牌' : raw;

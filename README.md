@@ -2,11 +2,56 @@
 
 面向个人 3D 打印用户的耗材库存、实物卷追踪、打印机与设备工作台。Windows 桌面端负责日常管理，Android 客户端负责移动查看与 NFC 标签操作；两端可以使用同一个 sohun 个人账号同步。
 
-[访问官网](https://sohun.top) · [下载安装器](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.1%2B2/sohun-setup-1.0.1-2-windows-x64.exe) · [下载便携版](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.1%2B2/sohun-1.0.1-2-windows-x64.zip) · [下载 Android 版](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.1%2B2/sohun-1.0.1-2-android.apk) · [查看版本说明](https://github.com/dkdjndbfj-wq/sohun/releases/tag/v1.0.1%2B2)
+[访问官网](https://sohun.top) · [下载 Android 1.0.2+4](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.2%2B4/sohun-1.0.2-4-android.apk) · [新版图文说明](docs/releases/1.0.2-4.md) · [所有版本与附件](https://github.com/dkdjndbfj-wq/sohun/releases)
 
-当前版本为 **1.0.1+2，首个正式公开版本**，标签为 **`v1.0.1+2`**。Windows 提供 Release 安装器与便携包，Android 提供使用稳定密钥签名的 Release APK。Windows 尚无 Authenticode 发布者签名；具体手机、标签、打印机和固件的兼容性仍需实机确认。
+**Android 1.0.2+4** 重新设计了手机耗材标签界面：打开后只需点击“读取 CUID / FUID”，已有资料进入入库确认，空白新卡进入独立写卡设置。读写、颜色选择和库存操作使用居中弹窗，配合浅色与深色主题，让常用操作更清楚、更顺手。本轮提供 Android APK，Windows 安装包请以 Releases 实际附件为准。
 
-本次已完成库存、标签职责、账号隔离、启动交接和原生 NFC 的专项回归，具体范围见 [验证记录](docs/release-validation-1.0.1.md)。欢迎在 [Issues](https://github.com/dkdjndbfj-wq/sohun/issues) 反馈问题，注明版本、设备和复现步骤；请勿附带账号密码、密钥或真实个人数据。
+Android 正式 APK 使用长期发行密钥签名。具体手机、标签、打印机和固件的兼容性仍以实机结果为准。欢迎在 [Issues](https://github.com/dkdjndbfj-wq/sohun/issues) 反馈问题，注明版本、设备和复现步骤；请勿附带账号密码、密钥或真实个人数据。
+
+## 先看看手机版怎么用
+
+以下预览由 **1.0.2+4 的真实 Flutter 界面组件**渲染，使用 PLA、PETG 等示例耗材与模拟 NFC 状态；它们展示实际页面和操作布局，不是概念图，也不代表已经完成真实读卡或 AMS 验收。
+
+### 打开就能读卡
+
+标签首页保留一个醒目的“读取 CUID / FUID”按钮。NFC 状态会自动检测，应用返回前台时重新检查；读取中显示贴卡提示和进度，可以取消。浅色主题明快，深色主题适合夜间查看。
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/mobile-1.0.2/reader-light.png" alt="浅色标签首页：自动 NFC 状态与唯一主读取按钮" width="280"><br>浅色 · 读取首页</td>
+    <td align="center"><img src="docs/images/mobile-1.0.2/reader-dark.png" alt="深色标签首页：耗材卷图形、NFC 状态与读取按钮" width="280"><br>深色 · 读取首页</td>
+  </tr>
+</table>
+
+### 已有卡核对入库，空白卡填写写入
+
+读到已有资料时，上方展示品牌、纯耗材类型和颜色，下方选择“按卷数”或“按克数”。整卷支持 **1–100 卷**，可点加减，也可直接输入数量；余料按实际剩余克数登记一卷。只有点击确认才增加库存，关闭弹窗不入库。
+
+确认空白卡后，另一个居中弹窗让你填写**品牌、耗材类型、颜色**。材料列表使用 PLA、PETG、ABS 等类型，不混入品牌前缀；输入 `Bambu`、`Bambu Lab` 或 `拓竹` 会统一识别为“拓竹”，匹配手机与桌面使用的品牌图片。标签兼容设置收在可展开区域，常用填写项集中展示。
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/mobile-1.0.2/read-dialog-light.png" alt="已有耗材卡居中读取弹窗：品牌、材料、颜色与入库数量" width="280"><br>已有资料 · 核对后入库</td>
+    <td align="center"><img src="docs/images/mobile-1.0.2/new-card-dialog-dark.png" alt="空白新卡居中写入弹窗：品牌、纯材料类型、颜色与兼容设置" width="280"><br>空白新卡 · 填写后写入</td>
+  </tr>
+</table>
+
+空白判断依赖完整标签结构，读取中断或权限错误会显示失败，不会直接当成新卡。AMS 写入需先读取自己持有的有效源标签，沿用完整源模板；自填资料由 Sohun 库存关联管理，AMS 仍读取源模板参数。
+
+### 把库存随身带着
+
+库存页按品牌与材料查看耗材，颜色、卷数和当前余量一起展示。可以搜索、筛选，查看具体实物卷；余料不会因为下一卷入库而被覆盖。登录同一个 Sohun 个人账号后，手机和 Windows 桌面同步库存及事件，离线操作保存在本机等待同步。
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/mobile-1.0.2/inventory-light.png" alt="浅色手机库存：示例耗材品牌、颜色、卷数与剩余量" width="280"><br>浅色 · 随身库存</td>
+    <td align="center"><img src="docs/images/mobile-1.0.2/inventory-dark.png" alt="深色手机库存：同样的库存信息与筛选入口" width="280"><br>深色 · 随身库存</td>
+  </tr>
+</table>
+
+每一实物卷固定 **1000g**；“415g”表示一卷当前还剩 415g。余量严格大于 **30g** 才能继续使用或重新装入，低余量记录保留供核对。完整操作步骤、支持的卡型和常见问题见 [手机读卡与入库图文指南](docs/mobile-reader-guide.md)。
+
+## 桌面工作台
 
 ![sohun 个人工作台](官网网页制作/public/assets/personal-workspace-v4.png)
 
@@ -37,7 +82,7 @@ CUID/FUID 在 sohun 中是**可重复使用的耗材资料卡**，不要求一�
 
 **每个实物卷的容量固定为 1000g，不能选择其他规格。** 库存中 500g 表示原本 1000g 的一卷剩余 500g；批量 5 卷则是 5 个独立实物卷，总量 5000g。**余量严格大于 30g 才能重新装入或继续使用**，例如 31g 可以，30g 不可以。低余量记录仍保留，系统不会自动把它清零；用户确认用完后才结算。
 
-读取资料卡后，用户可以选择本次增加的数量，整卷模式范围为 **1–100 卷，每卷按 1000 g 登记**；余量模式登记一卷，填写大于 0 且不超过 1000 g 的实际余量。确认后，系统为每一卷建立独立库存记录；选择取消、关闭或移除待办时不会增加库存，同一入库操作重试也不会重复新增。
+读取资料卡后，用户可以选择本次增加的数量，整卷模式范围为 **1–100 卷，每卷按 1000 g 登记**；新版手机标签首页的余量模式登记一卷，填写**严格大于 30 g 且不超过 1000 g** 的实际余量。确认后，系统为每一卷建立独立库存记录；选择取消、关闭或移除待办时不会增加库存，同一入库操作重试也不会重复新增。
 
 ```mermaid
 flowchart LR
@@ -66,7 +111,7 @@ flowchart LR
 
 克隆出的多张同 UID 卡无法仅凭 UID 自动区分为不同实物。遇到这种情况仍需在供料位确认具体库存卷；软件不会猜测，也不会把多卷余额相加。
 
-详细操作和卡片格式见 [CUID/FUID 手机与模板说明](电脑软件/docs/手机RFID模板使用说明.md)。读写校验和自动化测试通过，不代表所有手机、卡片、打印机与固件已经完成实机兼容验收。
+详细操作和卡片要求见 [手机读卡与入库图文指南](docs/mobile-reader-guide.md)。读写校验和自动化测试通过，不代表所有手机、卡片、打印机与固件已经完成实机兼容验收。
 
 ## NTAG213：独立的设备入口
 
@@ -79,7 +124,7 @@ NTAG213 与耗材链路严格分开。它只用于打印机设备工作台，可
 
 NTAG213 **不写入耗材资料、不登记库存、不增加卷数、不保存余量，也不参与打印消耗计算**。碰设备标签不会自动开始打印、加热、暂停或停止机器；标签本身不保存账号密码或打印机凭据，实际访问仍由 sohun 账号权限控制。
 
-使用方法与权限边界见 [NTAG213 设备工作台说明](电脑软件/docs/NTAG213设备工作台使用说明.md)。
+标签职责与耗材流程的区别见 [图文指南中的设备标签说明](docs/mobile-reader-guide.md#设备标签与耗材标签)。
 
 ## 账号、离线与同步
 
@@ -101,19 +146,19 @@ Windows 和 Android 可以登录同一个 sohun 个人账号。个人库存的�
 
 ## 下载与安装
 
-安装包发布在 [GitHub Releases](https://github.com/dkdjndbfj-wq/sohun/releases/tag/v1.0.1%2B2)，也可以从 [官网下载区](https://sohun.top/#download) 选择平台。对应的 [SHA-256 校验清单](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.1%2B2/SHA256SUMS.txt) 与安装包在同一版本页面提供。
+安装包发布在 [GitHub Releases](https://github.com/dkdjndbfj-wq/sohun/releases)。本轮 Android **1.0.2+4** 的变化和预览见 [版本说明](docs/releases/1.0.2-4.md)，对应的 [SHA-256 校验清单](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.2%2B4/SHA256SUMS.txt) 与 APK 位于同一个 Release。本轮只提供 Android 附件；Windows 安装器与便携版以版本页面实际列出的附件为准。
 
 ### Windows 10/11 x64 安装器
 
-下载 [`sohun-setup-1.0.1-2-windows-x64.exe`](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.1%2B2/sohun-setup-1.0.1-2-windows-x64.exe)，核对 GitHub Release 中的版本和校验信息后运行安装器。Windows 安装器当前没有 Authenticode 发布者签名，Windows 可能显示未知发布者提示。
+如果 [Releases](https://github.com/dkdjndbfj-wq/sohun/releases) 的版本页面提供 `sohun-setup-…-windows-x64.exe`，核对对应版本和校验信息后运行安装器。发布者签名状态以该版本说明为准；未做 Authenticode 签名的安装器可能显示未知发布者提示。本轮 Android Release 没有 Windows 安装器附件。
 
 ### Windows 10/11 x64 便携版
 
-下载 [`sohun-1.0.1-2-windows-x64.zip`](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.1%2B2/sohun-1.0.1-2-windows-x64.zip)，完整解压到可写目录，再运行其中的 `sohun.exe`。不要只从压缩包内单独启动 EXE，也不要把新版 EXE 覆盖进旧目录，以免混用不同版本的 DLL 和资源。
+如果 [Releases](https://github.com/dkdjndbfj-wq/sohun/releases) 的版本页面提供 `sohun-…-windows-x64.zip`，完整解压到可写目录，再运行其中的 `sohun.exe`。不要只从压缩包内单独启动 EXE，也不要把新版 EXE 覆盖进旧目录，以免混用不同版本的 DLL 和资源。本轮 Android Release 没有 Windows 便携包附件。
 
 ### Android Release APK
 
-下载 [`sohun-1.0.1-2-android.apk`](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.1%2B2/sohun-1.0.1-2-android.apk)，在 Android 系统安装页确认安装。该 APK 使用长期保存的发行密钥签名，后续版本沿用同一签名；遇到与旧调试包签名不一致的提示时，请先备份或同步库存，不要直接卸载丢失本地数据。使用 CUID/FUID 或 NTAG213 需要支持相应 NFC 能力的 Android 设备；不同厂商系统、标签批次和 NFC 芯片仍需现场测试。
+下载 [`sohun-1.0.2-4-android.apk`](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.2%2B4/sohun-1.0.2-4-android.apk)，在 Android 系统安装页确认安装。该 APK 使用长期保存的发行密钥签名，后续版本沿用同一签名；遇到与旧调试包签名不一致的提示时，请先备份或同步库存，不要直接卸载丢失本地数据。使用 CUID/FUID 或 NTAG213 需要支持相应 NFC 能力的 Android 设备；不同厂商系统、标签批次和 NFC 芯片仍需现场测试。
 
 项目目前没有 macOS 或 iOS 交付入口。
 
@@ -145,7 +190,7 @@ Windows 和 Android 可以登录同一个 sohun 个人账号。个人库存的�
 
 ### 正式发布是否代表所有安装包都有平台认证签名？
 
-这是首个正式公开版本，GitHub Release 不标为预发布。Android 为稳定密钥签名的 Release APK；Windows 未做 Authenticode 签名，安装时可能提示未知发布者。正式发布不等同于完成所有硬件实测。
+Android 正式版本为稳定密钥签名的 Release APK；其他平台的签名状态以其版本说明为准。GitHub 的正式 Release 标记不等同于完成所有硬件实测。
 
 ### 自动化测试通过是否代表我的硬件一定兼容？
 
@@ -171,7 +216,7 @@ npm test
 ```powershell
 # 本地正式 Android 构建需在环境中指定仓库外的 key.properties 路径和预期证书 SHA-256。
 # GitHub 的 Public Release 工作流会从受保护的 Secrets 与变量中提供这些配置。
-./scripts/public_core_build.ps1 -Target All -Installer -PublicRelease -ExpectedTag 'v1.0.1+2' -RunTests
+./scripts/public_core_build.ps1 -Target Android -PublicRelease -ExpectedTag 'v1.0.2+4' -RunTests
 ```
 
 脚本会导出独立源码快照、使用英文临时路径构建、检查成品边界并生成 SHA-256 清单。更完整的命令与验收范围见 [开发与验证工作流](docs/development-workflow.md)，部署配置见 [DEPLOYMENT.md](DEPLOYMENT.md)，公开构建限制见 [PUBLIC_RELEASE_MANIFEST.md](PUBLIC_RELEASE_MANIFEST.md)。

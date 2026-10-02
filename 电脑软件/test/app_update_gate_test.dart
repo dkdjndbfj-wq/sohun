@@ -228,7 +228,7 @@ void main() {
     await _unmount(tester);
   });
 
-  testWidgets('手机强制页使登记页停用，解除后恢复原tab及未提交表单', (tester) async {
+  testWidgets('手机强制页使读卡页停用，解除后恢复原tab和主操作', (tester) async {
     await tester.binding.setSurfaceSize(const Size(390, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final database = AppDatabase.forTesting(NativeDatabase.memory());
@@ -272,7 +272,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField).first, '未提交的品牌');
+    expect(find.byKey(const ValueKey('mobile-reader-primary')), findsOneWidget);
     expect(
       tester
           .widget<MobileRfidWriterPage>(find.byType(MobileRfidWriterPage))
@@ -304,7 +304,7 @@ void main() {
           .isActive,
       isTrue,
     );
-    expect(find.text('未提交的品牌'), findsOneWidget);
+    expect(find.byKey(const ValueKey('mobile-reader-primary')), findsOneWidget);
     expect(
       tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
       0,

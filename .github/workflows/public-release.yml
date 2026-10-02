@@ -3,6 +3,15 @@ name: Public Release
 on:
   workflow_dispatch:
     inputs:
+      target:
+        description: 'Platforms to include in this public release'
+        type: choice
+        required: true
+        default: All
+        options:
+          - All
+          - Android
+          - Windows
       run_tests:
         description: 'Run the full automated suite before packaging'
         type: boolean
@@ -34,6 +43,7 @@ jobs:
           channel: stable
           cache: true
       - name: Cache Gradle dependencies
+        if: inputs.target != 'Windows'
         uses: actions/cache@v4
         with:
           path: |
@@ -51,6 +61,7 @@ jobs:
           choco install ripgrep --no-progress -y
           if ($LASTEXITCODE -ne 0) { throw 'ripgrep installation failed.' }
       - name: Install installer compiler
+        if: inputs.target != 'Android'
         shell: powershell
         run: |
           if (-not (Get-Command ISCC.exe -ErrorAction SilentlyContinue) -and
@@ -62,8 +73,10 @@ jobs:
         shell: powershell
         run: |
           ./scripts/tests/test_public_release.ps1
+          ./scripts/tests/test_public_release_workflow.ps1
           ./scripts/tests/test_core_build.ps1
       - name: Restore Android signing outside the checkout
+        if: inputs.target != 'Windows'
         shell: powershell
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -101,38 +114,114 @@ jobs:
       - name: Build the sanitized public release
         shell: powershell
         env:
+          SOHUN_TARGET: ${{ inputs.target }}
           SOHUN_RUN_TESTS: ${{ inputs.run_tests }}
           SOHUN_ANDROID_SIGNING_CERT_SHA256: ${{ vars.ANDROID_SIGNING_CERT_SHA256 }}
         run: |
           $flags = @{}
+          if ($env:SOHUN_TARGET -notin @('Windows', 'Android', 'All')) { throw 'Unknown release target.' }
+          if ($env:SOHUN_TARGET -in @('Windows', 'All')) { $flags.Installer = $true }
           if ($env:SOHUN_RUN_TESTS -eq 'true') { $flags.RunTests = $true }
-          ./scripts/public_core_build.ps1 -PublicRelease -Target All -Installer @flags -ExpectedTag $env:GITHUB_REF_NAME -OutputDirectory ./artifacts/public-release-ci
+          ./scripts/public_core_build.ps1 -PublicRelease -Target $env:SOHUN_TARGET @flags -ExpectedTag $env:GITHUB_REF_NAME -OutputDirectory ./artifacts/public-release-ci
       - name: Verify final release identity and checksums
         shell: powershell
         env:
+          SOHUN_TARGET: ${{ inputs.target }}
           EXPECTED_ANDROID_CERT: ${{ vars.ANDROID_SIGNING_CERT_SHA256 }}
         run: |
           $ErrorActionPreference = 'Stop'
+          if ($env:SOHUN_TARGET -notin @('Windows', 'Android', 'All')) { throw 'Unknown release target.' }
+          $hasWindows = $env:SOHUN_TARGET -in @('Windows', 'All')
+          $hasAndroid = $env:SOHUN_TARGET -in @('Android', 'All')
           $output = Join-Path (Get-Location) 'artifacts/public-release-ci'
           $manifest = Get-Content -LiteralPath (Join-Path $output 'release-manifest.json') -Raw | ConvertFrom-Json
           if ($manifest.product -ne 'sohun-core' -or $manifest.prerelease -ne $false -or
               $manifest.releaseTag -ne $env:GITHUB_REF_NAME -or $manifest.sourceCommit -ne $env:GITHUB_SHA -or
-              $manifest.windowsSigning -ne 'WindowsNotSigned' -or $manifest.androidSigning -ne 'AndroidReleaseSigned' -or
-              $manifest.androidDebuggable -ne $false -or
-              $manifest.androidSigningCertificateSha256 -ne ($env:EXPECTED_ANDROID_CERT -replace ':|\s', '').ToLowerInvariant()) {
-            throw 'Release manifest identity, signing or debuggability verification failed.'
+              ('v' + $manifest.version) -ne $env:GITHUB_REF_NAME -or
+              $manifest.coreDefine -ne 'SOHUN_CORE_BUILD=true' -or
+              $manifest.sourceExportSha256 -notmatch '^[0-9a-f]{64}$') {
+            throw 'Release manifest identity verification failed.'
+          }
+          $expectedWindowsSigning = if ($hasWindows) { 'WindowsNotSigned' } else { 'NotBuilt' }
+          if ($manifest.windowsSigning -ne $expectedWindowsSigning) { throw 'Windows signing state does not match the release target.' }
+          $expectedCertificate = ($env:EXPECTED_ANDROID_CERT -replace ':|\s', '').ToLowerInvariant()
+          if ($hasAndroid) {
+            if ($expectedCertificate -notmatch '^[0-9a-f]{64}$' -or
+                $manifest.androidSigning -ne 'AndroidReleaseSigned' -or $manifest.androidDebuggable -ne $false -or
+                $manifest.androidSigningCertificateSha256 -ne $expectedCertificate) {
+              throw 'Android signing or debuggability verification failed.'
+            }
+          } elseif ($manifest.androidSigning -ne 'NotBuilt' -or $null -ne $manifest.androidDebuggable -or
+                    $null -ne $manifest.androidSigningCertificateSha256) {
+            throw 'Android signing state does not match the release target.'
           }
           $version = $manifest.version.Replace('+', '-')
-          $expected = @("sohun-setup-$version-windows-x64.exe", "sohun-$version-windows-x64.zip", "sohun-$version-android.apk")
-          if (@($manifest.artifacts).Count -ne 3) { throw 'Exactly three public install artifacts are required.' }
+          $expected = @{}
+          if ($hasWindows) {
+            $expected["sohun-setup-$version-windows-x64.exe"] = @{ kind = 'windows-installer'; signing = 'WindowsNotSigned' }
+            $expected["sohun-$version-windows-x64.zip"] = @{ kind = 'windows-portable'; signing = 'WindowsNotSigned' }
+          }
+          if ($hasAndroid) { $expected["sohun-$version-android.apk"] = @{ kind = 'android-release-apk'; signing = 'AndroidReleaseSigned' } }
+          if (@($manifest.artifacts).Count -ne $expected.Count) { throw 'Public artifact count does not match the release target.' }
+          $seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
           foreach ($artifact in $manifest.artifacts) {
-            if ($artifact.file -notin $expected) { throw 'Unexpected public artifact name.' }
+            if (-not $expected.ContainsKey($artifact.file) -or -not $seen.Add($artifact.file)) { throw 'Unexpected or duplicate public artifact name.' }
+            $identity = $expected[$artifact.file]
+            if ($artifact.kind -ne $identity.kind -or $artifact.signing -ne $identity.signing -or
+                ($artifact.kind -eq 'android-release-apk' -and $artifact.certificateSha256 -ne $expectedCertificate)) {
+              throw 'Public artifact signing identity verification failed.'
+            }
             $file = Join-Path $output $artifact.file
             if (-not (Test-Path -LiteralPath $file -PathType Leaf) -or
+                [int64]$artifact.bytes -le 0 -or (Get-Item -LiteralPath $file).Length -ne [int64]$artifact.bytes -or
+                $artifact.sha256 -notmatch '^[0-9a-f]{64}$' -or
                 (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant() -ne $artifact.sha256) {
               throw 'Public artifact checksum verification failed.'
             }
           }
+          $checksums = @($manifest.artifacts | ForEach-Object { "$($_.sha256)  $($_.file)" }) -join "`n"
+          $publishedChecksums = [IO.File]::ReadAllText((Join-Path $output 'SHA256SUMS.txt')).Replace("`r`n", "`n").TrimEnd()
+          if ($publishedChecksums -cne $checksums) { throw 'Published checksum list does not match the verified artifacts.' }
+          $expectedFiles = @($expected.Keys) + @('release-manifest.json', 'SHA256SUMS.txt')
+          $outputFiles = @(Get-ChildItem -LiteralPath $output -File -Recurse)
+          if ($outputFiles.Count -ne $expectedFiles.Count -or @($outputFiles | Where-Object { $_.Name -notin $expectedFiles }).Count -gt 0) {
+            throw 'Unexpected files in the public release output.'
+          }
+      - name: Prepare illustrated release notes
+        shell: powershell
+        env:
+          SOHUN_TARGET: ${{ inputs.target }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $repoRoot = [IO.Path]::GetFullPath((Get-Location).Path)
+          $version = $env:GITHUB_REF_NAME.Substring(1).Replace('+', '-')
+          $platforms = switch ($env:SOHUN_TARGET) { 'Android' { 'Android' }; 'Windows' { 'Windows' }; 'All' { 'Android / Windows' }; default { throw 'Unknown release target.' } }
+          $notesPath = Join-Path $repoRoot "docs/releases/$version.md"
+          $notes = if (Test-Path -LiteralPath $notesPath -PathType Leaf) {
+            [IO.File]::ReadAllText($notesPath)
+          } else {
+            $signing = @()
+            if ($env:SOHUN_TARGET -in @('Android', 'All')) { $signing += 'Android 使用长期发行密钥签名。' }
+            if ($env:SOHUN_TARGET -in @('Windows', 'All')) { $signing += 'Windows 包未进行 Authenticode 发布者签名。' }
+            "# sohun $($env:GITHUB_REF_NAME)`n`n$platforms 公开核心版。$($signing -join ' ')真机 NFC / AMS 兼容性以设备实测为准。`n`n官网：https://sohun.top`n"
+          }
+          $tag = [Uri]::EscapeDataString($env:GITHUB_REF_NAME)
+          $repoPrefix = $repoRoot.TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
+          $imagePattern = '!\[(?<alt>[^\]]*)\]\((?<path>[^\s)]+)\)'
+          $notes = [regex]::Replace($notes, $imagePattern, [Text.RegularExpressions.MatchEvaluator]{
+            param($match)
+            $imagePath = $match.Groups['path'].Value
+            if ($imagePath -match '^https://') { return $match.Value }
+            if ($imagePath -match '^[a-zA-Z][a-zA-Z0-9+.-]*:' -or [IO.Path]::IsPathRooted($imagePath)) { throw 'Release images must use repository-relative paths or HTTPS.' }
+            $image = [IO.Path]::GetFullPath((Join-Path (Split-Path -Parent $notesPath) $imagePath))
+            if (-not $image.StartsWith($repoPrefix, [StringComparison]::OrdinalIgnoreCase) -or
+                -not (Test-Path -LiteralPath $image -PathType Leaf)) { throw 'Release image is missing or outside the public source.' }
+            $relative = $image.Substring($repoPrefix.Length).Replace('\', '/')
+            $encodedPath = ($relative.Split('/') | ForEach-Object { [Uri]::EscapeDataString($_) }) -join '/'
+            return '![' + $match.Groups['alt'].Value + '](https://raw.githubusercontent.com/' + $env:GITHUB_REPOSITORY + '/' + $tag + '/' + $encodedPath + ')'
+          })
+          $notes += "`n`n本次发布安装包：$platforms。完整文件哈希与签名状态见附件 release-manifest.json 和 SHA256SUMS.txt。`n"
+          [IO.File]::WriteAllText((Join-Path $env:RUNNER_TEMP 'sohun-public-release-notes.md'), $notes, [Text.UTF8Encoding]::new($false))
       - uses: actions/upload-artifact@v4
         with:
           name: sohun-public-release
@@ -142,19 +231,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: sohun ${{ github.ref_name }}
+          name: sohun ${{ github.ref_name }} · ${{ inputs.target }}
           prerelease: false
           draft: false
-          body: |
-            sohun 首个正式公开版本：Windows 个人版和 Android 个人版。
-
-            每卷规格固定 1 kg；CUID/FUID 资料卡可重复使用，支持确认数量后批量入库，保留实际余量，大于 30 g 可继续使用。NTAG213 只用于独立设备工作台。
-
-            Android APK 使用长期发布密钥签名；Windows 安装包及便携包没有 Authenticode 发布者签名。两者的签名状态及 Android 证书指纹记录于 release-manifest.json。
-
-            本次公开的是精简核心版，未包含受限制的厂商闭源组件。验证记录见仓库 docs/release-validation-1.0.1.md；真机 NFC/AMS 兼容性以实际设备验证为准。
-
-            官网：https://sohun.top
+          body_path: ${{ runner.temp }}/sohun-public-release-notes.md
           files: artifacts/public-release-ci/*
           fail_on_unmatched_files: true
       - name: Remove temporary Android signing material

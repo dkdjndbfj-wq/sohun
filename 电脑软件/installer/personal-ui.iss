@@ -43,8 +43,8 @@ function DefSubclassProc(Window: HWND; Message: Cardinal; WParam: TWindowUnsigne
 external 'DefSubclassProc@comctl32.dll stdcall';
 function GetWindowRect(Window: HWND; var Rect: TRect): Boolean;
 external 'GetWindowRect@user32.dll stdcall';
-function ShowWindow(Window: HWND; Command: Integer): Boolean;
-external 'ShowWindow@user32.dll stdcall';
+function PostMessage(Window: HWND; Message, WParam, LParam: LongInt): Boolean;
+external 'PostMessageA@user32.dll stdcall';
 
 function WindowChromeProc(Window: HWND; Message: Cardinal; WParam: TWindowUnsigned;
   LParam: TWindowSigned; ID, Data: TWindowUnsigned): TWindowSigned;
@@ -73,14 +73,21 @@ begin
   Result := DefSubclassProc(Window, Message, WParam, LParam);
 end;
 
+procedure RaiseChromeButtons;
+begin
+  if MinimizeActionButton <> nil then MinimizeActionButton.BringToFront;
+  if CloseActionButton <> nil then CloseActionButton.BringToFront;
+end;
+
 procedure CloseActionClick(Sender: TObject);
 begin
-  WizardForm.Close;
+  { Frameless Inno forms do not always honor WizardForm.Close from custom chrome. }
+  PostMessage(WizardForm.Handle, $0112, $F060, 0);
 end;
 
 procedure MinimizeActionClick(Sender: TObject);
 begin
-  ShowWindow(WizardForm.Handle, 6);
+  PostMessage(WizardForm.Handle, $0112, $F020, 0);
 end;
 
 function DwmSetWindowAttribute(hWnd: HWND; dwAttribute: Cardinal;
@@ -370,6 +377,7 @@ begin
   if not UiReady then exit;
   CurrentUiPage := PageID;
   HideNativePresentation;
+  RaiseChromeButtons;
   SettingsPanel.Visible := PageID = wpSelectDir;
   WizardForm.WizardBitmapImage.Visible := True;
   ProgressPanel.Visible := PageID = wpInstalling;
@@ -447,6 +455,7 @@ begin
         WizardForm.OuterNotebook.BringToFront;
         WizardForm.NextButton.BringToFront;
         WizardForm.CancelButton.BringToFront;
+        RaiseChromeButtons;
       end;
   end;
 #if MyPreview
@@ -455,6 +464,7 @@ begin
     PaintButton(PrimaryButton, PrimaryBitmap, CustomMessage('PersonalPreviewProgress'),
       True, PrimaryButton.Enabled);
 #endif
+  RaiseChromeButtons;
 end;
 
 procedure DrawChromeButton(Button: TBitmapButton; Bitmap: TBitmap; IsClose: Boolean);
@@ -516,6 +526,7 @@ begin
   MinimizeActionButton := ButtonAt(WizardForm, 406, 6, 30, 28, @MinimizeActionClick);
   MinimizeActionButton.Caption := CustomMessage('PersonalMinimize');
   DrawChromeButton(MinimizeActionButton, MinimizeActionBitmap, False);
+  RaiseChromeButtons;
 
   BrandPanel := PanelAt(WizardForm, 28, 34, 424, 304, Background);
   WizardForm.WizardBitmapImage.Parent := BrandPanel;
@@ -597,6 +608,7 @@ begin
   WizardForm.LicenseNotAcceptedRadio.Checked := False;
   UiReady := True;
   HideNativePresentation;
+  RaiseChromeButtons;
 end;
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin

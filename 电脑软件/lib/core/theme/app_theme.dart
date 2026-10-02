@@ -69,14 +69,24 @@ class AppTheme {
         isDark ? AppColors.surfaceVariantDark : AppColors.surfaceVariant;
     final dividerC = isDark ? AppColors.dividerDark : AppColors.divider;
     final outlineC = isDark ? AppColors.outlineDark : AppColors.outline;
-    // v5: 显式设置中文字体族，优先 HarmonyOS Sans → Microsoft YaHei UI
+    // 中文用字体族 + 回退列表。Icon 使用 IconData.fontFamily，不要把
+    // MaterialIcons 写进 IconThemeData；当前 Flutter 已无该参数。
     const fontFamily = AppTypography.chineseFontFamily;
+    const fontFamilyFallback = AppTypography.chineseFontFamilyFallback;
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
       visualDensity: VisualDensity.adaptivePlatformDensity,
       brightness: brightness,
       scaffoldBackgroundColor: isDark ? AppColors.bgBaseDark : AppColors.bgBase,
+      iconTheme: IconThemeData(
+        color: textPri,
+        size: 24,
+      ),
+      primaryIconTheme: IconThemeData(
+        color: textPri,
+        size: 24,
+      ),
       // ===== AppBar =====
       appBarTheme: AppBarTheme(
         centerTitle: false,
@@ -84,8 +94,17 @@ class AppTheme {
         foregroundColor: textPri,
         elevation: 0,
         scrolledUnderElevation: 0,
+        iconTheme: IconThemeData(
+          color: textPri,
+          size: 24,
+        ),
+        actionsIconTheme: IconThemeData(
+          color: textPri,
+          size: 24,
+        ),
         titleTextStyle: TextStyle(
           fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           color: textPri,
           fontSize: 18,
           fontWeight: FontWeight.w700,
@@ -96,6 +115,7 @@ class AppTheme {
       textTheme: TextTheme(
         displayLarge: TextStyle(
           fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           fontSize: 36,
           fontWeight: FontWeight.w700,
           height: 1.15,
@@ -104,6 +124,7 @@ class AppTheme {
         ),
         displayMedium: TextStyle(
           fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           fontSize: 28,
           fontWeight: FontWeight.w700,
           height: 1.2,
@@ -112,6 +133,7 @@ class AppTheme {
         ),
         displaySmall: TextStyle(
           fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           fontSize: 24,
           fontWeight: FontWeight.w600,
           height: 1.25,
@@ -120,6 +142,7 @@ class AppTheme {
         ),
         headlineMedium: TextStyle(
           fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           fontSize: 20,
           fontWeight: FontWeight.w600,
           height: 1.3,
@@ -128,6 +151,7 @@ class AppTheme {
         ),
         headlineSmall: TextStyle(
           fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           fontSize: 18,
           fontWeight: FontWeight.w600,
           height: 1.35,
@@ -136,6 +160,7 @@ class AppTheme {
         ),
         titleLarge: TextStyle(
           fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           fontSize: 16,
           fontWeight: FontWeight.w600,
           height: 1.4,
@@ -144,6 +169,7 @@ class AppTheme {
         ),
         titleMedium: TextStyle(
           fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           fontSize: 14,
           fontWeight: FontWeight.w600,
           height: 1.45,
@@ -151,6 +177,7 @@ class AppTheme {
         ),
         titleSmall: TextStyle(
           fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           fontSize: 13,
           fontWeight: FontWeight.w600,
           height: 1.45,
@@ -158,6 +185,7 @@ class AppTheme {
         ),
         bodyLarge: TextStyle(
           fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           fontSize: 16,
           fontWeight: FontWeight.w400,
           height: 1.55,
@@ -165,6 +193,7 @@ class AppTheme {
         ),
         bodyMedium: TextStyle(
           fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           fontSize: 14,
           fontWeight: FontWeight.w400,
           height: 1.55,
@@ -172,6 +201,7 @@ class AppTheme {
         ),
         bodySmall: TextStyle(
           fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           fontSize: 12,
           fontWeight: FontWeight.w400,
           height: 1.5,
@@ -179,6 +209,7 @@ class AppTheme {
         ),
         labelLarge: TextStyle(
           fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           fontSize: 14,
           fontWeight: FontWeight.w600,
           height: 1.4,
@@ -186,6 +217,7 @@ class AppTheme {
         ),
         labelMedium: TextStyle(
           fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           fontSize: 12,
           fontWeight: FontWeight.w600,
           height: 1.4,
@@ -193,6 +225,7 @@ class AppTheme {
         ),
         labelSmall: TextStyle(
           fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           fontSize: 11,
           fontWeight: FontWeight.w600,
           height: 1.4,
@@ -210,8 +243,9 @@ class AppTheme {
         ),
         margin: EdgeInsets.zero,
       ),
-      listTileTheme: const ListTileThemeData(
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      listTileTheme: ListTileThemeData(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        iconColor: textPri,
       ),
       // ===== 按钮（圆润曲线 + 高光质感）=====
       filledButtonTheme: FilledButtonThemeData(
@@ -274,6 +308,7 @@ class AppTheme {
       dropdownMenuTheme: DropdownMenuThemeData(
         textStyle: TextStyle(
           fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: textPri,
@@ -374,6 +409,7 @@ class AppTheme {
           textStyle: const WidgetStatePropertyAll(
             TextStyle(
               fontFamily: fontFamily,
+              fontFamilyFallback: fontFamilyFallback,
               fontSize: 12,
               fontWeight: FontWeight.w600,
               letterSpacing: 0,
@@ -397,6 +433,7 @@ class AppTheme {
         ),
         textStyle: TextStyle(
           fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           fontSize: 12,
           color: textPri,
           letterSpacing: 0,
@@ -404,6 +441,7 @@ class AppTheme {
         labelTextStyle: WidgetStatePropertyAll(
           TextStyle(
             fontFamily: fontFamily,
+            fontFamilyFallback: fontFamilyFallback,
             fontSize: 12,
             color: textPri,
             letterSpacing: 0,
@@ -428,11 +466,15 @@ class AppTheme {
           borderRadius: BorderRadius.circular(AppColors.radiusXl),
         ),
         titleTextStyle: TextStyle(
+          fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: textPri,
         ),
         contentTextStyle: TextStyle(
+          fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
           fontSize: 14,
           fontWeight: FontWeight.w400,
           color: textSec,

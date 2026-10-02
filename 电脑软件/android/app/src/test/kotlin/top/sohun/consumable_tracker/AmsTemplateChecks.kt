@@ -48,6 +48,14 @@ class AmsTemplateChecks {
             check(keys.map(::amsHex) == amsKeyA(amsUnhex("01020304")).map(::amsHex))
             // Independently checked with Python stdlib hmac/hashlib.
             check(amsHex(keys.first()) == "6B0D673986DE")
+            val keyB = amsKeyB(amsUnhex("01020304"))
+            check(keyB.size == 16 && keyB.all { it.size == 6 })
+            check(keyB.map(::amsHex).toSet().size == 16)
+            check(keyB.map(::amsHex) != keys.map(::amsHex))
+            check(amsHex(keyB.first()) == "6168F8CBA539")
+        }
+        scenario("strictly blank transport card gets a dedicated classification") {
+            expectFailure("BLANK_TAG") { AmsTemplateEngine().readTemplate(blank()) }
         }
         scenario("source reads reconstruct masked keys by verified authentication") {
             val tag = FakeCard((0..63).map(source::block).toMutableList())
@@ -59,6 +67,15 @@ class AmsTemplateChecks {
             val blocks = (0..63).map(source::block).toMutableList()
             blocks[3][10] = 77
             expectFailure("TEMPLATE_KEY_B_UNAVAILABLE") { AmsTemplateEngine().readTemplate(FakeCard(blocks)) }
+        }
+        scenario("UID-derived KeyB source can be read without a supplied dump") {
+            val blocks = (0..63).map(source::block).toMutableList()
+            val keys = amsKeyB(amsUnhex(source.uid))
+            for (sector in 0..15) {
+                keys[sector].copyInto(blocks[sector * 4 + 3], destinationOffset = 10)
+            }
+            val expected = AmsTemplate.fromBlocks(source.uid, blocks)
+            check(AmsTemplateEngine().readTemplate(FakeCard(blocks)).toMap() == expected.toMap())
         }
         scenario("user-supplied matching keys can authenticate a complete source") {
             val blocks = (0..63).map(source::block).toMutableList(); blocks[3][10] = 77

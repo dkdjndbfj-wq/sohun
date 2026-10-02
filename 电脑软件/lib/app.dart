@@ -1095,16 +1095,14 @@ class _ConsumableTrackerAppState extends ConsumerState<ConsumableTrackerApp>
                   ),
                 ],
               ),
-              data: (done) => Column(
-                children: [
-                  const CustomTitleBar(),
-                  Expanded(
-                    child: done
-                        ? const AuroraWorkspace()
-                        : const OnboardingWizard(),
-                  ),
-                ],
-              ),
+              data: (done) => done
+                  ? const Column(
+                      children: [
+                        CustomTitleBar(),
+                        Expanded(child: AuroraWorkspace()),
+                      ],
+                    )
+                  : const OnboardingWizard(),
               error: (_, __) => const Column(
                 children: [
                   CustomTitleBar(),

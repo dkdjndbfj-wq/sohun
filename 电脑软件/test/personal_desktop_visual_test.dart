@@ -77,6 +77,9 @@ void main() {
         personal.filledButtonTheme.style?.minimumSize?.resolve({})?.height,
         36,
       );
+      expect(personal.iconTheme.size, 24);
+      expect(personal.appBarTheme.iconTheme?.size, 24);
+      expect(base.dialogTheme.titleTextStyle?.fontFamily, 'HarmonyOS Sans');
     }
   });
 

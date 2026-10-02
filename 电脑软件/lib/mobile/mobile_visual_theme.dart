@@ -170,47 +170,48 @@ class MobileGlassSurface extends StatelessWidget {
   }
 }
 
-/// Shared desktop-style modal glass, including a drag handle within the same
-/// material. Flexible keeps long forms and 2x text inside the available height.
-Future<T?> showMobileGlassBottomSheet<T>({
+/// Centered glass modal. Dialog handles safe areas and the keyboard once;
+/// content keeps its own scroll view so long forms remain reachable.
+Future<T?> showMobileGlassDialog<T>({
   required BuildContext context,
   required WidgetBuilder builder,
-  bool isScrollControlled = false,
-  bool useSafeArea = false,
-  bool showDragHandle = false,
-}) => showModalBottomSheet<T>(
+  double maxWidth = 560,
+  double? maxHeight,
+  bool barrierDismissible = true,
+}) => showDialog<T>(
   context: context,
-  isScrollControlled: isScrollControlled,
-  useSafeArea: useSafeArea,
-  showDragHandle: false,
-  backgroundColor: Colors.transparent,
-  elevation: 0,
-  builder: (context) => MobileGlassSurface(
-    radius: AppColors.radiusXl,
-    opacity: Theme.of(context).brightness == Brightness.dark ? 0.88 : 0.8,
-    blur: 24,
-    elevated: true,
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (showDragHandle)
-          ExcludeSemantics(
-            child: Center(
-              child: Container(
-                width: 32,
-                height: 4,
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurfaceVariant.withValues(alpha: 0.28),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+  useSafeArea: true,
+  barrierDismissible: barrierDismissible,
+  barrierColor: Colors.black.withValues(alpha: 0.38),
+  builder: (context) => Dialog(
+    backgroundColor: Colors.transparent,
+    surfaceTintColor: Colors.transparent,
+    elevation: 0,
+    insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+    constraints: BoxConstraints(maxWidth: maxWidth),
+    child: LayoutBuilder(
+      builder: (context, constraints) => ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: (maxHeight ?? MediaQuery.sizeOf(context).height * 0.88)
+              .clamp(0, constraints.maxHeight)
+              .toDouble(),
+        ),
+        child: SizedBox(
+          width: maxWidth,
+          child: MobileGlassSurface(
+            radius: AppColors.radiusXl,
+            opacity: Theme.of(context).brightness == Brightness.dark
+                ? 0.92
+                : 0.88,
+            blur: 24,
+            elevated: true,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 20),
+              child: builder(context),
             ),
           ),
-        Flexible(child: builder(context)),
-      ],
+        ),
+      ),
     ),
   ),
 );
@@ -225,14 +226,10 @@ ThemeData buildMobileTheme(ThemeData desktop) {
         : Color.lerp(desktop.colorScheme.error, Colors.black, 0.25),
   );
   final accentText = mobileAccentTextColor(desktop);
-  final families = AppTypography.chineseFontFamily
-      .split(',')
-      .map((font) => font.trim())
-      .toList();
   TextStyle style(TextStyle? base) => (base ?? AppTypography.body).copyWith(
-    fontFamily: families.first,
+    fontFamily: AppTypography.chineseFontFamily,
     fontFamilyFallback: [
-      ...families.skip(1),
+      ...AppTypography.chineseFontFamilyFallback,
       'Noto Sans CJK SC',
       'Noto Sans SC',
     ],

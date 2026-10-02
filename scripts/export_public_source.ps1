@@ -43,6 +43,10 @@ $sourceFiles = @(
     'docs/bambu-printer-fault-alerts.md', 'docs/windows-build-repair-2026-09-06.md',
     'docs/glass-button-system.md', 'docs/agent-workflow-audit-2026-09-06.md',
     'docs/release-validation-1.0.1.md',
+    'docs/mobile-reader-guide.md', 'docs/releases/1.0.2-4.md',
+    'docs/images/mobile-1.0.2/reader-light.png', 'docs/images/mobile-1.0.2/reader-dark.png',
+    'docs/images/mobile-1.0.2/read-dialog-light.png', 'docs/images/mobile-1.0.2/new-card-dialog-dark.png',
+    'docs/images/mobile-1.0.2/inventory-light.png', 'docs/images/mobile-1.0.2/inventory-dark.png',
     '电脑软件/docs/手机RFID模板使用说明.md', '电脑软件/docs/NTAG213设备工作台使用说明.md'
 )
 $excludedTrees = @(

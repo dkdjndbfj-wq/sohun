@@ -87,7 +87,7 @@ internal fun amsUnhex(hex: String): ByteArray = ByteArray(hex.length / 2) {
 }
 
 /** HKDF-SHA256, public UID-based protocol derivation, 16 consecutive 6-byte keys. */
-internal fun amsKeyA(uid: ByteArray): List<ByteArray> {
+private fun amsKeys(uid: ByteArray, info: ByteArray): List<ByteArray> {
     require(uid.size == 4)
     val salt = amsUnhex("9A759CF2C4F7CAFF222CB9769B41BC96")
     fun hmac(key: ByteArray, message: ByteArray): ByteArray =
@@ -96,7 +96,6 @@ internal fun amsKeyA(uid: ByteArray): List<ByteArray> {
             doFinal(message)
         }
     val prk = hmac(salt, uid)
-    val info = byteArrayOf(0x52, 0x46, 0x49, 0x44, 0x2D, 0x41, 0)
     var previous = byteArrayOf()
     val expanded = ByteArray(96)
     for (counter in 1..3) {
@@ -105,6 +104,16 @@ internal fun amsKeyA(uid: ByteArray): List<ByteArray> {
     }
     return (0..15).map { expanded.copyOfRange(it * 6, it * 6 + 6) }
 }
+
+internal fun amsKeyA(uid: ByteArray): List<ByteArray> = amsKeys(
+    uid,
+    byteArrayOf(0x52, 0x46, 0x49, 0x44, 0x2D, 0x41, 0), // RFID-A\0
+)
+
+internal fun amsKeyB(uid: ByteArray): List<ByteArray> = amsKeys(
+    uid,
+    byteArrayOf(0x52, 0x46, 0x49, 0x44, 0x2D, 0x42, 0), // RFID-B\0
+)
 
 internal class AmsAccess private constructor(private val bits: IntArray, val gpb: Int) {
     val isTransport: Boolean get() = bits.contentEquals(intArrayOf(0, 0, 0, 1))
@@ -202,15 +211,40 @@ internal class AmsTemplateEngine(
         if (io.uid.size != 4) throw AmsTemplateFailure("UNSUPPORTED_TAG", "仅支持 4 字节 UID 的 Classic 1K 标签")
         if (suppliedKeys != null && suppliedKeys.uid != uid) throw AmsTemplateFailure("TEMPLATE_UID_MISMATCH", "所选密钥模板不属于此标签")
         val derived = amsKeyA(io.uid)
+        val derivedB = amsKeyB(io.uid)
         val all = mutableListOf<ByteArray>()
         for (sector in 0..15) {
             val saved = suppliedKeys?.block(sector * 4 + 3)
             val aKeys = listOfNotNull(saved?.copyOfRange(0, 6), derived[sector], defaultKey)
-            val bKeys = listOfNotNull(saved?.copyOfRange(10, 16), zeroKey, defaultKey)
+            val bKeys = listOfNotNull(
+                saved?.copyOfRange(10, 16),
+                derivedB[sector],
+                zeroKey,
+                defaultKey,
+            )
             all.addAll(readSector(io, sector, aKeys, bKeys).blocks)
             progress("reading", all.size)
         }
+        if (isBlankTransportImage(all)) {
+            throw AmsTemplateFailure(
+                "BLANK_TAG",
+                "标签是空白 MIFARE Classic 1K，尚未写入耗材资料",
+            )
+        }
         return AmsTemplate.fromBlocks(uid, all)
+    }
+
+    private fun isBlankTransportImage(blocks: List<ByteArray>): Boolean {
+        if (blocks.size != 64) return false
+        if ((0..15).any { !AmsAccess.parse(blocks[it * 4 + 3]).isTransport }) {
+            return false
+        }
+        return (1..63)
+            .filter { it % 4 != 3 }
+            .all { block ->
+                blocks[block].all { it == 0.toByte() } ||
+                    blocks[block].all { it == 0xFF.toByte() }
+            }
     }
 
     fun restore(io: AmsMifareIo, template: AmsTemplate, allowUidChange: Boolean, targetKind: String): AmsRestoreResult {
@@ -219,11 +253,12 @@ internal class AmsTemplateEngine(
         }
         if (io.uid.size != 4) throw AmsTemplateFailure("UNSUPPORTED_TAG", "目标必须是 4 字节 UID 的 Classic 1K CUID/FUID")
         val derivedCurrent = amsKeyA(io.uid)
+        val derivedCurrentB = amsKeyB(io.uid)
         val preflight = (0..15).map { sector ->
             val desired = template.block(sector * 4 + 3)
             val image = readSector(io, sector,
                 listOf(defaultKey, desired.copyOfRange(0, 6), derivedCurrent[sector]),
-                listOf(defaultKey, zeroKey, desired.copyOfRange(10, 16)))
+                listOf(defaultKey, zeroKey, derivedCurrentB[sector], desired.copyOfRange(10, 16)))
             val same = (0..3).all { image.blocks[it].contentEquals(template.block(sector * 4 + it)) }
             if (!same && !AmsAccess.parse(image.trailer).isTransport) {
                 throw AmsTemplateFailure("TARGET_NOT_WRITABLE", "第 ${sector + 1} 扇区不是可写空白权限且内容不同，未执行任何写入；已锁定标签不能更换模板")

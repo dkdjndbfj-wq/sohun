@@ -93,6 +93,7 @@ CloseApplications=yes
 CloseApplicationsFilter={#MyExecutableName}
 RestartApplications=no
 AppMutex={#MyAppMutex}
+SetupMutex={#MyAppMutex}-setup
 SetupLogging=yes
 UsePreviousAppDir=yes
 UsePreviousTasks=yes

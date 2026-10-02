@@ -77,8 +77,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   FlutterWindow window(project);
   // Startup and the workspace use one stable surface; Flutter fades between
   // them without resizing the native window on every animation frame.
-  Win32Window::Point origin(120, 80);
-  Win32Window::Size size(1440, 900);
+  // Match the preferred logical size used by StartupWindowController. The
+  // Dart side then fits this to the primary monitor's usable work area before
+  // the first application surface is revealed.
+  Win32Window::Point origin(80, 60);
+  Win32Window::Size size(1280, 800);
   if (!window.Create(kWindowTitle, origin, size)) {
     ::CoUninitialize();
     if (single_instance_mutex != nullptr) {

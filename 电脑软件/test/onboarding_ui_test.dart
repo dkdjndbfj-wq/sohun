@@ -47,6 +47,14 @@ void main() {
       find.byKey(const ValueKey('onboarding-step-rail')),
       findsOneWidget,
     );
+    expect(
+      find.byKey(const ValueKey('onboarding-window-controls')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('custom-window-title-bar')),
+      findsNothing,
+    );
     expect(find.text('欢迎使用 sohun'), findsOneWidget);
     expect(find.text('耗材工作台'), findsNothing);
     expect(find.text('开始设置'), findsOneWidget);
@@ -76,6 +84,10 @@ void main() {
     );
     expect(
       find.byKey(const ValueKey('onboarding-progress-header')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('onboarding-window-controls')),
       findsOneWidget,
     );
     expect(

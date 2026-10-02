@@ -44,6 +44,10 @@ if ($Core) {
     if ($Product -ne 'Personal') { throw 'Core preview supports only the personal product.' }
     & (Join-Path $projectRoot 'scripts/Test-CoreSource.ps1') -ProjectRoot $projectRoot
     & (Join-Path $projectRoot 'scripts/Test-CoreBundle.ps1') -BundlePath $resolvedReleaseDir
+} else {
+    & (Join-Path $projectRoot 'scripts\Test-PersonalWindowsBundle.ps1') `
+        -BundlePath $resolvedReleaseDir `
+        -Product $Product
 }
 
 if ([string]::IsNullOrWhiteSpace($CompilerPath)) {

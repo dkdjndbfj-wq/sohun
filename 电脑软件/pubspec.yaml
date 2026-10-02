@@ -1,7 +1,7 @@
 name: consumable_tracker_desktop
 description: 3D 打印耗材库存统计与打印机消耗管理（桌面版）
 publish_to: 'none'
-version: 1.0.1+2
+version: 1.0.2+4
 
 environment:
   # Platform-scoped asset entries (used to keep Windows-only bridge binaries
@@ -52,6 +52,8 @@ dependencies:
   # 图标
   # 窗口管理 + 系统托盘（自定义标题栏 + 后台运行）
   window_manager: ^0.4.3
+  # 根据当前显示器工作区选择稳定的首屏尺寸，避免小屏/高 DPI 下超出桌面。
+  screen_retriever: ^0.2.2
   tray_manager: ^0.4.0
 
   # 本地通知（Windows Toast 通知：打印失败/离线/缺料告警）

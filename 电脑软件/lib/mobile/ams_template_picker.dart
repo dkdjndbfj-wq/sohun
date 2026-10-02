@@ -7,6 +7,7 @@ import '../widgets/filament_spool_icon.dart';
 import 'ams_tag_template.dart';
 import 'ams_template_repository.dart';
 import 'mobile_glass_choice_chip.dart';
+import 'mobile_visual_theme.dart';
 
 class AmsTemplateChoice {
   const AmsTemplateChoice.saved(this.template) : readFromTag = false;
@@ -15,7 +16,7 @@ class AmsTemplateChoice {
   final bool readFromTag;
 }
 
-/// Templates and their authentication keys remain on this device. This sheet
+/// Templates and their authentication keys remain on this device. This dialog
 /// deliberately has no inventory/cloud service dependency.
 Future<AmsTemplateChoice?> showAmsTemplatePicker(
   BuildContext context, {
@@ -23,11 +24,8 @@ Future<AmsTemplateChoice?> showAmsTemplatePicker(
   required String ownerAccount,
   required ValueListenable<int> accountRevision,
   void Function(String id)? onDeleted,
-}) => showModalBottomSheet<AmsTemplateChoice>(
+}) => showMobileGlassDialog<AmsTemplateChoice>(
   context: context,
-  isScrollControlled: true,
-  useSafeArea: true,
-  showDragHandle: true,
   builder: (context) => _TemplateSheet(
     repository: repository,
     ownerAccount: ownerAccount,

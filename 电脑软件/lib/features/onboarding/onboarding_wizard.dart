@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/glass_button_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:window_manager/window_manager.dart';
 
 import '../../core/app_identity.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/theme/glass_button_theme.dart';
 import '../../core/theme/interaction_effects.dart';
 import '../../providers/onboarding_provider.dart';
 import '../../widgets/app_brand_icon.dart';
+import '../../widgets/custom_title_bar.dart';
 import 'steps/cloud_login_step.dart';
 import 'steps/complete_step.dart';
 import 'steps/cost_params_step.dart';
@@ -38,51 +40,49 @@ class OnboardingWizard extends ConsumerWidget {
     final dark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: dark ? AppColors.bgBaseDark : AppColors.bgBase,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, bounds) {
-            final wide = bounds.maxWidth >= 980;
-            final inset = wide && bounds.maxHeight >= 680 ? 28.0 : 0.0;
-            return Padding(
-              padding: EdgeInsets.all(inset),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: 1260,
-                    maxHeight: 900,
-                  ),
-                  child: Container(
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      color: colors.surface,
-                      borderRadius: BorderRadius.circular(inset > 0 ? 24 : 0),
-                      border: Border.all(
-                        color: colors.outlineVariant.withValues(alpha: 0.35),
+      body: LayoutBuilder(
+        builder: (context, bounds) {
+          final wide = bounds.maxWidth >= 980;
+          return ColoredBox(
+            color: colors.surface,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: CustomTitleBar.height,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onDoubleTap: CustomTitleBar.toggleMaximize,
+                          child: const DragToMoveArea(
+                            child: SizedBox.expand(),
+                          ),
+                        ),
                       ),
-                      boxShadow: inset > 0
-                          ? [
-                              BoxShadow(
-                                color: Colors.black.withValues(
-                                  alpha: dark ? 0.18 : 0.035,
-                                ),
-                                blurRadius: 40,
-                                offset: const Offset(0, 12),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: Row(
-                      children: [
-                        if (wide) _rail(context, ref, state),
-                        Expanded(child: _workspace(context, ref, state, wide)),
-                      ],
-                    ),
+                      const CustomTitleBar(
+                        key: ValueKey('onboarding-window-controls'),
+                        embedded: true,
+                        controlsOnly: true,
+                        showFaults: false,
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            );
-          },
-        ),
+                Expanded(
+                  child: Row(
+                    children: [
+                      if (wide) _rail(context, ref, state),
+                      Expanded(
+                        child: _workspace(context, ref, state, wide),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -111,7 +111,7 @@ class OnboardingWizard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(28, 32, 28, 24),
+            padding: const EdgeInsets.fromLTRB(28, 12, 28, 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -248,7 +248,7 @@ class OnboardingWizard extends ConsumerWidget {
       children: [
         Padding(
           key: const ValueKey('onboarding-progress-header'),
-          padding: EdgeInsets.fromLTRB(wide ? 40 : 20, 24, wide ? 40 : 20, 16),
+          padding: EdgeInsets.fromLTRB(wide ? 40 : 20, 8, wide ? 40 : 20, 16),
           child: Column(
             children: [
               Row(

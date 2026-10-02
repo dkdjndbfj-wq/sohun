@@ -247,11 +247,8 @@ class _MobileInventoryPageState extends ConsumerState<MobileInventoryPage> {
     if (_batchSaving) return;
     final batchGeneration = _accountGeneration;
     final batchSync = widget.sync;
-    final result = await showMobileGlassBottomSheet<_MobileBatchDraft>(
+    final result = await showMobileGlassDialog<_MobileBatchDraft>(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      showDragHandle: true,
       builder: (sheetContext) => _MobileBatchAddSheet(
         materials: _materials,
         materialsLoading: _materialsLoading,
@@ -843,11 +840,8 @@ class _MobileInventoryPageState extends ConsumerState<MobileInventoryPage> {
     var brand = brands.contains(_brandFilter) ? _brandFilter : null;
     var material = materials.contains(_materialFilter) ? _materialFilter : null;
     final generation = _accountGeneration;
-    final apply = await showMobileGlassBottomSheet<bool>(
+    final apply = await showMobileGlassDialog<bool>(
       context: context,
-      useSafeArea: true,
-      isScrollControlled: true,
-      showDragHandle: true,
       builder: (context) => StatefulBuilder(
         builder: (context, update) => SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
@@ -927,11 +921,8 @@ class _MobileInventoryPageState extends ConsumerState<MobileInventoryPage> {
         ? [binding]
         : const <RfidSpoolBinding>[];
     if (!mounted || detailsGeneration != _accountGeneration) return;
-    await showMobileGlassBottomSheet<void>(
+    await showMobileGlassDialog<void>(
       context: context,
-      useSafeArea: true,
-      isScrollControlled: true,
-      showDragHandle: true,
       builder: (sheetContext) => SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         child: Column(
@@ -985,11 +976,8 @@ class _MobileInventoryPageState extends ConsumerState<MobileInventoryPage> {
                 TextButton.icon(
                   onPressed: () async {
                     Navigator.of(sheetContext).pop();
-                    await showMobileGlassBottomSheet<void>(
+                    await showMobileGlassDialog<void>(
                       context: context,
-                      isScrollControlled: true,
-                      useSafeArea: true,
-                      showDragHandle: true,
                       builder: (_) => SizedBox(
                         height: MediaQuery.sizeOf(context).height * 0.75,
                         child: RfidSpoolHistoryList(
@@ -1272,74 +1260,68 @@ class _MobileInventoryPageState extends ConsumerState<MobileInventoryPage> {
     final repository = widget.tagRepository;
     if (repository == null) return;
     final owner = widget.ownerAccount ?? '';
-    await showMobileGlassBottomSheet<void>(
+    await showMobileGlassDialog<void>(
       context: context,
-      useSafeArea: true,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (sheetContext) => DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.72,
-        minChildSize: 0.42,
-        maxChildSize: 0.92,
-        builder: (_, controller) => FutureBuilder<List<RfidTagRecord>>(
+      builder: (sheetContext) => SizedBox(
+        height: MediaQuery.sizeOf(context).height * 0.78,
+        child: FutureBuilder<List<RfidTagRecord>>(
           future: repository.list(ownerAccount: owner, limit: 100),
           builder: (context, snapshot) {
             final records = snapshot.data ?? const <RfidTagRecord>[];
-            return Padding(
+            return ListView(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    '标签记录',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+              children: [
+                Text(
+                  '标签记录',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '保存每次 CUID/FUID 操作；同一资料卡的新批次会单独保留，旧版其他标签记录仅供查看。',
-                    style: TextStyle(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? AppColors.textSecondaryDark
-                          : AppColors.textSecondary,
-                      fontSize: 12,
-                    ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '保存每次 CUID/FUID 操作；同一资料卡的新批次会单独保留，旧版其他标签记录仅供查看。',
+                  style: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.textSecondaryDark
+                        : AppColors.textSecondary,
+                    fontSize: 12,
                   ),
-                  const SizedBox(height: 14),
-                  if (snapshot.connectionState == ConnectionState.waiting)
-                    const Expanded(
-                      child: Center(child: CircularProgressIndicator()),
-                    )
-                  else if (snapshot.hasError)
-                    const Expanded(child: Center(child: Text('标签记录暂时无法加载')))
-                  else if (records.isEmpty)
-                    const Expanded(child: Center(child: Text('还没有保存的标签记录')))
-                  else
-                    Expanded(
-                      child: ListView.separated(
-                        controller: controller,
-                        itemCount: records.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: AppSpacing.xs),
-                        itemBuilder: (_, index) => _TagHistoryTile(
-                          record: records[index],
-                          onCopy: () async {
-                            await Clipboard.setData(
-                              ClipboardData(text: records[index].tagUid),
+                ),
+                const SizedBox(height: 14),
+                if (snapshot.connectionState == ConnectionState.waiting)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 32),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else if (snapshot.hasError)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 32),
+                    child: Center(child: Text('标签记录暂时无法加载')),
+                  )
+                else if (records.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 32),
+                    child: Center(child: Text('还没有保存的标签记录')),
+                  )
+                else
+                  for (final record in records)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                      child: _TagHistoryTile(
+                        record: record,
+                        onCopy: () async {
+                          await Clipboard.setData(
+                            ClipboardData(text: record.tagUid),
+                          );
+                          if (sheetContext.mounted) {
+                            ScaffoldMessenger.of(sheetContext).showSnackBar(
+                              const SnackBar(content: Text('UID 已复制')),
                             );
-                            if (sheetContext.mounted) {
-                              ScaffoldMessenger.of(sheetContext).showSnackBar(
-                                const SnackBar(content: Text('UID 已复制')),
-                              );
-                            }
-                          },
-                        ),
+                          }
+                        },
                       ),
                     ),
-                ],
-              ),
+              ],
             );
           },
         ),
@@ -2026,10 +2008,8 @@ class _MobileBatchAddSheetState extends State<_MobileBatchAddSheet> {
 
   Future<void> _pickModel() async {
     if (widget.materialsLoading || widget.materials.isEmpty) return;
-    final result = await showMobileGlassBottomSheet<String>(
+    final result = await showMobileGlassDialog<String>(
       context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
       builder: (_) => _BatchModelPicker(materials: widget.materials),
     );
     if (result != null && mounted) setState(() => _model = result);
@@ -2040,6 +2020,7 @@ class _MobileBatchAddSheetState extends State<_MobileBatchAddSheet> {
       context,
       initial: _color,
       initialName: _colorName,
+      compact: true,
     );
     if (result != null && mounted) {
       setState(() {
@@ -2071,10 +2052,8 @@ class _MobileBatchAddSheetState extends State<_MobileBatchAddSheet> {
         }
         latestByUid.putIfAbsent(uid, () => record.copyWith(tagUid: uid));
       }
-      final selected = await showMobileGlassBottomSheet<String>(
+      final selected = await showMobileGlassDialog<String>(
         context: context,
-        useSafeArea: true,
-        showDragHandle: true,
         builder: (_) => _SavedTagPicker(
           records: latestByUid.values.toList(growable: false),
         ),
