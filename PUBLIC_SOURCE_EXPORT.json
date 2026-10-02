@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-10-02T15:21:48.3877526+00:00",
+  "createdAt": "2026-10-02T15:48:11.3877858+00:00",
   "purpose": "Public source export; not a signed binary or third-party release clearance.",
   "coreAssets": true,
   "omittedAssetTrees": [
@@ -28,7 +28,7 @@
     "related tests and build scripts"
   ],
   "resourceReview": "THIRD_PARTY_NOTICES.md remains authoritative. Keeping attributed source data is not a clearance declaration for a distributable binary.",
-  "fileCount": 956,
+  "fileCount": 957,
   "files": [
     {
       "path": ".agents/skills/sohun-validation/SKILL.md",
@@ -47,8 +47,8 @@
     },
     {
       "path": ".github/workflows/public-release.yml",
-      "bytes": 14662,
-      "sha256": "0a0c233f4ed09b849c006e8f6f04038fb78f2ddfcf405ce8f0919e7a9cb8a277"
+      "bytes": 14745,
+      "sha256": "23257d90a505cf80ec3f8c0a31bd87ec77752df1e481dafcc6923b548a80183c"
     },
     {
       "path": ".github/workflows/release.yml",
@@ -1113,7 +1113,7 @@
     {
       "path": "电脑软件/lib/core/app_version.dart",
       "bytes": 388,
-      "sha256": "fafcd3ba585846cd39e5937c7f46937371d258b7393fc763dc0b8c42ea2a8af5"
+      "sha256": "0895860f9ce81d8fc2ac5422d0feb3f793557adcf84fc236cb3be7602576691c"
     },
     {
       "path": "电脑软件/lib/core/constants/personal_spool_policy.dart",
@@ -3053,7 +3053,7 @@
     {
       "path": "电脑软件/pubspec.yaml",
       "bytes": 4505,
-      "sha256": "0c371959fcf54a4802b6a526afe35e3f4327e35db909ae62cb77e6b548c5c7da"
+      "sha256": "fcc17002eca2526c79cccd28178134fa31419e0f2a8ae46c07b5491d8912a36d"
     },
     {
       "path": "电脑软件/README.md",
@@ -4698,7 +4698,7 @@
     {
       "path": "docs/mobile-reader-guide.md",
       "bytes": 9663,
-      "sha256": "00c4d9fe625ee7662a814876fd0d147b6c71f43108193b0363012ac76b2c05ae"
+      "sha256": "50ea96cca539462882978b12ddf9f7dd547d11bcdb3cddb14de63e7b277c23e0"
     },
     {
       "path": "docs/release-validation-1.0.1.md",
@@ -4721,6 +4721,11 @@
       "sha256": "12c65096d678fad65c3123fa1818b6114a49ce90ccd5e563a42cce24ab316f54"
     },
     {
+      "path": "docs/releases/1.0.2-7.md",
+      "bytes": 7302,
+      "sha256": "a79522b86f8c31f8673cee3bb25eaac748323ab2808d9a878e77a8b2bc610ceb"
+    },
+    {
       "path": "docs/windows-build-repair-2026-09-06.md",
       "bytes": 4162,
       "sha256": "43e42d449606de0426c4a4af1f0a4d503e95488cc3461e83310abca70affa72e"
@@ -4733,12 +4738,12 @@
     {
       "path": "PUBLIC_RELEASE_MANIFEST.md",
       "bytes": 4691,
-      "sha256": "e90365c47762e57d617779e38349cadae635f1cdbd03c64492d1a809ba246a27"
+      "sha256": "62e17a14a5fb9e8bb3941c5042dcbda21d0874508db83fad4bf741908ddc3f13"
     },
     {
       "path": "README.md",
       "bytes": 19341,
-      "sha256": "8d072c57cffe4753d9248a25a55069003b48ca51de753ed5325814ec9d979e10"
+      "sha256": "030051d9f9c453cbe92dbae71149a5ed2f8b82c1812cb77477c5d15a592a82c5"
     },
     {
       "path": "scripts/analyze_dart.ps1",
@@ -4752,8 +4757,8 @@
     },
     {
       "path": "scripts/export_public_source.ps1",
-      "bytes": 11855,
-      "sha256": "095f4e2911a2de724272ca06dd945cca6f01c5620fb854daf69e2184bc2566dd"
+      "bytes": 11883,
+      "sha256": "0d018c245dd41a527fd02a688097e4859e7e5c25fbe92055db08976c9ebb80bc"
     },
     {
       "path": "scripts/public_core_build.ps1",
@@ -4767,8 +4772,8 @@
     },
     {
       "path": "scripts/tests/test_public_release_workflow.ps1",
-      "bytes": 9093,
-      "sha256": "b0dd43ce078b906cc5f758f5d8cb703a8703d023dc6aca7fa29c1498145cbcc3"
+      "bytes": 14450,
+      "sha256": "d4833aa7440084b16464a7faadfecf4b5600006fc5013034b627220721ae33e7"
     },
     {
       "path": "scripts/tests/test_public_release.ps1",

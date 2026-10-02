@@ -51,10 +51,10 @@ GitHub Secret 临时注入已审核的资源和清单；没有清单与代码签
 - 签名私钥、口令和 `key.properties` 只允许在私有目录或 GitHub Secrets 中保存，临时注入构建目录并清理，绝不进入源码导出和发布附件。
 - 源码完整清单、隐私、资源边界和成品校验继续执行；正式发布不替代真实 NFC/AMS 兼容性验收。
 
-## 1.0.2+6 图文介绍与 Android 更新
+## 1.0.2+7 图文介绍与 Android 更新
 
 本轮正式附件仅构建 Android，Windows 不沿用旧链接冒充新版本。公开介绍包括
-`docs/mobile-reader-guide.md`、`docs/releases/1.0.2-6.md` 和
+`docs/mobile-reader-guide.md`、`docs/releases/1.0.2-7.md` 和
 `docs/images/mobile-1.0.2/` 下明确列入导出清单的八张界面与导航图标预览。
 预览由当前 Flutter 界面渲染，耗材和 NFC 状态使用示例数据；它们不代表实机验收，
 不包含真实标签区块、密钥、签名模板、个人账户或库存数据库。

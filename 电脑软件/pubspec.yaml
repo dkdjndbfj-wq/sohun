@@ -1,7 +1,7 @@
 name: consumable_tracker_desktop
 description: 3D 打印耗材库存统计与打印机消耗管理（桌面版）
 publish_to: 'none'
-version: 1.0.2+6
+version: 1.0.2+7
 
 environment:
   # Platform-scoped asset entries (used to keep Windows-only bridge binaries

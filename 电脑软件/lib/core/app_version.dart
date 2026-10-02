@@ -9,5 +9,5 @@ class AppVersion {
   static const String version = 'v1.0.2';
 
   /// 完整版本号（含构建号），如 'v1.0.0+1'。
-  static const String fullVersion = 'v1.0.2+6';
+  static const String fullVersion = 'v1.0.2+7';
 }
