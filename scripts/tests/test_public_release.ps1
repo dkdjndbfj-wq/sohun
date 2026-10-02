@@ -10,7 +10,9 @@ $stage = Join-Path $fixtureRoot 'source'
 $output = Join-Path $fixtureRoot 'output'
 $priorProperties = $env:SOHUN_ANDROID_SIGNING_PROPERTIES
 $priorFingerprint = $env:SOHUN_ANDROID_SIGNING_CERT_SHA256
+$priorPath = $env:PATH
 $originalLocation = Get-Location
+$completedBuildRoot = $null
 $passed = 0
 function Write-Fixture([string]$Relative, [string]$Text) {
     $path = Join-Path $stage $Relative
@@ -19,8 +21,10 @@ function Write-Fixture([string]$Relative, [string]$Text) {
 }
 function Reject([scriptblock]$Action, [string]$Pattern) {
     $caught = $null
+    $global:LASTEXITCODE = 37
     try { & $Action | Out-Null } catch { $caught = $_ }
     if ($null -eq $caught -or $caught.ToString() -notmatch $Pattern) { throw "Expected release rejection: $Pattern" }
+    if ($global:LASTEXITCODE -eq 0) { throw 'Rejected release must not normalize the caller exit code.' }
     if (Test-Path -LiteralPath $output) { throw 'Rejected release unexpectedly created artifact output.' }
     $script:passed++
 }
@@ -29,6 +33,22 @@ try {
     Write-Fixture '电脑软件/pubspec.lock' "packages: {}`n"
     Write-Fixture '电脑软件/core-build.json' '{"schemaVersion":1,"product":"sohun-core-preview","signedRelease":false}'
     Write-Fixture '电脑软件/scripts/Test-CoreSource.ps1' ([IO.File]::ReadAllText((Join-Path $repoRoot '电脑软件/scripts/Test-CoreSource.ps1')))
+    Write-Fixture '电脑软件/scripts/Test-CoreBundle.ps1' ([IO.File]::ReadAllText((Join-Path $repoRoot '电脑软件/scripts/Test-CoreBundle.ps1')))
+    # Replace only the SDK build in this isolated snapshot. The real source,
+    # bundle, artifact hash and manifest checks still execute in the packager.
+    Write-Fixture '电脑软件/scripts/build_android.ps1' @'
+[CmdletBinding()]
+param([string]$Configuration, [switch]$Core, [string]$ApiBaseUrl, [switch]$RunNativeTests)
+$ErrorActionPreference = 'Stop'
+$projectRoot = Split-Path -Parent $PSScriptRoot
+$payload = Join-Path $projectRoot 'build/fixture-payload'
+New-Item -ItemType Directory -Path $payload -Force | Out-Null
+[IO.File]::WriteAllText((Join-Path $payload 'AndroidManifest.xml'), 'isolated SDK fixture')
+$apk = Join-Path $projectRoot "build/app/outputs/flutter-apk/app-$($Configuration.ToLowerInvariant()).apk"
+New-Item -ItemType Directory -Path (Split-Path -Parent $apk) -Force | Out-Null
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+[IO.Compression.ZipFile]::CreateFromDirectory($payload, $apk)
+'@
     $files = @(Get-ChildItem -LiteralPath $stage -File -Recurse | ForEach-Object {
         [ordered]@{path=$_.FullName.Substring($stage.Length + 1).Replace('\','/'); bytes=$_.Length; sha256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
     })
@@ -55,12 +75,35 @@ try {
     Reject { & $packager -SourceStage $stage -Target Android -PublicRelease -ExpectedTag 'v1.0.1+2' -OutputDirectory $output } 'absolute path using forward slashes'
     Reject { & $installer -PublicRelease } 'pass -Core -Product Personal'
     Reject { & $installer -PublicRelease -Core -Product Farm } 'pass -Core -Product Personal'
+    $tools = Join-Path $fixtureRoot 'tools'
+    New-Item -ItemType Directory -Path $tools | Out-Null
+    [IO.File]::WriteAllText((Join-Path $tools 'flutter.cmd'), "@echo off`r`nexit /b 0`r`n", [Text.Encoding]::ASCII)
+    [IO.File]::WriteAllText((Join-Path $tools 'git.cmd'), "@echo off`r`nexit /b 1`r`n", [Text.Encoding]::ASCII)
+    $env:PATH = $tools + [IO.Path]::PathSeparator + $priorPath
+    # The optional commit lookup may leave a nonzero native exit code even
+    # after all required packaging gates pass, just as a clean rg scan can.
+    $global:LASTEXITCODE = 1
+    $result = & $packager -SourceStage $stage -Target Android -OutputDirectory $output
+    $completedBuildRoot = $result.BuildRoot
+    if ($global:LASTEXITCODE -ne 0) { throw 'Successful packaging must clear the caller exit code for the GitHub PowerShell wrapper.' }
+    if ($result.Artifacts -ne 1 -or -not (Test-Path -LiteralPath (Join-Path $output 'core-preview-manifest.json'))) {
+        throw 'The isolated successful packaging path did not finish its artifact and manifest checks.'
+    }
+    $passed++
     Write-Host "$passed public release entry-point boundary checks passed."
     $global:LASTEXITCODE = 0
 } finally {
     $env:SOHUN_ANDROID_SIGNING_PROPERTIES = $priorProperties
     $env:SOHUN_ANDROID_SIGNING_CERT_SHA256 = $priorFingerprint
+    $env:PATH = $priorPath
     Set-Location $originalLocation
+    if (-not [string]::IsNullOrWhiteSpace($completedBuildRoot)) {
+        $resolvedBuildRoot = [IO.Path]::GetFullPath($completedBuildRoot)
+        $buildBase = [IO.Path]::GetFullPath([Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)).TrimEnd('\','/') + [IO.Path]::DirectorySeparatorChar
+        if (-not $resolvedBuildRoot.StartsWith($buildBase, [StringComparison]::OrdinalIgnoreCase) -or
+            (Split-Path -Leaf $resolvedBuildRoot) -notmatch '^sohun_core_[0-9a-f]{12}$') { throw 'Unexpected isolated build cleanup path.' }
+        if (Test-Path -LiteralPath $resolvedBuildRoot) { Remove-Item -LiteralPath $resolvedBuildRoot -Recurse -Force }
+    }
     $resolved = [IO.Path]::GetFullPath($fixtureRoot)
     $base = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\','/') + [IO.Path]::DirectorySeparatorChar
     if (-not $resolved.StartsWith($base, [StringComparison]::OrdinalIgnoreCase) -or

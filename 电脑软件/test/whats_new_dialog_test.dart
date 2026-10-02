@@ -47,7 +47,9 @@ void main() {
     expect(find.text('开始使用'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
-    await tester.tap(find.text('开始使用'));
+    await tester.ensureVisible(find.text('开始使用'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('开始使用'), warnIfMissed: true);
     await tester.pumpAndSettle();
     expect(find.text(AppReleaseNotes.current.title), findsNothing);
   });

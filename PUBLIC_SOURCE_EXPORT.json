@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-10-02T14:15:50.3664415+00:00",
+  "createdAt": "2026-10-02T14:52:20.4430263+00:00",
   "purpose": "Public source export; not a signed binary or third-party release clearance.",
   "coreAssets": true,
   "omittedAssetTrees": [
@@ -28,7 +28,7 @@
     "related tests and build scripts"
   ],
   "resourceReview": "THIRD_PARTY_NOTICES.md remains authoritative. Keeping attributed source data is not a clearance declaration for a distributable binary.",
-  "fileCount": 954,
+  "fileCount": 955,
   "files": [
     {
       "path": ".agents/skills/sohun-validation/SKILL.md",
@@ -1113,7 +1113,7 @@
     {
       "path": "电脑软件/lib/core/app_version.dart",
       "bytes": 388,
-      "sha256": "b39beaba7a805ee1939ed05ffe5dc2280ada5ee8c3feba9e8d88acd957e44caa"
+      "sha256": "6df00183b270768a86f6f75a5c7551f4432d8f25183dc52682703515ef02465d"
     },
     {
       "path": "电脑软件/lib/core/constants/personal_spool_policy.dart",
@@ -1122,8 +1122,8 @@
     },
     {
       "path": "电脑软件/lib/core/releases/app_release_notes.dart",
-      "bytes": 1865,
-      "sha256": "7ea9dec52b1b9b8a638bde0a376184a1febce2c558a88f25aa90d3e02f345c8b"
+      "bytes": 2128,
+      "sha256": "7e7a3f599523e8af385a3c440d7dd120e25d06d350a0965a4ebef70945db8257"
     },
     {
       "path": "电脑软件/lib/core/responsive/breakpoints.dart",
@@ -3053,7 +3053,7 @@
     {
       "path": "电脑软件/pubspec.yaml",
       "bytes": 4505,
-      "sha256": "bcb2f7018a5b9c8f4e5dcc8ed12ae8f47873686a9428a080f275ad75ea08062b"
+      "sha256": "ac5e9e6468e9563c2b1e911e588a69786478fea0a7168cecb45b4bc6eb1cf5d0"
     },
     {
       "path": "电脑软件/README.md",
@@ -4247,8 +4247,8 @@
     },
     {
       "path": "电脑软件/test/whats_new_dialog_test.dart",
-      "bytes": 2063,
-      "sha256": "4cd521b43551dd1c22c47137b905ceab53c762cf3626ddd1aa7b3ee28b95ac22"
+      "bytes": 2176,
+      "sha256": "065694ed617f85e0ab3f2d9cd08c0e257afc3ee6231069a4b855fa925f821de3"
     },
     {
       "path": "电脑软件/test/widget_test.dart",
@@ -4698,7 +4698,7 @@
     {
       "path": "docs/mobile-reader-guide.md",
       "bytes": 9663,
-      "sha256": "f2897531032ab4be34a75efe07781947571c228b44e4f8726c9ee1b033f157bd"
+      "sha256": "532f00695d3c3b704355475a781ba1d99aa7bc8576921128f5a8880014190a2f"
     },
     {
       "path": "docs/release-validation-1.0.1.md",
@@ -4709,6 +4709,11 @@
       "path": "docs/releases/1.0.2-4.md",
       "bytes": 7117,
       "sha256": "a926675691ba8b9aaf65e40d1d176b02f501f2baa3f04cdd186c282bc4c839ed"
+    },
+    {
+      "path": "docs/releases/1.0.2-5.md",
+      "bytes": 7277,
+      "sha256": "e50b9c60614e148bb6d095625bf24679999de702eabfe2cabb1c11324487ad76"
     },
     {
       "path": "docs/windows-build-repair-2026-09-06.md",
@@ -4723,12 +4728,12 @@
     {
       "path": "PUBLIC_RELEASE_MANIFEST.md",
       "bytes": 4691,
-      "sha256": "499cb07a0dfe2894d60a8b061985dd2368aac813c69aa5659fb8e36ab73fb3ec"
+      "sha256": "bae606826f10a0285bd614e3b5734102b2a2b11f4f287740c8fcd473445d3e07"
     },
     {
       "path": "README.md",
       "bytes": 19341,
-      "sha256": "39df9cba28ea367104836e209f09f9e1d5f2a60a799d0326039372de07cd9daa"
+      "sha256": "219bb2af646fb27015fa7ab191ad5f3d97f5268f75f4d8a21957dd6d2b893695"
     },
     {
       "path": "scripts/analyze_dart.ps1",
@@ -4742,13 +4747,13 @@
     },
     {
       "path": "scripts/export_public_source.ps1",
-      "bytes": 11799,
-      "sha256": "02d66e6b14087a01f54d7a63b8263a8deb09de6fb50dbf09872723f515878992"
+      "bytes": 11827,
+      "sha256": "5087bb1bbae32fd029e3a0fc0617573f0e19f43615dc160e559d8236d5bb8494"
     },
     {
       "path": "scripts/public_core_build.ps1",
-      "bytes": 19272,
-      "sha256": "1153614bbf0410008da1212a1719b99eada6d393e7971b54fdb13463a0bf13d9"
+      "bytes": 19670,
+      "sha256": "2acfb97b79f1390834836fd06283e58a3a243839a11651f417982cc4d4fcb50e"
     },
     {
       "path": "scripts/tests/test_core_build.ps1",
@@ -4762,8 +4767,8 @@
     },
     {
       "path": "scripts/tests/test_public_release.ps1",
-      "bytes": 5406,
-      "sha256": "7f492654a23bbfd8200863526589c1bd03de82f6b9197c6840669d5640b5fd37"
+      "bytes": 8464,
+      "sha256": "ca08cb11f04224859c09017b41c00c65cfeab0497c09dad22567115ae731de42"
     },
     {
       "path": "scripts/tests/test_public_source.ps1",

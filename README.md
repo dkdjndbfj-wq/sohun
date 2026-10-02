@@ -2,15 +2,15 @@
 
 面向个人 3D 打印用户的耗材库存、实物卷追踪、打印机与设备工作台。Windows 桌面端负责日常管理，Android 客户端负责移动查看与 NFC 标签操作；两端可以使用同一个 sohun 个人账号同步。
 
-[访问官网](https://sohun.top) · [下载 Android 1.0.2+4](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.2%2B4/sohun-1.0.2-4-android.apk) · [新版图文说明](docs/releases/1.0.2-4.md) · [所有版本与附件](https://github.com/dkdjndbfj-wq/sohun/releases)
+[访问官网](https://sohun.top) · [下载 Android 1.0.2+5](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.2%2B5/sohun-1.0.2-5-android.apk) · [新版图文说明](docs/releases/1.0.2-5.md) · [所有版本与附件](https://github.com/dkdjndbfj-wq/sohun/releases)
 
-**Android 1.0.2+4** 重新设计了手机耗材标签界面：打开后只需点击“读取 CUID / FUID”，已有资料进入入库确认，空白新卡进入独立写卡设置。读写、颜色选择和库存操作使用居中弹窗，配合浅色与深色主题，让常用操作更清楚、更顺手。本轮提供 Android APK，Windows 安装包请以 Releases 实际附件为准。
+**Android 1.0.2+5** 重新设计了手机耗材标签界面：打开后只需点击“读取 CUID / FUID”，已有资料进入入库确认，空白新卡进入独立写卡设置。读写、颜色选择和库存操作使用居中弹窗，配合浅色与深色主题，让常用操作更清楚、更顺手。本轮提供 Android APK，Windows 安装包请以 Releases 实际附件为准。
 
 Android 正式 APK 使用长期发行密钥签名。具体手机、标签、打印机和固件的兼容性仍以实机结果为准。欢迎在 [Issues](https://github.com/dkdjndbfj-wq/sohun/issues) 反馈问题，注明版本、设备和复现步骤；请勿附带账号密码、密钥或真实个人数据。
 
 ## 先看看手机版怎么用
 
-以下预览由 **1.0.2+4 的真实 Flutter 界面组件**渲染，使用 PLA、PETG 等示例耗材与模拟 NFC 状态；它们展示实际页面和操作布局，不是概念图，也不代表已经完成真实读卡或 AMS 验收。
+以下预览由 **1.0.2+5 的真实 Flutter 界面组件**渲染，使用 PLA、PETG 等示例耗材与模拟 NFC 状态；它们展示实际页面和操作布局，不是概念图，也不代表已经完成真实读卡或 AMS 验收。
 
 ### 打开就能读卡
 
@@ -157,7 +157,7 @@ Windows 和 Android 可以登录同一个 sohun 个人账号。个人库存的�
 
 ## 下载与安装
 
-安装包发布在 [GitHub Releases](https://github.com/dkdjndbfj-wq/sohun/releases)。本轮 Android **1.0.2+4** 的变化和预览见 [版本说明](docs/releases/1.0.2-4.md)，对应的 [SHA-256 校验清单](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.2%2B4/SHA256SUMS.txt) 与 APK 位于同一个 Release。本轮只提供 Android 附件；Windows 安装器与便携版以版本页面实际列出的附件为准。
+安装包发布在 [GitHub Releases](https://github.com/dkdjndbfj-wq/sohun/releases)。本轮 Android **1.0.2+5** 的变化和预览见 [版本说明](docs/releases/1.0.2-5.md)，对应的 [SHA-256 校验清单](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.2%2B5/SHA256SUMS.txt) 与 APK 位于同一个 Release。本轮只提供 Android 附件；Windows 安装器与便携版以版本页面实际列出的附件为准。
 
 ### Windows 10/11 x64 安装器
 
@@ -169,7 +169,7 @@ Windows 和 Android 可以登录同一个 sohun 个人账号。个人库存的�
 
 ### Android Release APK
 
-下载 [`sohun-1.0.2-4-android.apk`](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.2%2B4/sohun-1.0.2-4-android.apk)，在 Android 系统安装页确认安装。该 APK 使用长期保存的发行密钥签名，后续版本沿用同一签名；遇到与旧调试包签名不一致的提示时，请先备份或同步库存，不要直接卸载丢失本地数据。使用 CUID/FUID 或 NTAG213 需要支持相应 NFC 能力的 Android 设备；不同厂商系统、标签批次和 NFC 芯片仍需现场测试。
+下载 [`sohun-1.0.2-5-android.apk`](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.2%2B5/sohun-1.0.2-5-android.apk)，在 Android 系统安装页确认安装。该 APK 使用长期保存的发行密钥签名，后续版本沿用同一签名；遇到与旧调试包签名不一致的提示时，请先备份或同步库存，不要直接卸载丢失本地数据。使用 CUID/FUID 或 NTAG213 需要支持相应 NFC 能力的 Android 设备；不同厂商系统、标签批次和 NFC 芯片仍需现场测试。
 
 项目目前没有 macOS 或 iOS 交付入口。
 
@@ -227,7 +227,7 @@ npm test
 ```powershell
 # 本地正式 Android 构建需在环境中指定仓库外的 key.properties 路径和预期证书 SHA-256。
 # GitHub 的 Public Release 工作流会从受保护的 Secrets 与变量中提供这些配置。
-./scripts/public_core_build.ps1 -Target Android -PublicRelease -ExpectedTag 'v1.0.2+4' -RunTests
+./scripts/public_core_build.ps1 -Target Android -PublicRelease -ExpectedTag 'v1.0.2+5' -RunTests
 ```
 
 脚本会导出独立源码快照、使用英文临时路径构建、检查成品边界并生成 SHA-256 清单。更完整的命令与验收范围见 [开发与验证工作流](docs/development-workflow.md)，部署配置见 [DEPLOYMENT.md](DEPLOYMENT.md)，公开构建限制见 [PUBLIC_RELEASE_MANIFEST.md](PUBLIC_RELEASE_MANIFEST.md)。

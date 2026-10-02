@@ -281,3 +281,9 @@ CUID/FUID：可重复使用的耗材资料卡；确认数量后按每卷固定 1
         Set-Location $originalLocation
     }
 }
+# GitHub's PowerShell wrapper propagates the caller's LASTEXITCODE. Native
+# commands in nested scopes (for example, a clean rg scan or optional git
+# metadata lookup) can leave a nonzero value after successful packaging.
+# Normalize only after every build, identity, hash and cleanup gate succeeds;
+# an exception above must keep failing without reaching this assignment.
+$global:LASTEXITCODE = 0
