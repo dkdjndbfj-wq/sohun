@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-10-02T14:52:20.4430263+00:00",
+  "createdAt": "2026-10-02T15:21:48.3877526+00:00",
   "purpose": "Public source export; not a signed binary or third-party release clearance.",
   "coreAssets": true,
   "omittedAssetTrees": [
@@ -28,7 +28,7 @@
     "related tests and build scripts"
   ],
   "resourceReview": "THIRD_PARTY_NOTICES.md remains authoritative. Keeping attributed source data is not a clearance declaration for a distributable binary.",
-  "fileCount": 955,
+  "fileCount": 956,
   "files": [
     {
       "path": ".agents/skills/sohun-validation/SKILL.md",
@@ -1113,7 +1113,7 @@
     {
       "path": "电脑软件/lib/core/app_version.dart",
       "bytes": 388,
-      "sha256": "6df00183b270768a86f6f75a5c7551f4432d8f25183dc52682703515ef02465d"
+      "sha256": "fafcd3ba585846cd39e5937c7f46937371d258b7393fc763dc0b8c42ea2a8af5"
     },
     {
       "path": "电脑软件/lib/core/constants/personal_spool_policy.dart",
@@ -3053,7 +3053,7 @@
     {
       "path": "电脑软件/pubspec.yaml",
       "bytes": 4505,
-      "sha256": "ac5e9e6468e9563c2b1e911e588a69786478fea0a7168cecb45b4bc6eb1cf5d0"
+      "sha256": "0c371959fcf54a4802b6a526afe35e3f4327e35db909ae62cb77e6b548c5c7da"
     },
     {
       "path": "电脑软件/README.md",
@@ -4698,7 +4698,7 @@
     {
       "path": "docs/mobile-reader-guide.md",
       "bytes": 9663,
-      "sha256": "532f00695d3c3b704355475a781ba1d99aa7bc8576921128f5a8880014190a2f"
+      "sha256": "00c4d9fe625ee7662a814876fd0d147b6c71f43108193b0363012ac76b2c05ae"
     },
     {
       "path": "docs/release-validation-1.0.1.md",
@@ -4716,6 +4716,11 @@
       "sha256": "e50b9c60614e148bb6d095625bf24679999de702eabfe2cabb1c11324487ad76"
     },
     {
+      "path": "docs/releases/1.0.2-6.md",
+      "bytes": 7310,
+      "sha256": "12c65096d678fad65c3123fa1818b6114a49ce90ccd5e563a42cce24ab316f54"
+    },
+    {
       "path": "docs/windows-build-repair-2026-09-06.md",
       "bytes": 4162,
       "sha256": "43e42d449606de0426c4a4af1f0a4d503e95488cc3461e83310abca70affa72e"
@@ -4728,12 +4733,12 @@
     {
       "path": "PUBLIC_RELEASE_MANIFEST.md",
       "bytes": 4691,
-      "sha256": "bae606826f10a0285bd614e3b5734102b2a2b11f4f287740c8fcd473445d3e07"
+      "sha256": "e90365c47762e57d617779e38349cadae635f1cdbd03c64492d1a809ba246a27"
     },
     {
       "path": "README.md",
       "bytes": 19341,
-      "sha256": "219bb2af646fb27015fa7ab191ad5f3d97f5268f75f4d8a21957dd6d2b893695"
+      "sha256": "8d072c57cffe4753d9248a25a55069003b48ca51de753ed5325814ec9d979e10"
     },
     {
       "path": "scripts/analyze_dart.ps1",
@@ -4747,13 +4752,13 @@
     },
     {
       "path": "scripts/export_public_source.ps1",
-      "bytes": 11827,
-      "sha256": "5087bb1bbae32fd029e3a0fc0617573f0e19f43615dc160e559d8236d5bb8494"
+      "bytes": 11855,
+      "sha256": "095f4e2911a2de724272ca06dd945cca6f01c5620fb854daf69e2184bc2566dd"
     },
     {
       "path": "scripts/public_core_build.ps1",
-      "bytes": 19670,
-      "sha256": "2acfb97b79f1390834836fd06283e58a3a243839a11651f417982cc4d4fcb50e"
+      "bytes": 20790,
+      "sha256": "da08a37b3b46482d7b8f261ed2a514c3b42555e7dcf3c64c9e22b6e5c215162d"
     },
     {
       "path": "scripts/tests/test_core_build.ps1",
@@ -4767,8 +4772,8 @@
     },
     {
       "path": "scripts/tests/test_public_release.ps1",
-      "bytes": 8464,
-      "sha256": "ca08cb11f04224859c09017b41c00c65cfeab0497c09dad22567115ae731de42"
+      "bytes": 13722,
+      "sha256": "6136983ba4ef6c3dd14f3294c8900daad1c21625e2fa54cedadb1823613774f9"
     },
     {
       "path": "scripts/tests/test_public_source.ps1",

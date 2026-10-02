@@ -72,6 +72,33 @@ if ($PublicRelease -and $Target -in @('Android', 'All')) {
         throw 'Public Android release requires the expected SOHUN_ANDROID_SIGNING_CERT_SHA256 fingerprint.'
     }
 }
+# Resolve provenance before creating the native build stage. Select-Object
+# -First 1 on a native pipeline can stop Git before its exit code is recorded
+# in Windows PowerShell, dropping a valid commit from the release manifest.
+$sourceCommit = $null
+if (Get-Command git -ErrorAction SilentlyContinue) {
+    $priorErrorAction = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        $sourceCommitOutput = @(& git -C $repoRoot rev-parse --verify HEAD 2>$null)
+        $sourceCommitExitCode = $LASTEXITCODE
+    } finally { $ErrorActionPreference = $priorErrorAction }
+    $sourceCommitText = [string]($sourceCommitOutput | Select-Object -First 1)
+    if ($sourceCommitExitCode -eq 0 -and $sourceCommitText.Trim() -match '^[0-9a-fA-F]{40}$') {
+        $sourceCommit = $sourceCommitText.Trim().ToLowerInvariant()
+    }
+}
+if ($PublicRelease -and [string]::IsNullOrWhiteSpace($sourceCommit)) {
+    throw 'PublicRelease requires a valid source Git commit before building.'
+}
+if ($PublicRelease -and $env:GITHUB_ACTIONS -eq 'true') {
+    if ($env:GITHUB_SHA -notmatch '^[0-9a-fA-F]{40}$') {
+        throw 'PublicRelease on GitHub Actions requires a valid GITHUB_SHA before building.'
+    }
+    if ($sourceCommit -ne $env:GITHUB_SHA.ToLowerInvariant()) {
+        throw 'Public release source Git commit does not match GITHUB_SHA.'
+    }
+}
 $sessionName = (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
 if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
     $artifactDirectory = if ($PublicRelease) { 'public-release' } else { 'core-preview' }
@@ -260,12 +287,7 @@ CUID/FUID：可重复使用的耗材资料卡；确认数量后按每卷固定 1
         coreDefine = 'SOHUN_CORE_BUILD=true'
         artifacts = @($artifacts.ToArray())
     }
-    if (Get-Command git -ErrorAction SilentlyContinue) {
-        $sourceCommit = (& git -C $repoRoot rev-parse --verify HEAD 2>$null | Select-Object -First 1)
-        if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($sourceCommit)) {
-            $manifest['sourceCommit'] = $sourceCommit.Trim().ToLowerInvariant()
-        }
-    }
+    if (-not [string]::IsNullOrWhiteSpace($sourceCommit)) { $manifest['sourceCommit'] = $sourceCommit }
     $manifestName = if ($PublicRelease) { 'release-manifest.json' } else { 'core-preview-manifest.json' }
     [IO.File]::WriteAllText((Join-Path $OutputDirectory $manifestName), ($manifest | ConvertTo-Json -Depth 6) + "`n", [Text.UTF8Encoding]::new($false))
     $checksumLines = @($artifacts | ForEach-Object { "$($_.sha256)  $($_.file)" })

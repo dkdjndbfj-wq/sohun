@@ -1,8 +1,8 @@
 # 手机读卡、写卡与入库图文指南
 
-适用版本：**Android 1.0.2+5**。这份指南从手机中的“耗材标签”首页开始，说明 CUID/FUID 耗材资料卡的读取、新卡写入和库存同步。
+适用版本：**Android 1.0.2+6**。这份指南从手机中的“耗材标签”首页开始，说明 CUID/FUID 耗材资料卡的读取、新卡写入和库存同步。
 
-[下载 Android APK](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.2%2B5/sohun-1.0.2-5-android.apk) · [查看新版说明](releases/1.0.2-5.md) · [返回项目介绍](../README.md)
+[下载 Android APK](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.2%2B6/sohun-1.0.2-6-android.apk) · [查看新版说明](releases/1.0.2-6.md) · [返回项目介绍](../README.md)
 
 本文预览来自当前客户端的真实 Flutter 组件，使用示例耗材和模拟 NFC 状态。页面布局与软件一致；真实 NFC 读写、实体卡及 AMS 兼容性仍需用自己的设备测试。
 
