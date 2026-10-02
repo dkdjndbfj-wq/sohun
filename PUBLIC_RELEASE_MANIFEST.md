@@ -55,7 +55,7 @@ GitHub Secret 临时注入已审核的资源和清单；没有清单与代码签
 
 本轮正式附件仅构建 Android，Windows 不沿用旧链接冒充新版本。公开介绍包括
 `docs/mobile-reader-guide.md`、`docs/releases/1.0.2-4.md` 和
-`docs/images/mobile-1.0.2/` 下明确列入导出清单的六张界面预览。
+`docs/images/mobile-1.0.2/` 下明确列入导出清单的八张界面与导航图标预览。
 预览由当前 Flutter 界面渲染，耗材和 NFC 状态使用示例数据；它们不代表实机验收，
 不包含真实标签区块、密钥、签名模板、个人账户或库存数据库。
 公开快照仍使用逐文件白名单及完整性校验，不因此开放整个内部文档目录。

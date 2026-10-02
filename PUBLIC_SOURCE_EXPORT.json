@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-10-02T10:55:58.5775884+00:00",
+  "createdAt": "2026-10-02T14:15:50.3664415+00:00",
   "purpose": "Public source export; not a signed binary or third-party release clearance.",
   "coreAssets": true,
   "omittedAssetTrees": [
@@ -28,7 +28,7 @@
     "related tests and build scripts"
   ],
   "resourceReview": "THIRD_PARTY_NOTICES.md remains authoritative. Keeping attributed source data is not a clearance declaration for a distributable binary.",
-  "fileCount": 942,
+  "fileCount": 954,
   "files": [
     {
       "path": ".agents/skills/sohun-validation/SKILL.md",
@@ -564,6 +564,46 @@
       "path": "电脑软件/assets/images/icons/layers.svg",
       "bytes": 305,
       "sha256": "4803c6dfbe4b6440e8695d86aefc2fdd98392e51fae2e590e993d94f8ce59d1c"
+    },
+    {
+      "path": "电脑软件/assets/images/icons/mobile_nav/account-outline.svg",
+      "bytes": 274,
+      "sha256": "4e831a63f30bdc74da28f516085ce1f00e95943dddd3edf3a142a9ef5a40e300"
+    },
+    {
+      "path": "电脑软件/assets/images/icons/mobile_nav/account-selected.svg",
+      "bytes": 274,
+      "sha256": "4e831a63f30bdc74da28f516085ce1f00e95943dddd3edf3a142a9ef5a40e300"
+    },
+    {
+      "path": "电脑软件/assets/images/icons/mobile_nav/inventory-outline.svg",
+      "bytes": 300,
+      "sha256": "ac46df43e6e76a8541e32ec5e2382d84f00204322d3ddf93e72ca6ec94914c4b"
+    },
+    {
+      "path": "电脑软件/assets/images/icons/mobile_nav/inventory-selected.svg",
+      "bytes": 300,
+      "sha256": "ac46df43e6e76a8541e32ec5e2382d84f00204322d3ddf93e72ca6ec94914c4b"
+    },
+    {
+      "path": "电脑软件/assets/images/icons/mobile_nav/print-alerts-outline.svg",
+      "bytes": 382,
+      "sha256": "4677a2a7beddd04c4e6c82632508df1f88c556b58e7239d6141b388fb947c9c4"
+    },
+    {
+      "path": "电脑软件/assets/images/icons/mobile_nav/print-alerts-selected.svg",
+      "bytes": 382,
+      "sha256": "4677a2a7beddd04c4e6c82632508df1f88c556b58e7239d6141b388fb947c9c4"
+    },
+    {
+      "path": "电脑软件/assets/images/icons/mobile_nav/tags-outline.svg",
+      "bytes": 283,
+      "sha256": "d1289af2715aadcb7fd132a62c0ed036949c33c2a2c162060f0d0dbe4cd0a8be"
+    },
+    {
+      "path": "电脑软件/assets/images/icons/mobile_nav/tags-selected.svg",
+      "bytes": 283,
+      "sha256": "d1289af2715aadcb7fd132a62c0ed036949c33c2a2c162060f0d0dbe4cd0a8be"
     },
     {
       "path": "电脑软件/assets/images/icons/more_vert.svg",
@@ -2566,14 +2606,19 @@
       "sha256": "e2e75d416162acd0b794bff9e24b8a6a0d2c20fb823ee7ba46bf49fdd673835e"
     },
     {
+      "path": "电脑软件/lib/mobile/mobile_navigation_icon.dart",
+      "bytes": 1405,
+      "sha256": "3cac8bd3aac7eb6030826a24cc32cde24d225311126f8214fd82512942f87a6d"
+    },
+    {
       "path": "电脑软件/lib/mobile/mobile_printer_faults.dart",
       "bytes": 15336,
       "sha256": "9b0277e919a52743c0f8bb2a3092ca2fab1d110d9e965701b68287d44efdca06"
     },
     {
       "path": "电脑软件/lib/mobile/mobile_rfid_account_app.dart",
-      "bytes": 22685,
-      "sha256": "b6651843828ca82d19d2da4c40af629aa8c6b8a511c56484b1cae3e887462ce5"
+      "bytes": 23201,
+      "sha256": "2fc1096e89d5e1f116f2a7be3091c471e64b22297b17474636b1e0c9d20f1e5f"
     },
     {
       "path": "电脑软件/lib/mobile/mobile_rfid_app.dart",
@@ -3007,8 +3052,8 @@
     },
     {
       "path": "电脑软件/pubspec.yaml",
-      "bytes": 4467,
-      "sha256": "6315de72e17331a03f99202fadfbc1a573372b967351de91d1445c910c5810c1"
+      "bytes": 4505,
+      "sha256": "bcb2f7018a5b9c8f4e5dcc8ed12ae8f47873686a9428a080f275ad75ea08062b"
     },
     {
       "path": "电脑软件/README.md",
@@ -3716,6 +3761,11 @@
       "sha256": "6300a90e244cf56702bd949c79655a6b4bc1271897e3b972788c559c7f8f02a7"
     },
     {
+      "path": "电脑软件/test/mobile_navigation_icon_test.dart",
+      "bytes": 9945,
+      "sha256": "a86b9df82a7b583dceb28ff95d46f38a9d3b19a187f06c0ee956ff368c2722b3"
+    },
+    {
       "path": "电脑软件/test/mobile_printer_faults_test.dart",
       "bytes": 7039,
       "sha256": "2310cf99bdc7bb0cfb8097bb4393f68e1437d45ba51d1b4128b151430b23d631"
@@ -3762,8 +3812,8 @@
     },
     {
       "path": "电脑软件/test/mobile_ui_regression_test.dart",
-      "bytes": 35890,
-      "sha256": "7e06c13226b5483daf4f5f7bde6f30831819d5adfc9fd07a99b80d1e31f099e6"
+      "bytes": 36063,
+      "sha256": "29556b91eee3d970e13255fed7dfca503954aa7c7b0ea0625a5011bf8b055401"
     },
     {
       "path": "电脑软件/test/mobile_visual_theme_test.dart",
@@ -4607,13 +4657,23 @@
     },
     {
       "path": "docs/images/mobile-1.0.2/inventory-dark.png",
-      "bytes": 833927,
-      "sha256": "20b501eea337fae83b656c8f331aee549cf39ec31a6c6331218c459718693fd3"
+      "bytes": 836434,
+      "sha256": "ee4cd57efcfbb1ab49c553edb09170e9212f1b171f41760cc948264f288fcd5c"
     },
     {
       "path": "docs/images/mobile-1.0.2/inventory-light.png",
-      "bytes": 1008753,
-      "sha256": "77e33c90c46fe5550d0a4448c65ffce36d167d43422f476d6c8c720acc7be073"
+      "bytes": 1012521,
+      "sha256": "876fdeb5e815cb927828842506c443eb5f3f81c5eedc60b1da055c18f1b5d07c"
+    },
+    {
+      "path": "docs/images/mobile-1.0.2/navigation-dark.png",
+      "bytes": 681082,
+      "sha256": "e7dce68f0a366499bb1e3e633f0ae3e99c59568211eaa05686a8a9b722380879"
+    },
+    {
+      "path": "docs/images/mobile-1.0.2/navigation-light.png",
+      "bytes": 932934,
+      "sha256": "675ecad3848ff8e0a02993911ccc0ec64de4930329a036b1ddb09ff5e475fd57"
     },
     {
       "path": "docs/images/mobile-1.0.2/new-card-dialog-dark.png",
@@ -4627,18 +4687,18 @@
     },
     {
       "path": "docs/images/mobile-1.0.2/reader-dark.png",
-      "bytes": 150023,
-      "sha256": "e4e1eae6f07f4eadc3b55bd7c6cf9d17c21bd209eb026db5a2ffbc6239ed160c"
+      "bytes": 873100,
+      "sha256": "12498a825ccaed9a37207e958d9f47a49c7a4926eb6b1a7c2dbb2183f9c6b5ad"
     },
     {
       "path": "docs/images/mobile-1.0.2/reader-light.png",
-      "bytes": 186428,
-      "sha256": "539ab9f77c48dab1d98156a47928137f27781d9fe81746260c04d140549f6680"
+      "bytes": 1139348,
+      "sha256": "f57a8c8cb05e48fae5d140b8228e400a042a4a0f51f28755b8e71ee14a09d797"
     },
     {
       "path": "docs/mobile-reader-guide.md",
-      "bytes": 9401,
-      "sha256": "2e938015167482807d361fce417aec703285d3929d86ef985d26cf232d8ecf7e"
+      "bytes": 9663,
+      "sha256": "f2897531032ab4be34a75efe07781947571c228b44e4f8726c9ee1b033f157bd"
     },
     {
       "path": "docs/release-validation-1.0.1.md",
@@ -4647,8 +4707,8 @@
     },
     {
       "path": "docs/releases/1.0.2-4.md",
-      "bytes": 6076,
-      "sha256": "5c7a6b725c638d9ee2a29d60255e658a98c7486f02fcf2ad0fd767280d93dec5"
+      "bytes": 7117,
+      "sha256": "a926675691ba8b9aaf65e40d1d176b02f501f2baa3f04cdd186c282bc4c839ed"
     },
     {
       "path": "docs/windows-build-repair-2026-09-06.md",
@@ -4662,13 +4722,13 @@
     },
     {
       "path": "PUBLIC_RELEASE_MANIFEST.md",
-      "bytes": 4676,
-      "sha256": "5bab48273edd74ee50db72d62e9ae014e562a673a21a715d5564d3f1ea243a2b"
+      "bytes": 4691,
+      "sha256": "499cb07a0dfe2894d60a8b061985dd2368aac813c69aa5659fb8e36ab73fb3ec"
     },
     {
       "path": "README.md",
-      "bytes": 18453,
-      "sha256": "c1c097cb17c47539f21e36876cdc5e5a6da4aedce9565b65bf22bc118cd9a515"
+      "bytes": 19341,
+      "sha256": "39df9cba28ea367104836e209f09f9e1d5f2a60a799d0326039372de07cd9daa"
     },
     {
       "path": "scripts/analyze_dart.ps1",
@@ -4682,8 +4742,8 @@
     },
     {
       "path": "scripts/export_public_source.ps1",
-      "bytes": 11698,
-      "sha256": "57ab1777ef45c932f10e66958665f0e14dbbefb3de7c17bf68d30fea84ec5328"
+      "bytes": 11799,
+      "sha256": "02d66e6b14087a01f54d7a63b8263a8deb09de6fb50dbf09872723f515878992"
     },
     {
       "path": "scripts/public_core_build.ps1",

@@ -51,6 +51,17 @@ Android 正式 APK 使用长期发行密钥签名。具体手机、标签、打�
 
 每一实物卷固定 **1000g**；“415g”表示一卷当前还剩 415g。余量严格大于 **30g** 才能继续使用或重新装入，低余量记录保留供核对。完整操作步骤、支持的卡型和常见问题见 [手机读卡与入库图文指南](docs/mobile-reader-guide.md)。
 
+## 为日常操作设计的导航图标
+
+标签读写、耗材库存、打印提醒和我的使用一组专属 SVG：标签与单道感应弧、并列耗材卷、打印任务卡片与提示点、无框头像。四个图标统一细线、比例和留白，不叠加厚外框与复杂徽记；图标选中时仅变色，不增粗或填充。颜色随浅色、深色主题自动变化，导航名称和点击区域保持不变。
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/mobile-1.0.2/navigation-light.png" alt="浅色主题的四个定制 SVG 导航图标，展示未选中和选中状态" width="440"><br>浅色 · 专属导航图标</td>
+    <td align="center"><img src="docs/images/mobile-1.0.2/navigation-dark.png" alt="深色主题的四个定制 SVG 导航图标，展示未选中和选中状态" width="440"><br>深色 · 专属导航图标</td>
+  </tr>
+</table>
+
 ## 桌面工作台
 
 ![sohun 个人工作台](官网网页制作/public/assets/personal-workspace-v4.png)

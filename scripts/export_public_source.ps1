@@ -47,6 +47,7 @@ $sourceFiles = @(
     'docs/images/mobile-1.0.2/reader-light.png', 'docs/images/mobile-1.0.2/reader-dark.png',
     'docs/images/mobile-1.0.2/read-dialog-light.png', 'docs/images/mobile-1.0.2/new-card-dialog-dark.png',
     'docs/images/mobile-1.0.2/inventory-light.png', 'docs/images/mobile-1.0.2/inventory-dark.png',
+    'docs/images/mobile-1.0.2/navigation-light.png', 'docs/images/mobile-1.0.2/navigation-dark.png',
     '电脑软件/docs/手机RFID模板使用说明.md', '电脑软件/docs/NTAG213设备工作台使用说明.md'
 )
 $excludedTrees = @(

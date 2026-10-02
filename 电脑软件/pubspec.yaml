@@ -91,6 +91,7 @@ flutter:
   assets:
     - assets/images/printers/
     - assets/images/icons/
+    - assets/images/icons/mobile_nav/
     - assets/images/branding/
     - assets/images/branding/themes/
     - assets/images/brands/

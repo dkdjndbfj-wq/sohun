@@ -572,6 +572,7 @@ void main() {
             tester,
             mode: mode,
             items: _catalogPreviewItems,
+            previewNfcReady: true,
           );
           await _settleImages(tester);
           await expectLater(
@@ -689,6 +690,7 @@ Future<List<String>> _mountApp(
   Size size = const Size(390, 844),
   ThemeMode mode = ThemeMode.system,
   List<Consumable> items = const [],
+  bool previewNfcReady = false,
 }) async {
   SharedPreferences.setMockInitialValues({});
   await tester.binding.setSurfaceSize(size);
@@ -710,6 +712,9 @@ Future<List<String>> _mountApp(
     call,
   ) async {
     calls.add(call.method);
+    if (previewNfcReady && call.method == 'getStatus') {
+      return {'available': true, 'enabled': true};
+    }
     return null;
   });
   addTearDown(

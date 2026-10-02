@@ -17,6 +17,7 @@ import '../features/updates/app_update_gate.dart';
 import 'mobile_account_page.dart';
 import 'mobile_auth_page.dart';
 import 'mobile_brand_launch.dart';
+import 'mobile_navigation_icon.dart';
 import 'mobile_visual_theme.dart';
 import '../providers/app_auth_provider.dart';
 import '../providers/database_provider.dart';
@@ -554,23 +555,35 @@ class _MobileAppShellState extends ConsumerState<_MobileAppShell> {
             onDestinationSelected: _selectPage,
             destinations: const [
               NavigationDestination(
-                icon: Icon(Icons.nfc_outlined),
-                selectedIcon: Icon(Icons.nfc_rounded),
+                icon: MobileNavigationIcon(MobileNavigationSymbol.tags),
+                selectedIcon: MobileNavigationIcon(
+                  MobileNavigationSymbol.tags,
+                  selected: true,
+                ),
                 label: '标签读写',
               ),
               NavigationDestination(
-                icon: Icon(Icons.inventory_2_outlined),
-                selectedIcon: Icon(Icons.inventory_2_rounded),
+                icon: MobileNavigationIcon(MobileNavigationSymbol.inventory),
+                selectedIcon: MobileNavigationIcon(
+                  MobileNavigationSymbol.inventory,
+                  selected: true,
+                ),
                 label: '耗材库存',
               ),
               NavigationDestination(
-                icon: Icon(Icons.notifications_none_rounded),
-                selectedIcon: Icon(Icons.notifications_rounded),
+                icon: MobileNavigationIcon(MobileNavigationSymbol.printAlerts),
+                selectedIcon: MobileNavigationIcon(
+                  MobileNavigationSymbol.printAlerts,
+                  selected: true,
+                ),
                 label: '打印提醒',
               ),
               NavigationDestination(
-                icon: Icon(Icons.person_outline_rounded),
-                selectedIcon: Icon(Icons.person_rounded),
+                icon: MobileNavigationIcon(MobileNavigationSymbol.account),
+                selectedIcon: MobileNavigationIcon(
+                  MobileNavigationSymbol.account,
+                  selected: true,
+                ),
                 label: '我的',
               ),
             ],
