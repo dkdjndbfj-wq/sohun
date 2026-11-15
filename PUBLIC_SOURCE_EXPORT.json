@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-11-15T04:54:03.6479612+00:00",
+  "createdAt": "2026-11-15T05:22:22.9638351+00:00",
   "purpose": "Public source export; not a signed binary or third-party release clearance.",
   "coreAssets": true,
   "omittedAssetTrees": [
@@ -57,8 +57,8 @@
     },
     {
       "path": ".gitignore",
-      "bytes": 3633,
-      "sha256": "49eb54886b709207e855d288e07dae3fe2d2fe48afb27f05472ae695c5b0ac49"
+      "bytes": 3899,
+      "sha256": "387f0d03ec4f9ed56a8f93c818adec9b0a270c82eb51be356492ffdb8f01ae27"
     },
     {
       "path": "电脑软件/.gitignore",
@@ -3862,8 +3862,8 @@
     },
     {
       "path": "电脑软件/test/database_all_versions_migration_test.dart",
-      "bytes": 8881,
-      "sha256": "080665affb3c059721388cde1f92cbaf5597fde515127f2515fd9358c3d90239"
+      "bytes": 9340,
+      "sha256": "e59a3a509d98fc87d7ad58f01d2ca8b4e3d3c9ef6ba584ea94fd732a99d24b7d"
     },
     {
       "path": "电脑软件/test/database_test.dart",

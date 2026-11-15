@@ -135,3 +135,9 @@
 !/电脑软件/docs/NTAG213设备工作台使用说明.md
 !/电脑软件/scripts/sqlite_hook_asset.ps1
 !/电脑软件/scripts/test_sqlite_hook_asset.ps1
+
+# Public end-user guides and required SQLite build helpers.
+!/电脑软件/docs/手机RFID模板使用说明.md
+!/电脑软件/docs/NTAG213设备工作台使用说明.md
+!/电脑软件/scripts/sqlite_hook_asset.ps1
+!/电脑软件/scripts/test_sqlite_hook_asset.ps1
