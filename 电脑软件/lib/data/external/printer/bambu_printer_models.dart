@@ -815,6 +815,12 @@ class BambuPrinterStatus {
   /// 是否正在升级中
   bool get isUpgrading => upgradeStatus == 'UPGRADING';
 
+  /// Upgrade results persist across later incremental status reports. Only an
+  /// explicit success releases this gate; failed or unknown results still need
+  /// attention. Connection, freshness and print-state checks remain separate.
+  bool get hasBlockingUpgradeStatus =>
+      upgradeStatus?.isNotEmpty == true && upgradeStatus != 'UPGRADE_SUCCESS';
+
   static int? _parseInt(dynamic v) {
     if (v == null) return null;
     if (v is int) return v;

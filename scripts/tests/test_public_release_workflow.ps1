@@ -181,13 +181,13 @@ try {
     Check-Notes '![Local](file:///private.png)' 'repository-relative paths or HTTPS'
     Check-Notes '![Remote](https://example.invalid/preview.png)'
 
-    # Use the actual illustrated notes, including all eight pinned HTTPS images,
+    # Keep the historical Android illustration fixture pinned to its release.
     # to catch Chinese corruption or URL changes in the child-shell boundary.
     $pubspec = [IO.File]::ReadAllText((Join-Path $repoRoot '电脑软件/pubspec.yaml'))
     $versionMatch = [regex]::Match($pubspec, '(?m)^version:\s*(?<version>\d+\.\d+\.\d+\+\d+)\s*$')
     if (-not $versionMatch.Success) { throw 'The current release version was not found in pubspec.' }
-    $currentVersion = $versionMatch.Groups['version'].Value
-    $currentNotesRelative = 'docs/releases/' + $currentVersion.Replace('+', '-') + '.md'
+    $currentVersion = '1.0.2+7'
+    $currentNotesRelative = 'docs/releases/1.0.2-7.md'
     $actualNotes = [IO.File]::ReadAllText((Join-Path $repoRoot $currentNotesRelative))
     $env:GITHUB_REF_NAME = 'v' + $currentVersion
     $env:GITHUB_REPOSITORY = 'dkdjndbfj-wq/sohun'
@@ -204,6 +204,21 @@ try {
         @($expectedImages | Where-Object { ($expectedImagePrefix + $_) -cnotin $urls }).Count -gt 0 -or
         -not $rendered.Contains('本次发布安装包：Android。完整文件哈希与签名状态见附件')) {
         throw 'Actual Chinese release notes and eight exact-tag preview URLs must survive UTF-8 script execution.'
+    }
+    $passed++
+
+    # Current release notes may have different platforms and preview layouts.
+    $currentVersion = $versionMatch.Groups['version'].Value
+    $currentNotesRelative = 'docs/releases/' + $currentVersion.Replace('+', '-') + '.md'
+    $actualNotes = [IO.File]::ReadAllText((Join-Path $repoRoot $currentNotesRelative))
+    $env:GITHUB_REF_NAME = 'v' + $currentVersion
+    $env:SOHUN_TARGET = 'All'
+    $notesPath = Join-Path $notesRoot $currentNotesRelative
+    Check-Notes $actualNotes
+    $rendered = Read-RenderedNotes
+    if (-not $rendered.StartsWith($actualNotes, [StringComparison]::Ordinal) -or
+        -not $rendered.Contains('本次发布安装包：Android / Windows。完整文件哈希与签名状态见附件')) {
+        throw 'Current release notes must preserve the exact UTF-8 content and selected platforms.'
     }
     $passed++
 

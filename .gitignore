@@ -111,6 +111,12 @@
 # Never commit local generated bundles or duplicate source archives
 /sohun-client-*.zip
 
+# Generated Mifu corpora, experimental bundles and machine-specific setup reports.
+/output/mifu-training/
+/output/mifu-training-preparation/
+/output/mifu-remote/
+/output/mifu-native-*
+
 # Reverse-engineering and local token tooling are never public source.
 # Keep these rules scoped to their known private locations so required build
 # helpers such as scripts/sqlite_hook_asset.ps1 remain publishable.

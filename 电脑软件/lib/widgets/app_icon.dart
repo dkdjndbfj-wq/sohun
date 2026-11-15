@@ -9,6 +9,7 @@ enum AppIconData {
   chart,
   history,
   printer,
+  cluster,
   firmware,
   cost,
   restock,

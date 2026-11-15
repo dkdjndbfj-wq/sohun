@@ -1,0 +1,1076 @@
+{
+  "schemaVersion": 1,
+  "modelName": "Mifu",
+  "currentContract": {
+    "scope": "single_plate_choice",
+    "maxCandidates": 16,
+    "objective": "minimize_completion_and_changeover"
+  },
+  "tracks": [
+    {
+      "id": "T01",
+      "name": "运行与训练管线实验",
+      "stage": "pipeline",
+      "capability": "current_input",
+      "dataNeeded": [
+        "明确标记 synthetic_pipeline 的兼容性样本",
+        "固定基础权重、SDK、依赖版本与文件哈希",
+        "独立实验输出目录"
+      ],
+      "acceptance": [
+        "验证加载、预测、训练前向/反向和产物重载，不把通过等同于领域效果",
+        "实验产物不得生成正式部署清单或冒充真实复核标签",
+        "记录实际设备、显存、耗时和输入是否截断"
+      ]
+    },
+    {
+      "id": "T02",
+      "name": "现有特征下的单盘候选选择",
+      "stage": "domain",
+      "capability": "current_input",
+      "dataNeeded": [
+        "决策当时已知的剩余盘次、估时、估重、候选队列、可排盘次和实际材料余量",
+        "真实选择及独立复核，或有显式假设和确定目标的合成实验",
+        "未知可用时间与余量必须保留未知"
+      ],
+      "acceptance": [
+        "只比较已通过业务准入的2至16个候选，不学习维修解锁或实际下发",
+        "当前请求缺少决策时钟，不能仅凭due_at学习真实剩余交期",
+        "比较固定快照和目标上的候选选择，合成成本改善不得宣称真实产能改善"
+      ]
+    },
+    {
+      "id": "T03",
+      "name": "换料成本、交期与质量取舍",
+      "stage": "domain",
+      "capability": "future_input",
+      "dataNeeded": [
+        "版本化目标与决策时刻，以及当时已知的剩余交期",
+        "顺序相关换料换色、清洗、校准、换板及人员准备时间",
+        "同类质量证据、覆盖范围、来源时间和未知标记"
+      ],
+      "acceptance": [
+        "先升级实际特征采集及模型schema，不能用现有固定完成时间/换料目标冒充任意目标优化",
+        "质量、时间与准备成本冲突时保留多方案可接受或无法判断标签",
+        "不得将候选选择概率解释为质量概率、设备分或绝对适配分"
+      ]
+    },
+    {
+      "id": "T04",
+      "name": "长期可靠性与质量证据及辅助预测",
+      "stage": "future",
+      "capability": "future_input",
+      "dataNeeded": [
+        "实际尝试、运行小时暴露、技术终局、质检与失败归因",
+        "组件阶段、修后观察、抽检方法、实测数量与覆盖",
+        "可核对的历史数据及条件分层"
+      ],
+      "acceptance": [
+        "先建立正确统计口径和不确定性，样本不足不生成满分或伪概率",
+        "辅助预测须有独立标签、校准和时间外评估，不能把choice概率乘100",
+        "主动取消、正常保养和未知结果不得当成机械失败或质量成功"
+      ]
+    },
+    {
+      "id": "T05",
+      "name": "多盘依赖与共享资源规划",
+      "stage": "future",
+      "capability": "future_input",
+      "dataNeeded": [
+        "任务/包/盘/盘次/尝试及订单版本的完整关联",
+        "首件放行、依赖、材料预留、设备及人员/维修/共享设施日历",
+        "逐步更新的计划快照、冻结盘与已提交占用"
+      ],
+      "acceptance": [
+        "每次规划后更新设备时间线和资源预留，不能重复使用同一空闲快照",
+        "依赖、互斥、容量和数量守恒由调度器保证，choice只可为合格候选提供偏好",
+        "评价整单完工、迟交、浪费和计划抖动，不能用独立单盘准确率代替"
+      ]
+    },
+    {
+      "id": "T06",
+      "name": "稀缺能力保护与等待公平性",
+      "stage": "domain",
+      "capability": "future_input",
+      "dataNeeded": [
+        "任务等待时长、优先级及版本化公平策略",
+        "稀缺设备能力和其他未完成需求摘要",
+        "按真实工时计算的负载及受保护资源窗口"
+      ],
+      "acceptance": [
+        "在明确目标和约束内比较方案，禁止无限饿死老任务",
+        "不把维修机加入均衡，不以任务数量平均替代工时均衡",
+        "单盘最早完成不自动等于整单或全局最优"
+      ]
+    },
+    {
+      "id": "T07",
+      "name": "硬准入与业务不变量",
+      "stage": "domain",
+      "capability": "non_model",
+      "dataNeeded": [
+        "权限、机型喷嘴材料兼容、维修锁及现场确认的权威事实",
+        "卷身份、余量、需求缓冲、预留、状态版本和新鲜度",
+        "每条不变量的正例、反例、边界例及冲突例"
+      ],
+      "acceptance": [
+        "所有硬准入都必须由软件检查，模型分数与建议不可覆盖",
+        "没有安全候选时不调用choice模型制造一个赢家",
+        "这些是业务与故障注入测试，不声称已通过模型训练而获得保证"
+      ]
+    },
+    {
+      "id": "T08",
+      "name": "执行一致性、服务故障与恢复",
+      "stage": "domain",
+      "capability": "non_model",
+      "dataNeeded": [
+        "执行权代次、持久化发送意图、回执、运行证据与幂等键",
+        "请求/盘/候选/账号/订单/模型版本及响应时序",
+        "断连、重启、写满、回滚及资源不足的故障注入轨迹"
+      ],
+      "acceptance": [
+        "不重复下发、扣料或释放未知执行状态的占用",
+        "迟到回包不能污染新选择，模型失败不取消已运行打印",
+        "版本切换和资源不足不得造成半加载或伪造在线状态"
+      ]
+    },
+    {
+      "id": "T09",
+      "name": "数据复核、时间与关联隔离",
+      "stage": "domain",
+      "capability": "non_model",
+      "dataNeeded": [
+        "决策时刻、事实观测时刻和系统收到时刻",
+        "任务、近重复文件、维修事件、生产批次及共同原因分组",
+        "可追溯标签来源、复核状态、撤销修订、结果成熟窗口和数据版本"
+      ],
+      "acceptance": [
+        "训练特征仅使用决策时已知信息，未来耗时、质量和根因只能作结果/标签",
+        "训练、校准、最终评估隔离；任务分组和完全相同JSON去重还不够",
+        "不把合成数据包装成真实expert_review；不把点击接受自动当最优标签",
+        "当前唯一selectedCandidateId格式不支持平局/多方案均可/无法判断，必须保留待复核而非强行选一台"
+      ]
+    },
+    {
+      "id": "T10",
+      "name": "候选鲁棒性、校准与覆盖",
+      "stage": "domain",
+      "capability": "current_input",
+      "dataNeeded": [
+        "候选顺序、数量、冗余候选、缺失值和极端队列的扰动集合",
+        "各场景、设备/材料子群的独立评估与覆盖数量",
+        "独立校准数据和不参与反复调参的最终评估集"
+      ],
+      "acceptance": [
+        "验证顺序扰动和候选映射，不跨候选集合拼接choice概率",
+        "超出16候选必须显式缩减或分组并报告覆盖，不宣称全局最优",
+        "低样本、新材料或高概率不自动代表可靠；需确认或拒绝采用的策略须单独验收"
+      ]
+    },
+    {
+      "id": "T11",
+      "name": "耗时、材料与恢复窗口预测",
+      "stage": "future",
+      "capability": "future_input",
+      "dataNeeded": [
+        "决策时估计与实际尝试耗时、实际耗材和维护阶段耗时",
+        "估计来源、版本、条件特征、残差及关联延误事件",
+        "经验证的预测区间与明确缓冲覆盖范围"
+      ],
+      "acceptance": [
+        "先报告误差和覆盖，再考虑独立预测头或分位模型",
+        "预测不能降低材料最低缓冲或放松人员/维护硬边界",
+        "缺乏可靠上界时不承诺准时、不将未知成本当零"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "S01",
+      "title": "高分设备处于维修锁定",
+      "routes": [
+        "hard_gate"
+      ],
+      "trackIds": [
+        "T07"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "当前维修锁、作用范围与版本"
+      ],
+      "checks": [
+        "高分和模型偏好均不能放行维修锁定设备"
+      ]
+    },
+    {
+      "id": "S02",
+      "title": "故障提示消失或已读但维修未验收",
+      "routes": [
+        "hard_gate",
+        "system_integration"
+      ],
+      "trackIds": [
+        "T07",
+        "T08"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "告警生命周期、维修验收状态及事件关联"
+      ],
+      "checks": [
+        "已读或告警消失不释放维修锁"
+      ]
+    },
+    {
+      "id": "S03",
+      "title": "旧恢复事件晚于新故障到达",
+      "routes": [
+        "hard_gate",
+        "system_integration"
+      ],
+      "trackIds": [
+        "T07",
+        "T08"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "事件版本、观测时间、收到时间和设备映射"
+      ],
+      "checks": [
+        "旧恢复事件不能覆盖新故障，冲突进入待确认"
+      ]
+    },
+    {
+      "id": "S04",
+      "title": "主动保养与正常换件",
+      "routes": [
+        "data_quality",
+        "auxiliary_prediction"
+      ],
+      "trackIds": [
+        "T04",
+        "T09"
+      ],
+      "capability": "future_input",
+      "evidenceNeeded": [
+        "维护类型、执行结果、故障归因和组件阶段"
+      ],
+      "checks": [
+        "正常维护不能被计作多次机械失败"
+      ]
+    },
+    {
+      "id": "S05",
+      "title": "同故障重复上报与真实复发",
+      "routes": [
+        "hard_gate",
+        "data_quality"
+      ],
+      "trackIds": [
+        "T07",
+        "T09"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "事件去重标识、活动区间和复发关联"
+      ],
+      "checks": [
+        "重复告警计为一个事件，复发另行记录而非简单累计"
+      ]
+    },
+    {
+      "id": "S06",
+      "title": "修复验收、受限观察与复发",
+      "routes": [
+        "hard_gate",
+        "data_quality"
+      ],
+      "trackIds": [
+        "T07",
+        "T04"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "验收证据、受限任务条件及组件阶段"
+      ],
+      "checks": [
+        "验收失败不解锁，观察期复发重新限制；保留历史"
+      ]
+    },
+    {
+      "id": "S07",
+      "title": "局部AMS或供料路径失效",
+      "routes": [
+        "hard_gate"
+      ],
+      "trackIds": [
+        "T07"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "失效组件范围、任务所需路径及已验证降级能力"
+      ],
+      "checks": [
+        "仅允许不依赖受限路径且经验证可行的任务"
+      ]
+    },
+    {
+      "id": "S08",
+      "title": "新设备、少样本与稳定历史",
+      "routes": [
+        "data_quality",
+        "auxiliary_prediction",
+        "robustness"
+      ],
+      "trackIds": [
+        "T04",
+        "T10"
+      ],
+      "capability": "future_input",
+      "evidenceNeeded": [
+        "有效样本量、暴露、条件分层、覆盖和先验来源"
+      ],
+      "checks": [
+        "零样本或一次成功不制造满分排名，证据不足须显式标记"
+      ]
+    },
+    {
+      "id": "S09",
+      "title": "未完成、主动取消与受潮失败",
+      "routes": [
+        "data_quality",
+        "auxiliary_prediction"
+      ],
+      "trackIds": [
+        "T04",
+        "T09"
+      ],
+      "capability": "future_input",
+      "evidenceNeeded": [
+        "实际终局、取消原因、材料归因和结果成熟状态"
+      ],
+      "checks": [
+        "未观测结果不当成功，非机械原因不误扣机械可靠性"
+      ]
+    },
+    {
+      "id": "S10",
+      "title": "技术完成与质检结果分离",
+      "routes": [
+        "data_quality",
+        "hard_gate"
+      ],
+      "trackIds": [
+        "T04",
+        "T05",
+        "T09"
+      ],
+      "capability": "future_input",
+      "evidenceNeeded": [
+        "技术终局、质检、合格件数和验收覆盖"
+      ],
+      "checks": [
+        "技术完成不能替代质量验收或整单交付，部分不合格正确计数"
+      ]
+    },
+    {
+      "id": "S11",
+      "title": "高使用量设备故障次数较多",
+      "routes": [
+        "data_quality",
+        "auxiliary_prediction"
+      ],
+      "trackIds": [
+        "T04"
+      ],
+      "capability": "future_input",
+      "evidenceNeeded": [
+        "运行小时、实际尝试数及同类任务条件"
+      ],
+      "checks": [
+        "按暴露和同类条件比较，不用累计故障数简单排名"
+      ]
+    },
+    {
+      "id": "S12",
+      "title": "多盘、多份、首件与返工",
+      "routes": [
+        "choice_training",
+        "hard_gate",
+        "system_integration"
+      ],
+      "trackIds": [
+        "T05",
+        "T07"
+      ],
+      "capability": "future_input",
+      "evidenceNeeded": [
+        "任务/包/盘/盘次/尝试关系、依赖、首件放行和需求"
+      ],
+      "checks": [
+        "逐盘更新资源，数量与依赖守恒；评价整单结果而非各盘孤立最优"
+      ]
+    },
+    {
+      "id": "S13",
+      "title": "多工具或多盘共用实物卷",
+      "routes": [
+        "hard_gate",
+        "system_integration"
+      ],
+      "trackIds": [
+        "T07",
+        "T05"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "实物卷/槽关系、合并需求、在途和待执行预留"
+      ],
+      "checks": [
+        "合并同一物理资源需求，不能重复占用同一余量"
+      ]
+    },
+    {
+      "id": "S14",
+      "title": "固定单卷容量与余量边界",
+      "routes": [
+        "hard_gate"
+      ],
+      "trackIds": [
+        "T07"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "实物卷容量、当前余量、既有缓冲和异常账本状态"
+      ],
+      "checks": [
+        "每实物卷1000g，开始使用须严格大于30g；小于等于30g不自动清零，异常余额不静默截断"
+      ]
+    },
+    {
+      "id": "S15",
+      "title": "数量或材料映射在确认时改变",
+      "routes": [
+        "hard_gate",
+        "system_integration"
+      ],
+      "trackIds": [
+        "T07",
+        "T08"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "最终选择、资源映射、当前容量及并发版本"
+      ],
+      "checks": [
+        "最新检查及原子提交阻止超量，不沿用旧显示上限"
+      ]
+    },
+    {
+      "id": "S16",
+      "title": "待取件、无人时段与计划维护",
+      "routes": [
+        "choice_training",
+        "hard_gate",
+        "auxiliary_prediction"
+      ],
+      "trackIds": [
+        "T03",
+        "T05",
+        "T11"
+      ],
+      "capability": "future_input",
+      "evidenceNeeded": [
+        "决策时钟、取件/人员窗口、维护窗口及估计区间"
+      ],
+      "checks": [
+        "不虚构立即可用，不跨硬窗口；当前仅due_at缺决策时钟不足以支持交期学习"
+      ]
+    },
+    {
+      "id": "S17",
+      "title": "离线、过期、时钟异常或回执不明",
+      "routes": [
+        "hard_gate",
+        "system_integration"
+      ],
+      "trackIds": [
+        "T07",
+        "T08"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "遥测时间、新鲜度、执行身份和发送状态"
+      ],
+      "checks": [
+        "不当成空闲，不盲重发，不重复扣料"
+      ]
+    },
+    {
+      "id": "S18",
+      "title": "并发抢占、计划到期与重启",
+      "routes": [
+        "hard_gate",
+        "system_integration"
+      ],
+      "trackIds": [
+        "T07",
+        "T08"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "事务版本、幂等键、提交状态和在途预留"
+      ],
+      "checks": [
+        "并发不超占，已提交或未知执行的预留不因TTL释放"
+      ]
+    },
+    {
+      "id": "S19",
+      "title": "文件、喷嘴、材料或权限变化",
+      "routes": [
+        "hard_gate",
+        "system_integration"
+      ],
+      "trackIds": [
+        "T07",
+        "T08"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "确认期间的文件哈希、配置、权限及材料版本"
+      ],
+      "checks": [
+        "变化使旧准入失效，发送前必须重新核对"
+      ]
+    },
+    {
+      "id": "S20",
+      "title": "候选顺序、数量及大于16台",
+      "routes": [
+        "choice_training",
+        "robustness"
+      ],
+      "trackIds": [
+        "T02",
+        "T10"
+      ],
+      "capability": "current_input",
+      "evidenceNeeded": [
+        "同一快照的候选置换与数量扰动、筛选覆盖记录"
+      ],
+      "checks": [
+        "映射正确且报告顺序敏感性，不拼接分组概率或声称全局最优"
+      ]
+    },
+    {
+      "id": "S21",
+      "title": "稀缺设备保护与任务饥饿",
+      "routes": [
+        "choice_training",
+        "hard_gate"
+      ],
+      "trackIds": [
+        "T05",
+        "T06"
+      ],
+      "capability": "future_input",
+      "evidenceNeeded": [
+        "等待时长、优先级、全局需求、稀缺能力及公平策略"
+      ],
+      "checks": [
+        "可行方案保护稀缺能力并限制长期饥饿，维修机不参与均衡"
+      ]
+    },
+    {
+      "id": "S22",
+      "title": "新设备积累经验",
+      "routes": [
+        "hard_gate",
+        "data_quality"
+      ],
+      "trackIds": [
+        "T07",
+        "T09"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "验证任务授权、真实订单边界和选择来源"
+      ],
+      "checks": [
+        "只使用授权验证盘，不私自将生产订单作为随机探索"
+      ]
+    },
+    {
+      "id": "S23",
+      "title": "切换选择后的迟到推理或反馈",
+      "routes": [
+        "system_integration"
+      ],
+      "trackIds": [
+        "T08"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "请求、盘、候选、设备、账号和选择修订号"
+      ],
+      "checks": [
+        "旧回包不覆盖当前选择，也不错误标记新反馈已保存"
+      ]
+    },
+    {
+      "id": "S24",
+      "title": "模型离线、截断或非法输出",
+      "routes": [
+        "system_integration",
+        "robustness"
+      ],
+      "trackIds": [
+        "T01",
+        "T08",
+        "T10"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "实际服务状态、模型版本、截断信息和输出契约"
+      ],
+      "checks": [
+        "拒绝非法概率或不一致候选，不伪造建议，不干扰正常打印"
+      ]
+    },
+    {
+      "id": "S25",
+      "title": "重启、回滚与重新评分",
+      "routes": [
+        "system_integration",
+        "data_quality"
+      ],
+      "trackIds": [
+        "T08",
+        "T09"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "模型/评分版本、持久化占用与在途证据"
+      ],
+      "checks": [
+        "恢复先对账，不改写历史或擅自迁移在途盘"
+      ]
+    },
+    {
+      "id": "S26",
+      "title": "训练与评估关联泄漏",
+      "routes": [
+        "data_quality",
+        "robustness"
+      ],
+      "trackIds": [
+        "T09",
+        "T10"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "任务、近重复文件、维修事件、批次与共同原因分组"
+      ],
+      "checks": [
+        "训练、校准、最终评估按关联隔离，再验证时间外及子群覆盖"
+      ]
+    },
+    {
+      "id": "S27",
+      "title": "历史查询受限、缺遥测或未知成本",
+      "routes": [
+        "data_quality",
+        "auxiliary_prediction"
+      ],
+      "trackIds": [
+        "T04",
+        "T09",
+        "T11"
+      ],
+      "capability": "future_input",
+      "evidenceNeeded": [
+        "历史查询覆盖、新鲜度和各字段缺失状态"
+      ],
+      "checks": [
+        "缺失不是零故障、零成本或满分；不以UI最近记录冒充完整历史"
+      ]
+    },
+    {
+      "id": "S28",
+      "title": "账号、组织或设备身份映射冲突",
+      "routes": [
+        "hard_gate",
+        "data_quality"
+      ],
+      "trackIds": [
+        "T07",
+        "T09"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "权限范围、物理设备身份及历史映射"
+      ],
+      "checks": [
+        "不串用他方历史、维修锁、评分或耗材权限"
+      ]
+    },
+    {
+      "id": "S29",
+      "title": "外部同名作业被误认作本地完成",
+      "routes": [
+        "system_integration",
+        "data_quality"
+      ],
+      "trackIds": [
+        "T08",
+        "T09"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "运行身份、发送会话、时间和外部占用证据"
+      ],
+      "checks": [
+        "同名同文件不足以确认身份，未知关联不生成完成量或成功标签"
+      ]
+    },
+    {
+      "id": "S30",
+      "title": "多端接管与旧控制端恢复",
+      "routes": [
+        "hard_gate",
+        "system_integration"
+      ],
+      "trackIds": [
+        "T07",
+        "T08"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "有效控制代次、指定执行端和在途作业核对"
+      ],
+      "checks": [
+        "只允许有效执行权新下发，无共同协调不得自动多端接管"
+      ]
+    },
+    {
+      "id": "S31",
+      "title": "现场确认变化、卷转移与残件",
+      "routes": [
+        "hard_gate",
+        "system_integration"
+      ],
+      "trackIds": [
+        "T07",
+        "T08"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "清床/装板/装槽确认及其绑定版本、卷位置证据"
+      ],
+      "checks": [
+        "旧确认失效，扫码不等于装槽，同卷不复制余量，清床不替代质检"
+      ]
+    },
+    {
+      "id": "S32",
+      "title": "发送意图或回执边界崩溃",
+      "routes": [
+        "system_integration",
+        "hard_gate"
+      ],
+      "trackIds": [
+        "T08"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "持久化发送状态、执行证据和崩溃注入轨迹"
+      ],
+      "checks": [
+        "区分未发送与可能已发送，未知执行不盲重发或释放资源"
+      ]
+    },
+    {
+      "id": "S33",
+      "title": "订单改版、减量或交期变化",
+      "routes": [
+        "choice_training",
+        "hard_gate",
+        "data_quality"
+      ],
+      "trackIds": [
+        "T03",
+        "T05",
+        "T08"
+      ],
+      "capability": "future_input",
+      "evidenceNeeded": [
+        "订单/零件版本、决策时钟、旧版实物兼容审核和需求分配"
+      ],
+      "checks": [
+        "旧版不再新下发，审核后才抵扣新版需求，保留成本和多余件"
+      ]
+    },
+    {
+      "id": "S34",
+      "title": "运行中暂停撤单与旧恢复事件",
+      "routes": [
+        "hard_gate",
+        "system_integration"
+      ],
+      "trackIds": [
+        "T07",
+        "T08"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "订单版本、发送状态、运行证据与恢复事件版本"
+      ],
+      "checks": [
+        "阻止新下发但不擅自停止当前打印，旧恢复不能覆盖新暂停"
+      ]
+    },
+    {
+      "id": "S35",
+      "title": "共同原因多机失败与根因纠正",
+      "routes": [
+        "data_quality",
+        "hard_gate",
+        "auxiliary_prediction"
+      ],
+      "trackIds": [
+        "T04",
+        "T07",
+        "T09"
+      ],
+      "capability": "future_input",
+      "evidenceNeeded": [
+        "材料批次/区域/配置共同事件、隔离范围和复核根因"
+      ],
+      "checks": [
+        "不无限重试或全算机械故障；更正归因后修订未来标签并保留原判断"
+      ]
+    },
+    {
+      "id": "S36",
+      "title": "维修资源冲突与到货延迟",
+      "routes": [
+        "hard_gate",
+        "auxiliary_prediction",
+        "system_integration"
+      ],
+      "trackIds": [
+        "T05",
+        "T07",
+        "T11"
+      ],
+      "capability": "future_input",
+      "evidenceNeeded": [
+        "备件、维修人员、检测工具、到货证据和各阶段耗时"
+      ],
+      "checks": [
+        "资源不可双占，预计到货不能当验收完成；此项不是当前printer choice动作"
+      ]
+    },
+    {
+      "id": "S37",
+      "title": "抽检与批量放行的样本口径",
+      "routes": [
+        "data_quality",
+        "auxiliary_prediction"
+      ],
+      "trackIds": [
+        "T04",
+        "T09"
+      ],
+      "capability": "future_input",
+      "evidenceNeeded": [
+        "抽样方法、抽样原因、实测数、缺陷数和放行范围"
+      ],
+      "checks": [
+        "实测5件不能变成100个独立成功，风险抽检不与随机抽样直接混比"
+      ]
+    },
+    {
+      "id": "S38",
+      "title": "推荐集中与选择偏差",
+      "routes": [
+        "data_quality",
+        "robustness"
+      ],
+      "trackIds": [
+        "T04",
+        "T09",
+        "T10"
+      ],
+      "capability": "future_input",
+      "evidenceNeeded": [
+        "机会/展示/选择/开打/验收覆盖及策略来源"
+      ],
+      "checks": [
+        "未选不当失败，模型偏好概率不冒充行为采样概率，不虚报反事实收益"
+      ]
+    },
+    {
+      "id": "S39",
+      "title": "无可用资源、数据不足或求解超时",
+      "routes": [
+        "hard_gate",
+        "system_integration",
+        "robustness"
+      ],
+      "trackIds": [
+        "T05",
+        "T07",
+        "T08"
+      ],
+      "capability": "future_input",
+      "evidenceNeeded": [
+        "约束冲突、缺失字段、求解状态和被检查的候选范围"
+      ],
+      "checks": [
+        "分开报告不可行/数据不足/超时，无安全候选不强行choice，不放松硬门"
+      ]
+    },
+    {
+      "id": "S40",
+      "title": "速度质量冲突与分布外高概率",
+      "routes": [
+        "choice_training",
+        "robustness"
+      ],
+      "trackIds": [
+        "T03",
+        "T04",
+        "T10"
+      ],
+      "capability": "future_input",
+      "evidenceNeeded": [
+        "本次目标、可接受方案集合、训练覆盖与独立校准"
+      ],
+      "checks": [
+        "高概率不自动代表适用或成功，保留取舍/需确认，不强造唯一赢家"
+      ]
+    },
+    {
+      "id": "S41",
+      "title": "顺序准备成本与估计误差越界",
+      "routes": [
+        "choice_training",
+        "hard_gate",
+        "auxiliary_prediction"
+      ],
+      "trackIds": [
+        "T03",
+        "T05",
+        "T07",
+        "T11"
+      ],
+      "capability": "future_input",
+      "evidenceNeeded": [
+        "顺序相关换色成本、维护窗口、已确认需求上界和缓冲范围"
+      ],
+      "checks": [
+        "可信需求上界60g而可用50g时不能按均值40g放行，避免重复缓冲或擅自加速"
+      ]
+    },
+    {
+      "id": "S42",
+      "title": "共享烘干、后处理或场地容量",
+      "routes": [
+        "choice_training",
+        "hard_gate",
+        "system_integration"
+      ],
+      "trackIds": [
+        "T05",
+        "T07"
+      ],
+      "capability": "future_input",
+      "evidenceNeeded": [
+        "实际启用设施、容量、时段、依赖及可靠功耗资料"
+      ],
+      "checks": [
+        "资源与依赖由规划器约束，未知功耗不当零，不越权控制设施"
+      ]
+    },
+    {
+      "id": "S43",
+      "title": "归因修订、评分变更与迟到质检",
+      "routes": [
+        "data_quality",
+        "system_integration"
+      ],
+      "trackIds": [
+        "T04",
+        "T08",
+        "T09"
+      ],
+      "capability": "future_input",
+      "evidenceNeeded": [
+        "追加审计、撤销标签、评分版本及观测/接收时间"
+      ],
+      "checks": [
+        "重算受影响统计并分段，不回填改写决策时输入或无痕改分"
+      ]
+    },
+    {
+      "id": "S44",
+      "title": "未来事实与共同事件泄漏",
+      "routes": [
+        "data_quality",
+        "robustness"
+      ],
+      "trackIds": [
+        "T09",
+        "T10"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "决策时间边界、未来结果成熟窗口和关联分组"
+      ],
+      "checks": [
+        "未来质量/耗时/根因不得进入当时特征，评估不冒充因果收益"
+      ]
+    },
+    {
+      "id": "S45",
+      "title": "训练资源占满、加载失败或远程断连",
+      "routes": [
+        "system_integration",
+        "robustness"
+      ],
+      "trackIds": [
+        "T01",
+        "T08"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "实际GPU预算、训练/推理状态、版本哈希和加载健康"
+      ],
+      "checks": [
+        "不半切换或伪造在线，保留已提交队列和运行中任务"
+      ]
+    },
+    {
+      "id": "S46",
+      "title": "存储不可写或从旧备份恢复",
+      "routes": [
+        "hard_gate",
+        "system_integration"
+      ],
+      "trackIds": [
+        "T07",
+        "T08"
+      ],
+      "capability": "non_model",
+      "evidenceNeeded": [
+        "持久化能力、备份代次、执行权及恢复对账证据"
+      ],
+      "checks": [
+        "没有持久化意图不发送新任务，不重放旧命令或恢复错误占用"
+      ]
+    }
+  ]
+}

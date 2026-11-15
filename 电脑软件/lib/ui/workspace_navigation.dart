@@ -1,12 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// One-shot navigation requests used by compact surfaces such as the tray.
-final workspaceNavigationRequestProvider =
-    StateProvider<String?>((ref) => null);
+final workspaceNavigationRequestProvider = StateProvider<String?>(
+  (ref) => null,
+);
 
 abstract final class WorkspacePageIds {
   static const dashboard = 'dashboard';
   static const printers = 'printers';
+  static const cluster = 'cluster';
   static const inventory = 'inventory';
   static const cost = 'cost';
   static const restock = 'restock';

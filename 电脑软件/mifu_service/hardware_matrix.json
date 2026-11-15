@@ -1,0 +1,272 @@
+{
+  "schema_version": 1,
+  "snapshot_date": "2026-11-12",
+  "scope": "Bambu hardware represented by the application's local capability snapshot; not a certification of every real machine, firmware, accessory, nozzle or material combination.",
+  "default_unknown_behavior": "requires_verification",
+  "sources": {
+    "local_feed_presets": {"path": "电脑软件/lib/data/seed/printer_seed.dart", "sha256": "ceb2d31b9fe4ad8784ef76f7fcba8d8210bc808b44d51285f2aff011e2c5abc4", "lines": [20, 147, 193, 321]},
+    "local_model_normalizer": {"path": "电脑软件/lib/core/services/printer_model_normalizer.dart", "sha256": "b64002ab1dff0229cb232af60c0e71e420301d3991f1a043e85142740f560c2c"},
+    "local_feed_gate": {"path": "电脑软件/lib/data/external/printer/bambu_print_feed.dart", "sha256": "78cc9fae4cd3e0ab80013d9197e95e8addd47a2c3afe7ab0c028504b537a8ac6", "lines": [36, 226]},
+    "local_feed_routing": {"path": "电脑软件/lib/data/database/models/printer_feed_models.dart", "sha256": "93a9fdde9643994a615c6ba8a2bc78359f54b6f287172c8723b6438e49f2f05a"},
+    "local_telemetry_types": {"path": "电脑软件/lib/data/external/printer/bambu_printer_models.dart", "sha256": "e5599d1665fd7467657d072335f21530e7fca784b0dfe451592be631d88872b9"},
+    "local_nozzle_defaults": {"path": "电脑软件/lib/data/models/printer_preset.dart", "sha256": "3f8f7b6b62f5b55da889aac0b8f8613f38656b736fcbe90af14e84e382dcd304"},
+    "local_feed_documentation": {"path": "docs/bambu-feed-compatibility.md", "sha256": "0d26bd4fb38bb42752d7a29f91976a2ae8a37e79ad7ad73751abd586b248172a", "documented_at": "2026-09-05"},
+    "official_bambu_studio_catalog": {
+      "url": "https://raw.githubusercontent.com/bambulab/BambuStudio/master/resources/profiles/BBL.json",
+      "retrieved_at": "2026-11-12",
+      "sha256_utf8_content": "186273e2c526cc2afc88e3ea5be465e9db0f042621e86cca50a12f4b8df51605",
+      "model_count": 15,
+      "verification": "retrieved_live",
+      "revision": null,
+      "note": "Master is mutable. Content hashes identify the fetched text; no immutable Git revision was obtained. Per-model official profile hashes are recorded below."
+    },
+    "official_ams_guide": {"url": "https://wiki.bambulab.com/en/ams/manual/multi-model-AMS-compatibility-guide", "verification": "retrieved_live", "retrieved_at": "2026-11-12", "sha256_utf8_content": "ad444a38e1ea1e53173b36d01fb0cb3ae11f660b6bd8498c94656fec26068d00"},
+    "official_ams_notes": {"url": "https://wiki.bambulab.com/en/knowledge-sharing/notes-AMS", "verification": "retrieved_live", "retrieved_at": "2026-11-12", "sha256_utf8_content": "aacd9478509a17127e11f3939bcb460ece8d34251d6577c0a689f8d9447bb317"},
+    "official_tpu_for_ams": {"url": "https://us.store.bambulab.com/products/tpu-for-ams", "verification": "retrieved_live", "retrieved_at": "2026-11-12", "sha256_utf8_content": "dfcf6ee110957499fac9a11a33ff76c0085ec3b106f875399e38907b433b6c30"},
+    "official_tpu_95a_hf": {"url": "https://us.store.bambulab.com/products/tpu-95a-hf", "verification": "retrieved_live", "retrieved_at": "2026-11-12", "sha256_utf8_content": "5a2bd72da574cbe3a308317f585879292a41bde6d2aaa2a0f0a0831ed34e4100"},
+    "official_petg_cf": {"url": "https://us.store.bambulab.com/products/petg-cf", "verification": "retrieved_live", "retrieved_at": "2026-11-12", "sha256_utf8_content": "7485e7976713fe47e77b91d73cd91855ae60e8bb1fc6fe981e8b627f6c62f625"},
+    "official_ams_2_pro": {"url": "https://us.store.bambulab.com/products/ams-2-pro", "verification": "retrieved_live", "retrieved_at": "2026-11-12", "sha256_utf8_content": "5d0933f61395286ac8a3c51763a2a2832051abdecb1f053835f6036ba976364b"},
+    "official_ams_ht": {"url": "https://us.store.bambulab.com/products/ams-ht", "verification": "retrieved_live", "retrieved_at": "2026-11-12", "sha256_utf8_content": "8bc3b0d69e9ae03eabf105b3011c718e4200438b1ad50e37f478a1ed13ab407f"},
+    "official_ams_lite": {"url": "https://us.store.bambulab.com/products/ams-lite", "verification": "retrieved_live", "retrieved_at": "2026-11-12", "sha256_utf8_content": "a2830a3d8343c54581a2ee7e9e1fc6e79ddd801b457c5ef2b409055ae00107fb"},
+    "official_a2l_guide": {"url": "https://wiki.bambulab.com/en/a2l/manual/a2l-ams-connection-guide", "verification": "cited_by_local_documentation_current_refetch_failed"},
+    "official_fts_guide": {"url": "https://wiki.bambulab.com/en/general/manual/filament-track-switch", "verification": "cited_by_local_documentation_current_refetch_failed"}
+  },
+  "verification_policy": {
+    "feed_limits": "local_software_capability_snapshot_cross_checked_against_current_official_ams_guide",
+    "model_ids_and_nozzle_diameters": "official_bambu_studio_profiles_retrieved_live",
+    "real_hardware_validation": "not_performed_by_this_snapshot",
+    "installed_nozzle_source": "requires_explicit_configuration_or_observation",
+    "installed_ams_source": "requires_live_presence_type_route_and_slot_observation",
+    "synthetic_configuration_evidence": "A generator may explicitly declare an experimental configuration. Such declarations are synthetic assumptions, not measured user hardware or real outcome labels.",
+    "compatible_materials": "partial feeder-level and exact-product facts below; printer, nozzle, plate, spool geometry, dryness and route compatibility still require separate evidence",
+    "capacity_is_not_presence": true,
+    "unknown_is_not_zero_or_compatible": true,
+    "machine_family_is_not_dispatch_compatibility": true,
+    "pre_sliced_job_requires_exact_model_and_nozzle_diameter": true
+  },
+  "ams_types": [
+    {"id": "ams", "display_name": "AMS", "slots": 4, "quota_group": "four_slot", "firmware_type_codes": [1], "drying_capability": "not_inferred"},
+    {"id": "ams_2_pro", "display_name": "AMS 2 Pro", "slots": 4, "quota_group": "four_slot", "firmware_type_codes": [3], "drying_capability": "requires_power_and_device_state"},
+    {"id": "ams_ht", "display_name": "AMS HT", "slots": 1, "quota_group": "ht", "firmware_type_codes": [4], "drying_capability": "requires_power_and_device_state"},
+    {"id": "ams_lite", "display_name": "AMS lite", "slots": 4, "quota_group": "lite", "firmware_type_codes": [2, 5], "drying_capability": "not_inferred"}
+  ],
+  "nozzle_materials": {
+    "values": ["hardened_steel", "stainless_steel", "unknown"],
+    "default": "unknown",
+    "compatibility_by_model": null,
+    "verification": "requires_declared_configuration_and_separate_material_compatibility_evidence",
+    "note": "The local hardened_steel preset default is not proof of the installed nozzle. Official model-level diameter lists do not certify every diameter/material combination. Unknown material cannot automatically pass an abrasive-filament requirement."
+  },
+  "material_path_facts": {
+    "scope": "Feeder loading/unloading and specific branded product restrictions only. Passing these facts does not prove whole-printer compatibility or authorize automatic dispatch. Absence from a list means unverified unless an explicit exclusion applies.",
+    "product_identity_must_be_verified": true,
+    "generic_material_name_must_not_match_branded_product": true,
+    "feeder_profiles": [
+      {
+        "ams_type": "ams", "source_ids": ["official_ams_notes"],
+        "verification": "partial_official_guidance",
+        "automatic_feed_avoid_generic": ["TPU", "TPE", "absorbent_or_damp_PVA", "third_party_CF_GF_or_brittle_material_without_product_verification"],
+        "note": "Official optimized branded composite products may be exceptions. Do not apply a blanket CF/GF allowance or blanket CF/GF ban."
+      },
+      {
+        "ams_type": "ams_2_pro", "source_ids": ["official_ams_2_pro"],
+        "verification": "official_product_specifications",
+        "automatic_feed_material_families": ["PLA", "PETG", "ABS", "ASA", "PET", "PA", "PC", "PP", "POM", "HIPS"],
+        "automatic_feed_requires_dry": ["PVA", "BVOH"],
+        "automatic_feed_verified_branded_products": ["bambu_pla_cf", "bambu_paht_cf", "bambu_petg_cf", "bambu_support_for_pla_petg", "bambu_tpu_for_ams"],
+        "automatic_feed_exclusions": ["TPE", "generic_TPU", "damp_PVA", "damp_BVOH", "bambu_pet_cf", "bambu_tpu_95a", "other_CF_GF_without_product_exception"],
+        "spool_geometry_mm": {"width_min": 50, "width_max": 68, "diameter_min": 197, "diameter_max": 202},
+        "filament_diameter_mm": 1.75
+      },
+      {
+        "ams_type": "ams_ht", "source_ids": ["official_ams_ht"],
+        "verification": "official_product_specifications",
+        "automatic_feed_material_families": ["PLA", "PETG", "ABS", "ASA", "PET", "PA", "PC", "PP", "POM", "HIPS"],
+        "automatic_feed_requires_dry": ["PVA", "BVOH"],
+        "automatic_feed_verified_branded_products": ["bambu_pla_cf", "bambu_paht_cf", "bambu_petg_cf", "bambu_support_for_pla_petg", "bambu_tpu_for_ams"],
+        "manual_bypass_only": ["TPE", "generic_TPU", "bambu_pet_cf", "bambu_tpu_95a", "other_CF_GF_without_product_exception"],
+        "all_feed_exclusions": ["damp_PVA", "damp_BVOH"],
+        "manual_bypass_automatic_feed_or_retraction": false,
+        "manual_bypass_counts_as_automatic_ams_route": false,
+        "spool_geometry_mm": {"width_min": 50, "width_max": 68, "diameter_min": 197, "diameter_max": 202},
+        "filament_diameter_mm": 1.75,
+        "note": "Bypass requires manual loading into the extruder. Drying while printing is firmware/model/route dependent and must not be inferred from the presence of a dryer."
+      },
+      {
+        "ams_type": "ams_lite", "source_ids": ["official_ams_lite"],
+        "verification": "official_product_specifications",
+        "automatic_feed_material_families": ["PLA", "PETG"],
+        "automatic_feed_requires_dry": ["PVA"],
+        "automatic_feed_verified_branded_products": ["bambu_pla_cf", "bambu_support_for_pla_petg", "bambu_tpu_for_ams"],
+        "automatic_feed_exclusions": ["generic_TPU", "damp_PVA", "PLA_Glow", "PETG_CF", "ABS", "ASA", "PC", "Support_for_ABS_PA_PET", "PAHT_CF", "PET_CF", "PPA_CF", "PPS_CF", "PA_CF_GF", "third_party_fiber_reinforced"],
+        "automatic_feed_not_recommended": ["generic_PLA_glow_in_the_dark"],
+        "spool_geometry_mm": {"width_min": 40, "width_max": 68, "inner_diameter_min": 53, "inner_diameter_max": 58},
+        "filament_diameter_mm": 1.75
+      }
+    ],
+    "exact_products": [
+      {
+        "id": "bambu_tpu_for_ams", "brand": "Bambu Lab", "display_name": "TPU for AMS", "source_ids": ["official_tpu_for_ams"],
+        "verification": "official_product_specifications",
+        "automatic_ams_types": ["ams", "ams_2_pro", "ams_ht", "ams_lite"],
+        "excluded_nozzle_diameters_mm": [0.2], "dry_before_use": true,
+        "remaining_requirements": ["printer and hotend compatibility", "material is this exact formulation", "verified dry state", "supported spool geometry and route"]
+      },
+      {
+        "id": "bambu_tpu_95a_hf", "brand": "Bambu Lab", "display_name": "TPU 95A HF", "source_ids": ["official_tpu_95a_hf"],
+        "verification": "official_product_specifications",
+        "automatic_ams_types": [], "dry_before_use": true,
+        "excluded_nozzle_configurations": [{"material": "stainless_steel", "diameter_mm": 0.2}],
+        "external_or_manual_bypass_requires_separate_validation": true,
+        "note": "Do not confuse this product with TPU for AMS. An AMS HT bypass is manual external-style feeding, not automatic AMS feeding."
+      },
+      {
+        "id": "bambu_petg_cf", "brand": "Bambu Lab", "display_name": "PETG-CF", "source_ids": ["official_petg_cf"],
+        "verification": "official_product_specifications",
+        "automatic_ams_types": ["ams", "ams_2_pro", "ams_ht"], "excluded_ams_types": ["ams_lite"],
+        "excluded_nozzle_diameters_mm": [0.2], "required_nozzle_material": "hardened_steel",
+        "explicitly_documented_nozzle_diameters_mm": [0.4, 0.6], "recommended_nozzle_diameter_mm": 0.6,
+        "dry_before_use": true,
+        "remaining_requirements": ["printer and hotend compatibility", "material is this exact formulation", "verified installed hardened nozzle", "verified dry state", "supported spool geometry and route"]
+      }
+    ]
+  },
+  "route_policy": {
+    "unknown_ams_type": "requires_verification",
+    "unknown_ams_presence": "requires_verification",
+    "unknown_extruder_route": "block_automatic_dispatch",
+    "fts_shared_route": "block_automatic_dispatch_until_explicit_route_support",
+    "external_with_fts_present": "block_automatic_dispatch",
+    "dual_path_requires_selected_plate_tool_extruder_map": true,
+    "protocol_physical_extruders": {"left": 1, "right": 0},
+    "external_channels": {"left_dual_path": 254, "right_or_single_path": 255},
+    "same_path_ams_external_simultaneous": false,
+    "single_path_ams_external_simultaneous": false,
+    "multiple_tools_sharing_one_external_slot": "requires_reslicing_or_manual_workflow",
+    "hotend_change_count_is_not_feed_path_count": true,
+    "a2l_mixed_lite": {"physical_slots": 4, "maximum_simultaneous_lite_slots_with_regular_ams": 3, "surrendered_slot": "actual_route_dependent_not_fixed_slot_4", "protocol_unit_id": 16, "presence_bit": 12}
+  },
+  "connection_prerequisites": {
+    "x1_p1": {"verification": "local_documented_snapshot", "required": ["model-appropriate buffer or hub for installed AMS topology", "installed firmware supports the chosen AMS type", "drying power verified separately from filament feeding"]},
+    "p2s": {"verification": "local_documented_snapshot", "required": ["P2S-compatible buffer and connection topology", "installed firmware supports the chosen AMS type", "drying power verified separately from filament feeding"]},
+    "a1_family": {"verification": "local_documented_snapshot", "required": ["regular AMS requires the A1 AMS Hub", "regular AMS requires firmware 01.07.00.00 or later per local snapshot", "AMS lite is an alternative to regular AMS, not simultaneous"]},
+    "a2l": {"verification": "local_documented_snapshot", "required": ["regular AMS requires appropriate coupler or 4-to-1 PTFE adapter for topology", "mixed lite and regular AMS consume a real shared input route", "selected mixed lite slots and route must be verified"]},
+    "dual_path": {"verification": "local_documented_snapshot", "required": ["installed connection accessories verified", "live AMS-to-physical-extruder routing verified", "selected-plate tool-to-physical-extruder routing verified"]},
+    "h2s": {"verification": "local_documented_snapshot", "required": ["installed connection accessories verified", "installed firmware supports the chosen AMS type"]},
+    "h2c": {"verification": "local_documented_snapshot", "required": ["H2C-specific supported connection accessories verified", "hotend switching configuration verified separately from feed routing", "live AMS-to-physical-extruder and selected-plate routing verified"]}
+  },
+  "models": [
+    {
+      "id": "X1", "display_name": "Bambu Lab X1", "official_model_id": "BL-P002",
+      "verification": "software_supported_snapshot", "nozzle_diameters_mm": [0.2, 0.4, 0.6, 0.8],
+      "feed": {"allowed_ams_types": ["ams", "ams_2_pro", "ams_ht"], "four_slot_combined_max": 4, "ht_max": 4, "regular_units_max": 4, "lite_max": 0, "lite_can_mix_with_regular": false, "physical_external_paths": 1, "ams_external_coexist": false},
+      "prerequisite_ids": ["x1_p1"], "source_ids": ["local_feed_presets", "local_feed_documentation", "official_bambu_studio_catalog"],
+      "official_profile": {"path": "resources/profiles/BBL/machine/Bambu Lab X1.json", "sha256_utf8_content": "0650bc36c77091e382ed6c47cb367a1b669b7beb524355fdcd1a15c8bb915b09"}
+    },
+    {
+      "id": "X1C", "display_name": "Bambu Lab X1 Carbon", "official_model_id": "BL-P001",
+      "verification": "software_supported_snapshot", "nozzle_diameters_mm": [0.2, 0.4, 0.6, 0.8],
+      "feed": {"allowed_ams_types": ["ams", "ams_2_pro", "ams_ht"], "four_slot_combined_max": 4, "ht_max": 4, "regular_units_max": 4, "lite_max": 0, "lite_can_mix_with_regular": false, "physical_external_paths": 1, "ams_external_coexist": false},
+      "prerequisite_ids": ["x1_p1"], "source_ids": ["local_feed_presets", "local_feed_documentation", "official_bambu_studio_catalog"],
+      "official_profile": {"path": "resources/profiles/BBL/machine/Bambu Lab X1 Carbon.json", "sha256_utf8_content": "4c1c033e7e8bbafb391ce20eeec1c16857058b8e444c1b972b617a0242145175"}
+    },
+    {
+      "id": "X1E", "display_name": "Bambu Lab X1E", "official_model_id": "C13",
+      "verification": "software_supported_snapshot", "nozzle_diameters_mm": [0.2, 0.4, 0.6, 0.8],
+      "feed": {"allowed_ams_types": ["ams", "ams_2_pro", "ams_ht"], "four_slot_combined_max": 4, "ht_max": 4, "regular_units_max": 4, "lite_max": 0, "lite_can_mix_with_regular": false, "physical_external_paths": 1, "ams_external_coexist": false},
+      "prerequisite_ids": ["x1_p1"], "source_ids": ["local_feed_presets", "local_feed_documentation", "official_bambu_studio_catalog"],
+      "official_profile": {"path": "resources/profiles/BBL/machine/Bambu Lab X1E.json", "sha256_utf8_content": "d7c90805ec5d05421eabe05d44c43c50321454b733abb220bb522acf956894e8"}
+    },
+    {
+      "id": "X2D", "display_name": "Bambu Lab X2D", "official_model_id": "N6",
+      "verification": "software_supported_snapshot", "nozzle_diameters_mm": [0.2, 0.4, 0.6, 0.8],
+      "feed": {"allowed_ams_types": ["ams", "ams_2_pro", "ams_ht"], "four_slot_combined_max": 4, "ht_max": 8, "regular_units_max": 12, "lite_max": 0, "lite_can_mix_with_regular": false, "physical_external_paths": 2, "ams_external_coexist": true},
+      "prerequisite_ids": ["dual_path"], "source_ids": ["local_feed_presets", "local_feed_documentation", "official_bambu_studio_catalog"],
+      "official_profile": {"path": "resources/profiles/BBL/machine/Bambu Lab X2D.json", "sha256_utf8_content": "e46099883cffab3adb4d221da380d3ae2da070ffbf18efd9dea67e5a9db68b38"}
+    },
+    {
+      "id": "P1P", "display_name": "Bambu Lab P1P", "official_model_id": "C11",
+      "verification": "software_supported_snapshot", "nozzle_diameters_mm": [0.2, 0.4, 0.6, 0.8],
+      "feed": {"allowed_ams_types": ["ams", "ams_2_pro", "ams_ht"], "four_slot_combined_max": 4, "ht_max": 4, "regular_units_max": 4, "lite_max": 0, "lite_can_mix_with_regular": false, "physical_external_paths": 1, "ams_external_coexist": false},
+      "prerequisite_ids": ["x1_p1"], "source_ids": ["local_feed_presets", "local_feed_documentation", "official_bambu_studio_catalog"],
+      "official_profile": {"path": "resources/profiles/BBL/machine/Bambu Lab P1P.json", "sha256_utf8_content": "4f98a31ecc06e39b86c03e6894e51a115fa154a6fb4aaecdf9bb96a5c3ee2e34"}
+    },
+    {
+      "id": "P1S", "display_name": "Bambu Lab P1S", "official_model_id": "C12",
+      "verification": "software_supported_snapshot", "nozzle_diameters_mm": [0.2, 0.4, 0.6, 0.8],
+      "feed": {"allowed_ams_types": ["ams", "ams_2_pro", "ams_ht"], "four_slot_combined_max": 4, "ht_max": 4, "regular_units_max": 4, "lite_max": 0, "lite_can_mix_with_regular": false, "physical_external_paths": 1, "ams_external_coexist": false},
+      "prerequisite_ids": ["x1_p1"], "source_ids": ["local_feed_presets", "local_feed_documentation", "official_bambu_studio_catalog"],
+      "official_profile": {"path": "resources/profiles/BBL/machine/Bambu Lab P1S.json", "sha256_utf8_content": "0dbe3efb41f41ed71d799dc1714e8f4503d34a6d113fa2af3b8bdfbb62dfd3d8"}
+    },
+    {
+      "id": "P2S", "display_name": "Bambu Lab P2S", "official_model_id": "N7",
+      "verification": "software_supported_snapshot", "nozzle_diameters_mm": [0.2, 0.4, 0.6, 0.8],
+      "feed": {"allowed_ams_types": ["ams", "ams_2_pro", "ams_ht"], "four_slot_combined_max": 4, "ht_max": 4, "regular_units_max": 8, "lite_max": 0, "lite_can_mix_with_regular": false, "physical_external_paths": 1, "ams_external_coexist": false},
+      "prerequisite_ids": ["p2s"], "source_ids": ["local_feed_presets", "local_feed_documentation", "official_bambu_studio_catalog"],
+      "official_profile": {"path": "resources/profiles/BBL/machine/Bambu Lab P2S.json", "sha256_utf8_content": "c9f6869ddc93f4f9b29be2039355bf9e4b697cc5ffeb3a16087a89bfa76f6fb8"}
+    },
+    {
+      "id": "A1", "display_name": "Bambu Lab A1", "official_model_id": "N2S",
+      "verification": "software_supported_snapshot", "nozzle_diameters_mm": [0.2, 0.4, 0.6, 0.8],
+      "feed": {"allowed_ams_types": ["ams", "ams_2_pro", "ams_ht", "ams_lite"], "four_slot_combined_max": 4, "ht_max": 4, "regular_units_max": 4, "lite_max": 1, "lite_can_mix_with_regular": false, "physical_external_paths": 1, "ams_external_coexist": false},
+      "prerequisite_ids": ["a1_family"], "source_ids": ["local_feed_presets", "local_feed_documentation", "official_bambu_studio_catalog"],
+      "official_profile": {"path": "resources/profiles/BBL/machine/Bambu Lab A1.json", "sha256_utf8_content": "e69bb3534d26820e5f719a4419eda5209e99c176c928f9be3adc1a2a81eefb07"}
+    },
+    {
+      "id": "A1mini", "display_name": "Bambu Lab A1 mini", "official_model_id": "N1",
+      "verification": "software_supported_snapshot", "nozzle_diameters_mm": [0.2, 0.4, 0.6, 0.8],
+      "feed": {"allowed_ams_types": ["ams", "ams_2_pro", "ams_ht", "ams_lite"], "four_slot_combined_max": 4, "ht_max": 4, "regular_units_max": 4, "lite_max": 1, "lite_can_mix_with_regular": false, "physical_external_paths": 1, "ams_external_coexist": false},
+      "prerequisite_ids": ["a1_family"], "source_ids": ["local_feed_presets", "local_feed_documentation", "official_bambu_studio_catalog"],
+      "official_profile": {"path": "resources/profiles/BBL/machine/Bambu Lab A1 mini.json", "sha256_utf8_content": "7b5a868259597dc3942376b921234f7785e76e78930230606931e0f1994bf589"}
+    },
+    {
+      "id": "A2L", "display_name": "Bambu Lab A2L", "official_model_id": "N9",
+      "verification": "software_supported_snapshot", "nozzle_diameters_mm": [0.2, 0.4, 0.6, 0.8],
+      "feed": {"allowed_ams_types": ["ams", "ams_2_pro", "ams_ht", "ams_lite"], "four_slot_combined_max": 4, "ht_max": 4, "regular_units_max": 4, "lite_max": 1, "lite_can_mix_with_regular": true, "physical_external_paths": 1, "ams_external_coexist": false},
+      "prerequisite_ids": ["a2l"], "source_ids": ["local_feed_presets", "local_feed_documentation", "official_bambu_studio_catalog"],
+      "official_profile": {"path": "resources/profiles/BBL/machine/Bambu Lab A2L.json", "sha256_utf8_content": "74522a86fc899bb1a4423332ceea442dbc05493d8cb0f24afb36adcced0f953a"}
+    },
+    {
+      "id": "H2D", "display_name": "Bambu Lab H2D", "official_model_id": "O1D",
+      "verification": "software_supported_snapshot", "nozzle_diameters_mm": [0.2, 0.4, 0.6, 0.8],
+      "feed": {"allowed_ams_types": ["ams", "ams_2_pro", "ams_ht"], "four_slot_combined_max": 4, "ht_max": 8, "regular_units_max": 12, "lite_max": 0, "lite_can_mix_with_regular": false, "physical_external_paths": 2, "ams_external_coexist": true},
+      "prerequisite_ids": ["dual_path"], "source_ids": ["local_feed_presets", "local_feed_documentation", "official_bambu_studio_catalog"],
+      "official_profile": {"path": "resources/profiles/BBL/machine/Bambu Lab H2D.json", "sha256_utf8_content": "9b9516ca791e3b373ee3e9032d3df9634a41d88ad95f48d323c16f4682791cbe"}
+    },
+    {
+      "id": "H2D Pro", "display_name": "Bambu Lab H2D Pro", "official_model_id": "O1E",
+      "verification": "software_supported_snapshot", "nozzle_diameters_mm": [0.2, 0.4, 0.6, 0.8],
+      "feed": {"allowed_ams_types": ["ams", "ams_2_pro", "ams_ht"], "four_slot_combined_max": 4, "ht_max": 8, "regular_units_max": 12, "lite_max": 0, "lite_can_mix_with_regular": false, "physical_external_paths": 2, "ams_external_coexist": true},
+      "prerequisite_ids": ["dual_path"], "source_ids": ["local_feed_presets", "local_feed_documentation", "official_bambu_studio_catalog"],
+      "official_profile": {"path": "resources/profiles/BBL/machine/Bambu Lab H2D Pro.json", "sha256_utf8_content": "5ec0f471aa50f9878abaab5f598af44948ce36f1f6ddcf5f71edb18133e0f01b"}
+    },
+    {
+      "id": "H2S", "display_name": "Bambu Lab H2S", "official_model_id": "O1S",
+      "verification": "software_supported_snapshot", "nozzle_diameters_mm": [0.2, 0.4, 0.6, 0.8],
+      "feed": {"allowed_ams_types": ["ams", "ams_2_pro", "ams_ht"], "four_slot_combined_max": 4, "ht_max": 8, "regular_units_max": 12, "lite_max": 0, "lite_can_mix_with_regular": false, "physical_external_paths": 1, "ams_external_coexist": false},
+      "prerequisite_ids": ["h2s"], "source_ids": ["local_feed_presets", "local_feed_documentation", "official_bambu_studio_catalog"],
+      "official_profile": {"path": "resources/profiles/BBL/machine/Bambu Lab H2S.json", "sha256_utf8_content": "6dfc62fdbdacbdbd8b59e07e6e052744ce645222b2d415c5785bae421fe49be3"}
+    },
+    {
+      "id": "H2C", "display_name": "Bambu Lab H2C", "official_model_id": "O1C2",
+      "verification": "software_supported_snapshot", "nozzle_diameters_mm": [0.2, 0.4, 0.6, 0.8],
+      "feed": {"allowed_ams_types": ["ams", "ams_2_pro", "ams_ht"], "four_slot_combined_max": 4, "ht_max": 8, "regular_units_max": 12, "lite_max": 0, "lite_can_mix_with_regular": false, "physical_external_paths": 2, "ams_external_coexist": true},
+      "prerequisite_ids": ["h2c"], "source_ids": ["local_feed_presets", "local_feed_documentation", "official_bambu_studio_catalog"],
+      "official_profile": {"path": "resources/profiles/BBL/machine/Bambu Lab H2C.json", "sha256_utf8_content": "72f5b8988ecc1e33ebdce8e009ad2b0466fcba90fa3afebcfe5fa691eb331813"}
+    }
+  ],
+  "unmapped_ams_types": [
+    {"id": "ams_3h", "display_name": "AMS 3H", "verification": "official_guide_present_local_support_unmapped", "software_supported": false, "automatic_dispatch": false, "source_ids": ["official_ams_guide"], "verified_external_facts": {"slots": 8, "referenced_printer": "H3C"}, "note": "Not present in the local AmsUnitType enum or channel mapping. Do not generate it as an implemented automatic feeder; material, firmware, routing and coexistence behavior remain unverified."}
+  ],
+  "coverage_gaps": [
+    "H3C and AMS 3H are present in current official sources but are not implemented by the captured local software.",
+    "Non-Bambu CFS and ACE topology, nozzle and material capabilities are not verified by this snapshot.",
+    "Feeder material lists are partial compatibility facts, not exhaustive printer-material-nozzle-plate guarantees.",
+    "No real print outcomes, user maintenance histories or per-machine calibration results are supplied by this matrix.",
+    "Firmware-specific drying/printing concurrency, hotend variant and FTS route behavior require explicit observed or declared evidence."
+  ],
+  "unmapped_models": [
+    {"id": "H3C", "display_name": "Bambu Lab H3C", "official_model_id": "N10", "verification": "official_catalog_present_local_support_unmapped", "software_supported": false, "feed": null, "automatic_dispatch": false, "source_ids": ["official_bambu_studio_catalog", "official_ams_guide"], "verified_external_facts": {"additional_regular_ams_units_max": 4, "ams_3h_slots": 8, "maximum_colors_in_documented_setup": 24, "h3c_buffer_required": true}, "official_profile": {"path": "resources/profiles/BBL/machine/Bambu Lab H3C.json", "sha256_utf8_content": "8730c850be567899cc908377cfc1d7f04e47ac3852eb2e2465b6848c64a4600c"}, "note": "Do not inherit H2C limits, topology or material support by name similarity."},
+    {"id": "non_bambu_unverified", "display_name": "Non-Bambu models with generic local presets", "verification": "precise_feeder_nozzle_and_material_compatibility_unknown", "feed": null, "automatic_dispatch": false, "note": "Local Creality and Anycubic generic counts do not verify CFS or ACE capabilities. Do not map CFS or ACE to the AMS enum."}
+  ]
+}

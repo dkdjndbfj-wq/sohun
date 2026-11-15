@@ -62,6 +62,12 @@ class SliceResult {
   final int? artifactSize;
   final DateTime? artifactModifiedAt;
 
+  /// Actual project-settings declaration only; never a measured footprint or fit verdict.
+  final Map<String, Object?>? declaredSliceGeometry;
+
+  /// Commanded centerline evidence only, never complete deposited geometry.
+  final Map<String, Object?>? toolpathGeometry;
+
   /// 层级累计克数映射（精细模式用）。
   /// key = 层号（0-based），value = 到该层为止（含）累计消耗的克数。
   /// 由 GcodeParser 精细解析填充；粗略模式为 null。
@@ -95,6 +101,8 @@ class SliceResult {
     this.artifactSha256,
     this.artifactSize,
     this.artifactModifiedAt,
+    this.declaredSliceGeometry,
+    this.toolpathGeometry,
     this.layerCumulativeGrams,
     this.amsMapping,
     DateTime? parsedAt,

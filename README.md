@@ -2,11 +2,25 @@
 
 面向个人 3D 打印用户的耗材库存、实物卷追踪、打印机与设备工作台。Windows 桌面端负责日常管理，Android 客户端负责移动查看与 NFC 标签操作；两端可以使用同一个 sohun 个人账号同步。
 
-[访问官网](https://sohun.top) · [下载 Android 1.0.2+7](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.2%2B7/sohun-1.0.2-7-android.apk) · [新版图文说明](docs/releases/1.0.2-7.md) · [所有版本与附件](https://github.com/dkdjndbfj-wq/sohun/releases)
+[访问官网](https://sohun.top) · [Windows 1.1.0+9 安装器](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/sohun-setup-1.1.0-9-windows-x64.exe) · [Windows 便携包](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/sohun-1.1.0-9-windows-x64.zip) · [下载 Android 1.1.0+9](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/sohun-1.1.0-9-android.apk) · [所有版本与附件](https://github.com/dkdjndbfj-wq/sohun/releases)
 
-**Android 1.0.2+7** 重新设计了手机耗材标签界面：打开后只需点击“读取 CUID / FUID”，已有资料进入入库确认，空白新卡进入独立写卡设置。读写、颜色选择和库存操作使用居中弹窗，配合浅色与深色主题，让常用操作更清楚、更顺手。本轮提供 Android APK，Windows 安装包请以 Releases 实际附件为准。
+**1.1.0+9** 同时提供 Windows 与 Android 客户端。桌面新增集群管理工作区：左侧任务与多盘进度、中间 Mifu 决策中枢、右侧设备名称阵列；条件检查、人工选择、打印结果和质检记录贯穿同一次打印。浅色、深色主题沿用 Sohun 的视觉风格。完整内容见 [1.1.0+9 图文说明](docs/releases/1.1.0-9.md)。
+
+手机继续使用简洁的“读取 CUID / FUID”入口：已有资料进入入库确认，空白新卡进入独立写卡设置，读写、颜色选择与库存操作使用居中弹窗。品牌识别与实物卷规则和桌面共用；手机页面没有新增整套桌面集群布局。
 
 Android 正式 APK 使用长期发行密钥签名。具体手机、标签、打印机和固件的兼容性仍以实机结果为准。欢迎在 [Issues](https://github.com/dkdjndbfj-wq/sohun/issues) 反馈问题，注明版本、设备和复现步骤；请勿附带账号密码、密钥或真实个人数据。
+
+Windows 公开核心版未做 Authenticode 签名。Mifu 原生数值模型提供独立离线入口，尚未取得生产验收资格；模型包不随客户端安装器或 APK 自动安装，也不授权自动派单。宣传剪辑素材保留在项目本地，不作为 GitHub Release 压缩包附件。
+
+## 集群管理与 Mifu
+
+一个任务可以包含多盘，每盘保留自己的重复次数、设备条件和执行记录。设备以名称、状态与关键信息排列，数量增加时仍能查看；中枢展示当前选择、条件检查和实际服务状态，避免把“检测到显卡”当作“正在推理”。
+
+![浅色集群工作区：左侧多盘任务、中间 Mifu、右侧设备阵列](https://raw.githubusercontent.com/dkdjndbfj-wq/sohun/v1.1.0%2B9/docs/images/mifu-1.1/desktop-light.png)
+
+![深色集群工作区：沿用相同操作结构与设备名称阵列](https://raw.githubusercontent.com/dkdjndbfj-wq/sohun/v1.1.0%2B9/docs/images/mifu-1.1/desktop-dark.png)
+
+以上两图由当前 Flutter 界面组件渲染，使用示例任务和设备，未连接打印机、未调用模型服务；它们展示界面，不是实际推理或打印效果证明。
 
 ## 先看看手机版怎么用
 
@@ -68,6 +82,14 @@ Android 正式 APK 使用长期发行密钥签名。具体手机、标签、打�
 
 > 截图由项目中的真实界面组件渲染，内容是示例数据，用于说明布局和操作入口。它不构成打印机、NFC 标签或公网服务已经通过实机验收的证明。
 
+## Mifu · 自研数值决策
+
+**Mifu 是由 Sohun 项目作者自主设计与训练的数值决策模型及配套集群管理系统。** 任务阵列、打印盘、设备阵列和选择记录围绕同一个决策工作台组织；原生数值模型在已知耗时和合格候选中比较设备，不调用聊天模型生成结论。
+
+桌面集群与采集流程随 1.1.0+9 客户端交付，原生模型作为独立离线研究成果维护。模型在已知耗时条件下输出设备偏好分，不是打印成功率；没有合格权重时，本机 HTTP 服务保持“待配置”。人工检查并确认的排产流程与模型自动派单权限分开，当前模型不会自行启动打印。
+
+[Mifu 产品与验证范围](docs/mifu.md) · [本机服务与离线入口](电脑软件/mifu_service/README.md) · [组件信息](docs/mifu-components.md)
+
 ## 它解决什么问题
 
 管理耗材时，你需要知道正在使用哪一卷、余料卷还剩多少、同一张资料卡先后对应过哪些卷。sohun 把耗材资料、入库批次、实物卷、当前装载和消耗记录分开保存，使一张可重复使用的 CUID/FUID 资料卡能够服务多卷耗材，同时保留每一卷自己的余量和历史。
@@ -78,6 +100,7 @@ Android 正式 APK 使用长期发行密钥签名。具体手机、标签、打�
 | 实物卷追踪 | 每一卷都有独立库存 UID；换卷不会覆盖旧卷的余量与消耗 |
 | CUID/FUID 资料卡 | 读取资料、兼容模板写卡与登记、批量增加 1–100 卷、选择具体卷上机和复用旧余料 |
 | 打印与供料位 | 将打印任务和实际供料位关联到具体库存卷，按卷记录消耗 |
+| 集群管理与 Mifu | 多盘任务、设备条件检查、人工选择、打印结果与独立质检采集 |
 | 账号同步 | Windows 与 Android 使用同一 sohun 账号同步库存与事件；本地数据按服务器和稳定用户 ID 隔离 |
 | NTAG213 设备工作台 | 定位打印机并打开状态、故障、维护和摄像头入口，不参与耗材库存 |
 | 社区与参数 | 浏览社区内容、材料参数及相关工作台入口 |
@@ -157,19 +180,28 @@ Windows 和 Android 可以登录同一个 sohun 个人账号。个人库存的�
 
 ## 下载与安装
 
-安装包发布在 [GitHub Releases](https://github.com/dkdjndbfj-wq/sohun/releases)。本轮 Android **1.0.2+7** 的变化和预览见 [版本说明](docs/releases/1.0.2-7.md)，对应的 [SHA-256 校验清单](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.2%2B7/SHA256SUMS.txt) 与 APK 位于同一个 Release。本轮只提供 Android 附件；Windows 安装器与便携版以版本页面实际列出的附件为准。
+安装包发布在 [GitHub Releases](https://github.com/dkdjndbfj-wq/sohun/releases)，请按平台选择对应版本，不要把手机版截图当作桌面改版预览。
+
+| 平台与版本 | 下载 | 说明与校验 |
+| --- | --- | --- |
+| Windows 10/11 x64 · 1.1.0+9 | [安装器](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/sohun-setup-1.1.0-9-windows-x64.exe) · [便携包](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/sohun-1.1.0-9-windows-x64.zip) | [图文说明](docs/releases/1.1.0-9.md) · [SHA-256](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/SHA256SUMS.txt) |
+| Android · 1.1.0+9 | [正式 APK](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/sohun-1.1.0-9-android.apk) | [读卡指南](docs/mobile-reader-guide.md) · [SHA-256](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/SHA256SUMS.txt) |
+
+各包的哈希及签名状态以本次 Release 的 `SHA256SUMS.txt` 与 `release-manifest.json` 为准。历史 Android 1.0.2+7 的预览保留作既有读卡流程参考，不是新版桌面集群截图。
 
 ### Windows 10/11 x64 安装器
 
-如果 [Releases](https://github.com/dkdjndbfj-wq/sohun/releases) 的版本页面提供 `sohun-setup-…-windows-x64.exe`，核对对应版本和校验信息后运行安装器。发布者签名状态以该版本说明为准；未做 Authenticode 签名的安装器可能显示未知发布者提示。本轮 Android Release 没有 Windows 安装器附件。
+下载 [`sohun-setup-1.1.0-9-windows-x64.exe`](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/sohun-setup-1.1.0-9-windows-x64.exe)，核对 SHA-256 后运行安装器。该公开核心版没有 Authenticode 签名，Windows 可能提示未知发布者；请先确认下载来源及哈希，不要为安装而全局关闭安全防护。
+
+升级前先完成库存同步或备份，退出正在运行的 sohun，再运行新版安装器。通常不需要先卸载旧版；保留原数据，安装后核对账号、库存和余料记录。
 
 ### Windows 10/11 x64 便携版
 
-如果 [Releases](https://github.com/dkdjndbfj-wq/sohun/releases) 的版本页面提供 `sohun-…-windows-x64.zip`，完整解压到可写目录，再运行其中的 `sohun.exe`。不要只从压缩包内单独启动 EXE，也不要把新版 EXE 覆盖进旧目录，以免混用不同版本的 DLL 和资源。本轮 Android Release 没有 Windows 便携包附件。
+下载 [`sohun-1.1.0-9-windows-x64.zip`](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/sohun-1.1.0-9-windows-x64.zip)，核对 SHA-256 后完整解压到新的可写目录，再运行其中的 `sohun.exe`。不要只从压缩包内单独启动 EXE，也不要把新版 EXE 覆盖进旧目录，以免混用不同版本的 DLL 和资源。更新前先同步或备份库存，核对新版中的账号和数据后再处理旧目录；便携版同样未做 Authenticode 签名。
 
 ### Android Release APK
 
-下载 [`sohun-1.0.2-7-android.apk`](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.0.2%2B7/sohun-1.0.2-7-android.apk)，在 Android 系统安装页确认安装。该 APK 使用长期保存的发行密钥签名，后续版本沿用同一签名；遇到与旧调试包签名不一致的提示时，请先备份或同步库存，不要直接卸载丢失本地数据。使用 CUID/FUID 或 NTAG213 需要支持相应 NFC 能力的 Android 设备；不同厂商系统、标签批次和 NFC 芯片仍需现场测试。
+下载 [`sohun-1.1.0-9-android.apk`](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/sohun-1.1.0-9-android.apk)，在 Android 系统安装页确认安装。该 APK 使用长期保存的发行密钥签名，后续版本沿用同一签名；遇到与旧调试包签名不一致的提示时，请先备份或同步库存，不要直接卸载丢失本地数据。使用 CUID/FUID 或 NTAG213 需要支持相应 NFC 能力的 Android 设备；不同厂商系统、标签批次和 NFC 芯片仍需现场测试。
 
 项目目前没有 macOS 或 iOS 交付入口。
 
@@ -222,12 +254,12 @@ npm ci
 npm test
 ```
 
-正式公开构建使用固定清单，生成 Windows 安装器、便携包和 Android Release APK；Android 签名材料由受保护的 GitHub Secrets 临时提供：
+正式公开构建使用固定清单，按目标平台生成 Windows 安装器、便携包或 Android Release APK；Android 签名材料由受保护的 GitHub Secrets 临时提供：
 
 ```powershell
-# 本地正式 Android 构建需在环境中指定仓库外的 key.properties 路径和预期证书 SHA-256。
-# GitHub 的 Public Release 工作流会从受保护的 Secrets 与变量中提供这些配置。
-./scripts/public_core_build.ps1 -Target Android -PublicRelease -ExpectedTag 'v1.0.2+7' -RunTests
+# Windows / Android 公开核心版；Windows 安装器需要 Inno Setup。
+./scripts/public_core_build.ps1 -Target All -PublicRelease -ExpectedTag 'v1.1.0+9' -Installer -RunTests
+# 正式 Android 构建还需仓库外 key.properties 与预期证书 SHA-256。
 ```
 
 脚本会导出独立源码快照、使用英文临时路径构建、检查成品边界并生成 SHA-256 清单。更完整的命令与验收范围见 [开发与验证工作流](docs/development-workflow.md)，部署配置见 [DEPLOYMENT.md](DEPLOYMENT.md)，公开构建限制见 [PUBLIC_RELEASE_MANIFEST.md](PUBLIC_RELEASE_MANIFEST.md)。
@@ -238,6 +270,7 @@ npm test
 | --- | --- |
 | `电脑软件/lib`、`电脑软件/test` | Flutter Windows/Android 共享客户端及测试 |
 | `电脑软件/lib/main_mobile.dart`、`电脑软件/android` | Android 入口和原生 NFC 实现 |
+| `电脑软件/mifu_service` | 本机采集服务、复核导出、Mifu 原生离线入口与测试；不含权重或私有记录 |
 | `电脑软件/community_server` | sohun 社区与个人库存 API |
 | `官网网页制作` | 官网、下载入口与公开页面 |
 | `手机软件` | 早期浏览器原型，仅作历史参考 |

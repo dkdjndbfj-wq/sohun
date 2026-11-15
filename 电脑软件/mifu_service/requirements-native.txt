@@ -1,0 +1,3 @@
+# Mifu Core uses CPU float64 PyTorch only. No base model, tokenizer or SDK.
+# Matches the version recorded for the selected native training artifact.
+torch==2.11.0

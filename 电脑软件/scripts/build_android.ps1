@@ -86,6 +86,19 @@ try {
     flutter pub get
     if ($LASTEXITCODE -ne 0) { throw "flutter pub get failed." }
 
+    $buildArgs = @("build", "apk", "--$($Configuration.ToLowerInvariant())", "-t", "lib/main_mobile.dart")
+    if ($Core) { $buildArgs += '--dart-define=SOHUN_CORE_BUILD=true' }
+    if (-not [string]::IsNullOrWhiteSpace($ApiBaseUrl)) {
+        $buildArgs += "--dart-define=APP_API_BASE_URL=$($ApiBaseUrl.Trim().TrimEnd('/'))"
+    }
+    & flutter @buildArgs
+    if ($LASTEXITCODE -ne 0) {
+        throw "Flutter Android build failed (exit $LASTEXITCODE)."
+    }
+
+    # Flutter installs the Gradle wrapper during its first Android build.
+    # Sanitized source exports intentionally do not redistribute that binary.
+    # Run native checks after bootstrap, but before accepting/copying the APK.
     if ($RunNativeTests) {
         Push-Location (Join-Path $buildRoot 'android')
         try {
@@ -96,16 +109,6 @@ try {
         } finally {
             Pop-Location
         }
-    }
-
-    $buildArgs = @("build", "apk", "--$($Configuration.ToLowerInvariant())", "-t", "lib/main_mobile.dart")
-    if ($Core) { $buildArgs += '--dart-define=SOHUN_CORE_BUILD=true' }
-    if (-not [string]::IsNullOrWhiteSpace($ApiBaseUrl)) {
-        $buildArgs += "--dart-define=APP_API_BASE_URL=$($ApiBaseUrl.Trim().TrimEnd('/'))"
-    }
-    & flutter @buildArgs
-    if ($LASTEXITCODE -ne 0) {
-        throw "Flutter Android build failed (exit $LASTEXITCODE)."
     }
 
     $apkName = if ($Configuration -eq "Release") { "app-release.apk" } else { "app-debug.apk" }

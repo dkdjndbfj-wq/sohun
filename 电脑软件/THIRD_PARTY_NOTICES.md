@@ -164,6 +164,25 @@ The installer compiler is a build dependency and is not committed to this
 workspace. Review Inno Setup's current license and commercial-use terms before
 shipping an installer; sign the generated setup executable for public use.
 
+## Mifu decision components
+
+The Mifu product name covers project-authored workflow, numeric comparison,
+training and evaluation code. The native numeric head uses independently
+initialized project-trained weights and PyTorch; it does not load the legacy
+foundation checkpoint, tokenizer or SDK. Python, PyTorch and Flutter remain
+third-party runtimes, not project-authored implementations.
+
+The separately retained compatibility/research backend uses Laya 0.4.31 and
+its multilingual/mmBERT checkpoint. The locally inspected SDK package metadata
+declares Apache-2.0 and includes its upstream LICENSE. Keep dependency-provided
+copyright, license and provenance files when applicable; product branding does
+not replace their authorship. This entry does not newly clear model weights or
+all transitive dependencies for redistribution.
+
+See `../docs/mifu-components.md` for the component boundary. Historical
+experiment reports keep their original model identities. The native inference
+package does not bundle the compatibility SDK or foundation weights.
+
 ## Release gate
 
 Do not publish or commercially distribute a build containing uncleared resources until all entries

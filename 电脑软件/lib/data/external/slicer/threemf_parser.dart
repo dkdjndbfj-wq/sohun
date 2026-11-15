@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:archive/archive_io.dart';
+import 'package:crypto/crypto.dart';
 import 'package:xml/xml.dart';
 
 import '../../../core/services/slice_artifact_hash_service.dart';
+import '../../../core/services/slice_geometry_evidence.dart';
+import '../../../core/services/toolpath_geometry_evidence.dart';
 import '../../../core/utils/zip_safety.dart';
 import 'filament_change_point.dart';
 import 'slice_result.dart';
@@ -46,11 +49,15 @@ class ThreemfParser {
     if (!await isSafe3mfFile(file)) return null;
 
     Archive archive;
+    String archiveBytesSha256;
     try {
       // archive 4 lazily reads file-backed entries. Use the already bounded
       // compressed bytes so XML/G-code remains readable after decoding.
-      archive = ZipDecoder().decodeBytes(await file.readAsBytes());
+      final archiveBytes = await file.readAsBytes();
+      if (archiveBytes.length > max3mfInputBytes) return null;
+      archive = ZipDecoder().decodeBytes(archiveBytes);
       if (!isSafe3mfArchive(archive)) return null;
+      archiveBytesSha256 = sha256.convert(archiveBytes).toString();
     } catch (_) {
       return null; // 不是有效 ZIP
     }
@@ -78,7 +85,9 @@ class ThreemfParser {
     if (plates.isEmpty) return null;
     XmlElement? plate;
     for (final p in plates) {
-      final idxMeta = p.findElements('metadata').firstWhere(
+      final idxMeta = p
+          .findElements('metadata')
+          .firstWhere(
             (m) => m.getAttribute('key') == 'index',
             orElse: () => XmlElement(XmlName(''), []),
           );
@@ -141,8 +150,9 @@ class ThreemfParser {
           usedForObject: bambuBoolAttribute(f, 'used_for_object'),
           usedForSupport: bambuBoolAttribute(f, 'used_for_support'),
           groupId: int.tryParse(f.getAttribute('group_id') ?? ''),
-          nozzleDiameter:
-              double.tryParse(f.getAttribute('nozzle_diameter') ?? ''),
+          nozzleDiameter: double.tryParse(
+            f.getAttribute('nozzle_diameter') ?? '',
+          ),
           volumeType: f.getAttribute('volume_type'),
         ),
       );
@@ -193,7 +203,8 @@ class ThreemfParser {
     String? printerSettingsId;
     double? nozzleDiameter;
     String? plateType;
-    final gcodeFile = archive.findFile('Metadata/plate_$plateIndex.gcode') ??
+    final gcodeFile =
+        archive.findFile('Metadata/plate_$plateIndex.gcode') ??
         archive.findFile('Metadata/plate.gcode');
     if (gcodeFile != null) {
       final tempDir = await Directory.systemTemp.createTemp('ct_3mf_');
@@ -242,6 +253,22 @@ class ThreemfParser {
       artifactSha256: artifact?.sha256Hex,
       artifactSize: artifact?.size,
       artifactModifiedAt: artifact?.modifiedAt,
+      declaredSliceGeometry: artifact == null
+          ? null
+          : SliceGeometryEvidence.fromArchive(
+              archive,
+              archiveBytesSha256: archiveBytesSha256,
+              stableArtifactSha256: artifact.sha256Hex,
+              plateIndex: plateIndex,
+            ),
+      toolpathGeometry: artifact == null
+          ? null
+          : ToolpathGeometryEvidence.fromArchive(
+              archive,
+              archiveBytesSha256: archiveBytesSha256,
+              stableArtifactSha256: artifact.sha256Hex,
+              plateIndex: plateIndex,
+            ),
       layerCumulativeGrams: layerMap,
       amsMapping: amsMapping,
     );

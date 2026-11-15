@@ -1491,7 +1491,7 @@ String _printerUnavailableReason(
   }
   if (state.connectionState != PrinterConnectionState.connected) return '离线';
   if (state.isStale(SchedulingConfig.defaults)) return '状态过期';
-  if (state.lastStatus?.upgradeStatus?.isNotEmpty == true) return '升级中';
+  if (state.lastStatus?.hasBlockingUpgradeStatus == true) return '升级中';
   return switch (state.lastStatus?.gcodeState) {
     BambuGcodeState.failed => '设备异常',
     BambuGcodeState.offline => '设备离线',

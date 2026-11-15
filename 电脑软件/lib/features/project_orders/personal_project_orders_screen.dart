@@ -1639,7 +1639,7 @@ class _PersonalPlatePreview extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final path = sourcePath?.trim();
-    final thumbnails = path == null || path.isEmpty
+    final thumbnails = plate.thumbnailBytes != null || path == null || path.isEmpty
         ? null
         : ref.watch(_personalPlateThumbnailsProvider(path));
     final fallback = thumbnails?.valueOrNull?[plate.plateIndex];
@@ -1714,27 +1714,28 @@ class _PersonalPlatePreview extends ConsumerWidget {
                           fit: BoxFit.contain,
                           filterQuality: FilterQuality.low,
                           gaplessPlayback: true,
-                          frameBuilder:
-                              (context, child, frame, wasSynchronouslyLoaded) {
-                                if (wasSynchronouslyLoaded || frame != null) {
-                                  return child;
-                                }
-                                return Stack(
-                                  fit: StackFit.expand,
-                                  children: [
-                                    child,
-                                    const Center(
-                                      child: SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
+                          frameBuilder: plate.thumbnailBytes != null
+                              ? null
+                              : (context, child, frame, wasSynchronouslyLoaded) {
+                                  if (wasSynchronouslyLoaded || frame != null) {
+                                    return child;
+                                  }
+                                  return Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      child,
+                                      const Center(
+                                        child: SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                );
-                              },
+                                    ],
+                                  );
+                                },
                           errorBuilder: (context, error, stackTrace) => Center(
                             child: Text(
                               '预览读取失败，点击打开拓竹工作区',
@@ -2466,6 +2467,44 @@ class _FilamentChip extends StatelessWidget {
   );
 }
 
+typedef PersonalClusterDispatchGuard = Future<String?> Function(
+  String plateId,
+  int printerId,
+  int runs,
+  Map<int, int> channelByTool,
+  String expectedArtifactSha256,
+);
+
+/// Mifu only suggests a device. Re-read the production data and open the same
+/// human confirmation/material-mapping workflow used by the project page.
+/// Opening this flow itself never dispatches a job.
+Future<void> reviewPersonalClusterPlate(
+  BuildContext context,
+  WidgetRef ref, {
+  required String plateId,
+  required int preferredPrinterId,
+  required int maxRuns,
+  required PersonalClusterDispatchGuard validateDispatch,
+}) async {
+  if (maxRuns <= 0) return;
+  final snapshot = await ref.read(studioDaoProvider).getDefaultSnapshot();
+  final plate = snapshot.productionPlates.where((p) => p.id == plateId).firstOrNull;
+  if (!context.mounted) return;
+  if (plate == null) {
+    _personalSnack(context, '打印盘已变化，请刷新集群', error: true);
+    return;
+  }
+  await _personalPlateWorkflow(context, ref,
+    plate: plate,
+    package: snapshot.productionPackages.where((p) => p.id == plate.packageId).firstOrNull,
+    snapshot: snapshot,
+    forceSliceOnly: false,
+    preferredPrinterId: preferredPrinterId,
+    clusterRunLimit: maxRuns,
+    clusterDispatchGuard: validateDispatch,
+  );
+}
+
 Future<void> _personalPlateWorkflow(
   BuildContext context,
   WidgetRef ref, {
@@ -2473,6 +2512,9 @@ Future<void> _personalPlateWorkflow(
   required StudioProductionPackage? package,
   required StudioSnapshot snapshot,
   required bool forceSliceOnly,
+  int? preferredPrinterId,
+  int? clusterRunLimit,
+  PersonalClusterDispatchGuard? clusterDispatchGuard,
 }) async {
   final printers = await ref.read(printersWithChannelsProvider.future);
   final fleet = ref.read(fleetPrinterStatesProvider);
@@ -2496,7 +2538,8 @@ Future<void> _personalPlateWorkflow(
     printers: printers,
     fleet: fleet,
     printAction: !forceSliceOnly,
-    maxRuns: math.max(1, maxRuns),
+    maxRuns: math.max(1, math.min(maxRuns, clusterRunLimit ?? maxRuns)),
+    preferredPrinterId: preferredPrinterId,
   );
   if (selection == null || !context.mounted) return;
   var selectedState = selection.state;
@@ -2735,6 +2778,20 @@ Future<void> _personalPlateWorkflow(
   try {
     final serial = selectedPrinter.serial;
     if (serial == null || serial.trim().isEmpty) throw StateError('打印机没有序列号');
+    if (clusterDispatchGuard != null) {
+      final failure = await clusterDispatchGuard(
+        freshPlate.id,
+        selectedPrinter.printer.id,
+        selection.runs,
+        channelByTool,
+        stable.sha256Hex,
+      );
+      if (!context.mounted) return;
+      if (failure != null) {
+        _personalSnack(context, failure, error: true);
+        return;
+      }
+    }
     await StudioDispatchService(
       database: ref.read(databaseProvider),
       studioDao: ref.read(studioDaoProvider),
@@ -2842,7 +2899,7 @@ class _PersonalPrinterCandidate {
     }
     if (current.isStale(SchedulingConfig.defaults)) return '状态过期';
     final status = current.lastStatus;
-    if (status?.upgradeStatus?.isNotEmpty == true) return '升级中';
+    if (status?.hasBlockingUpgradeStatus == true) return '升级中';
     return switch (status?.gcodeState) {
       BambuGcodeState.running => '打印中（可预排）',
       BambuGcodeState.pause => '已暂停（可预排）',
@@ -2888,6 +2945,7 @@ Future<PersonalPrintSelection?> showPersonalPrintSetupDialog(
   required List<FleetPrinterState> fleet,
   required bool printAction,
   required int maxRuns,
+  int? preferredPrinterId,
 }) async {
   var currentFleet = fleet;
   List<_PersonalPrinterCandidate> allCandidates() {
@@ -2957,7 +3015,16 @@ Future<PersonalPrintSelection?> showPersonalPrintSetupDialog(
   }
   final notifier = ref.read(farmSlicingPresetsProvider.notifier);
   await notifier.ready;
-  var selected = selectableCandidates.first;
+  final preferred = selectableCandidates.where(
+    (item) => item.printer.printer.id == preferredPrinterId,
+  ).firstOrNull;
+  if (preferredPrinterId != null && preferred == null) {
+    if (context.mounted) {
+      _personalSnack(context, '建议设备已不可用，请刷新集群后重新选择', error: true);
+    }
+    return null;
+  }
+  var selected = preferred ?? selectableCandidates.first;
   var runs = 1;
   var selectedPreset =
       (!plate.isSliced ||

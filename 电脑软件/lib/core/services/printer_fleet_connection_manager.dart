@@ -121,7 +121,7 @@ class FleetPrinterState {
     // failed/offline/slicing/unknown 视为忙碌（异常状态）
     if (gcode == BambuGcodeState.idle || gcode == BambuGcodeState.finish) {
       // 检查是否在升级
-      if (s.upgradeStatus != null && s.upgradeStatus!.isNotEmpty) {
+      if (s.hasBlockingUpgradeStatus) {
         return true;
       }
       return false;
@@ -148,7 +148,7 @@ class FleetPrinterState {
     }
     final status = lastStatus;
     if (status == null ||
-        status.upgradeStatus?.isNotEmpty == true ||
+        status.hasBlockingUpgradeStatus ||
         status.gcodeState == null) {
       return false;
     }

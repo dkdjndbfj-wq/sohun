@@ -15,9 +15,7 @@
 #   4. Copies the resulting build artifacts back to the project's build/ dir.
 #   5. Cleans up the staging dir in finally.
 #
-# For hot-reload debugging, use scripts\run_windows_debug.ps1 instead, which
-# uses `subst` to map the project to an ASCII drive letter (preserving hot
-# reload by keeping the source tree in place).
+# Debug builds are local development artifacts, not signed installers.
 #
 # Usage:
 #   .\scripts\build_windows.ps1                       # Debug build
@@ -48,6 +46,56 @@ param(
     [string]$SplitDebugInfoDir = "",
     [string]$ApiBaseUrl = ""
 )
+
+function Copy-SohunWindowsNativeAssetDiagnostics {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$BuildRoot,
+        [Parameter(Mandatory)][string]$ProjectRoot,
+        [Parameter(Mandatory)]
+        [ValidateSet('Debug', 'Release', 'Profile')][string]$Configuration
+    )
+
+    $source = [System.IO.Path]::GetFullPath((Join-Path $BuildRoot 'build\native_assets'))
+    if (-not (Test-Path -LiteralPath $source -PathType Container)) { return }
+
+    # Flutter tests load DLLs from build/native_assets. This is only a diagnostic
+    # copy of the staged build, never a replacement for that shared runtime.
+    $projectPath = [System.IO.Path]::GetFullPath($ProjectRoot).TrimEnd('\')
+    $diagnosticRoot = [System.IO.Path]::GetFullPath((Join-Path $projectPath 'build\windows\native_assets'))
+    $destination = [System.IO.Path]::GetFullPath((Join-Path $diagnosticRoot $Configuration))
+    if (-not $destination.StartsWith("$diagnosticRoot\", [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw 'Refusing to copy native-asset diagnostics outside build\windows\native_assets.'
+    }
+
+    # Lexical containment alone does not protect against an ancestor junction.
+    # Check every existing directory before recursively replacing this config.
+    foreach ($directory in @(
+        $projectPath,
+        (Join-Path $projectPath 'build'),
+        (Join-Path $projectPath 'build\windows'),
+        $diagnosticRoot,
+        $destination
+    )) {
+        if (Test-Path -LiteralPath $directory) {
+            $item = Get-Item -LiteralPath $directory -Force
+            if (($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+                throw "Refusing a redirected native-asset diagnostics directory: $directory"
+            }
+            if (-not $item.PSIsContainer) {
+                throw "Native-asset diagnostics path is not a directory: $directory"
+            }
+        }
+    }
+    if (Test-Path -LiteralPath $destination) {
+        Remove-Item -LiteralPath $destination -Recurse -Force -ErrorAction Stop
+    }
+    & robocopy $source $destination /E /R:2 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+    $diagnosticCopyExit = $LASTEXITCODE
+    if ($diagnosticCopyExit -gt 7) {
+        throw "Failed to copy native-asset diagnostics (robocopy $diagnosticCopyExit)."
+    }
+}
 
 $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
@@ -295,15 +343,8 @@ try {
         }
         Write-Host "[build] Artifacts copied to: $projectBuildDir"
 
-        # Also copy the build/native_assets dir for diagnostics.
-        $stagingNativeAssets = Join-Path $buildRoot "build\native_assets"
-        $projectNativeAssets = Join-Path $projectRoot "build\native_assets"
-        if (Test-Path $stagingNativeAssets) {
-            if (Test-Path $projectNativeAssets) {
-                Remove-Item -Recurse -Force $projectNativeAssets
-            }
-            & robocopy $stagingNativeAssets $projectNativeAssets /E /R:2 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
-        }
+        Copy-SohunWindowsNativeAssetDiagnostics -BuildRoot $buildRoot `
+            -ProjectRoot $projectRoot -Configuration $Configuration
     } else {
         Write-Host "`n=== Step 4: Skipped (built in place) ===" -ForegroundColor Yellow
     }

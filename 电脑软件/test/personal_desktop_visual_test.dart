@@ -1,18 +1,23 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 
+import 'package:consumable_tracker_desktop/core/services/mifu_client.dart';
 import 'package:consumable_tracker_desktop/core/theme/app_theme.dart';
 import 'package:consumable_tracker_desktop/core/theme/app_typography.dart';
 import 'package:consumable_tracker_desktop/core/theme/interaction_effects.dart';
 import 'package:consumable_tracker_desktop/core/theme/personal_desktop_theme.dart';
 import 'package:consumable_tracker_desktop/data/database/database.dart';
 import 'package:consumable_tracker_desktop/features/dashboard/material_playground_hero.dart';
+import 'package:consumable_tracker_desktop/features/cluster/cluster_screen.dart';
 import 'package:consumable_tracker_desktop/features/inventory/inventory_screen.dart';
 import 'package:consumable_tracker_desktop/mobile/mobile_visual_theme.dart';
 import 'package:consumable_tracker_desktop/providers/bambu_account_manager.dart';
 import 'package:consumable_tracker_desktop/providers/bambu_cloud_provider.dart';
 import 'package:consumable_tracker_desktop/providers/batch_recognition_provider.dart';
 import 'package:consumable_tracker_desktop/providers/consumable_provider.dart';
+import 'package:consumable_tracker_desktop/providers/cluster_provider.dart';
 import 'package:consumable_tracker_desktop/providers/database_provider.dart';
+import 'package:consumable_tracker_desktop/providers/mifu_provider.dart';
 import 'package:consumable_tracker_desktop/providers/printer_connection_provider.dart';
 import 'package:consumable_tracker_desktop/providers/printer_provider.dart';
 import 'package:consumable_tracker_desktop/providers/print_queue_provider.dart';
@@ -22,15 +27,23 @@ import 'package:consumable_tracker_desktop/providers/usage_provider.dart';
 import 'package:consumable_tracker_desktop/ui/aurora_design.dart';
 import 'package:consumable_tracker_desktop/ui/aurora_shell.dart';
 import 'package:consumable_tracker_desktop/widgets/app_button.dart';
+import 'package:consumable_tracker_desktop/widgets/app_icon.dart';
+import 'package:consumable_tracker_desktop/widgets/bambu_icon.dart';
 import 'package:consumable_tracker_desktop/widgets/glass_button_material.dart';
 import 'package:consumable_tracker_desktop/widgets/glass_card.dart';
 import 'package:consumable_tracker_desktop/widgets/personal_desktop_chrome.dart';
+import 'package:consumable_tracker_desktop/widgets/mifu_wordmark.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'cluster_screen_test.dart' as cluster_fixture;
+
+const _desktopCaptureKey = ValueKey('desktop-mifu-capture');
 
 void main() {
   test('个人主题仅显式启用，商业模式与手机版保持原主题', () {
@@ -221,7 +234,93 @@ void main() {
     await tester.pumpAndSettle();
   });
 
+  for (final query in ['Mifu', '集群']) {
+    testWidgets('桌面帮助搜索 $query 包含说明并能进入集群管理', (tester) async {
+      await _mount(tester);
+      await tester.tap(find.byTooltip('功能说明与常见问题'));
+      await tester.pumpAndSettle();
+      final search = find.descendant(
+        of: find.byType(Dialog),
+        matching: find.byType(TextField),
+      );
+      await tester.enterText(search, query);
+      await tester.pumpAndSettle();
+      expect(find.text('Mifu 集群管理从哪里开始？'), findsOneWidget);
+      expect(find.text('Mifu 显示待连接或待训练怎么办？'), findsOneWidget);
+      expect(find.text('Mifu 会自动开始打印吗？'), findsOneWidget);
+      if (query == '集群') {
+        expect(
+          find.descendant(
+            of: find.byType(Dialog),
+            matching: find.byWidgetPredicate(
+              (widget) =>
+                  widget is AppIcon && widget.icon == AppIconData.cluster,
+            ),
+          ),
+          findsOneWidget,
+        );
+      }
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.text('Mifu 集群管理从哪里开始？'));
+      await tester.pumpAndSettle();
+      expect(find.byType(Dialog), findsNothing);
+      expect(find.byType(ClusterScreen), findsOneWidget);
+      expect(find.byType(MifuWordmark), findsOneWidget);
+      expect(find.byType(PersonalDesktopChrome), findsNWidgets(2));
+      expect(
+        find.byWidgetPredicate(
+          (widget) => widget is AppIcon && widget.icon == AppIconData.cluster,
+        ),
+        findsNWidgets(2),
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+    });
+  }
+
   for (final mode in [Brightness.light, Brightness.dark]) {
+    testWidgets('完整桌面侧栏进入 Mifu 并保留框架 ${mode.name}', (tester) async {
+      await _mount(tester, brightness: mode);
+      expect(find.byType(ClusterScreen), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('personal-nav-diagnostics')),
+          matching: find.byWidgetPredicate(
+            (widget) => widget is BambuIcon && widget.name == 'monitor',
+          ),
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('personal-nav-cluster')));
+      await tester.pumpAndSettle();
+      expect(find.byType(ClusterScreen), findsOneWidget);
+      expect(find.byType(MifuWordmark), findsOneWidget);
+      expect(find.byType(PersonalDesktopChrome), findsNWidgets(2));
+      expect(
+        Theme.of(tester.element(find.byType(ClusterScreen))).brightness,
+        mode,
+      );
+      _expectClusterFooterFullyVisible(tester);
+      await tester.tap(find.byTooltip('收起侧边栏'));
+      await tester.pumpAndSettle();
+      expect(find.byTooltip('集群管理'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) => widget is AppIcon && widget.icon == AppIconData.cluster,
+        ),
+        findsNWidgets(2),
+      );
+      await tester.tap(find.byKey(const ValueKey('personal-nav-dashboard')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('personal-nav-cluster')));
+      await tester.pumpAndSettle();
+      expect(find.byType(MifuWordmark), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+    });
+
     testWidgets('个人弹窗增加遮盖度，显式透明度不被覆盖 ${mode.name}', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
@@ -296,35 +395,67 @@ void main() {
     });
 
     testWidgets(
+      'Mifu desktop capture ${mode.name}',
+      (tester) async {
+        final shadows = debugDisableShadows;
+        debugDisableShadows = false;
+        try {
+          await _loadCaptureFonts(tester);
+          await _mount(
+            tester,
+            brightness: mode,
+            size: const Size(1600, 1000),
+            captureMifu: true,
+          );
+          await tester.tap(find.byKey(const ValueKey('personal-nav-cluster')));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('P01  外壳'));
+          await tester.pumpAndSettle();
+          final panel = find.byKey(const ValueKey('mifu-decision-panel'));
+          await tester.tap(
+            find.descendant(of: panel, matching: find.text('设备 2')),
+          );
+          await tester.pumpAndSettle();
+          await _images(tester);
+          expect(find.byType(AuroraWorkspace), findsOneWidget);
+          expect(find.byType(PersonalDesktopChrome), findsNWidgets(2));
+          expect(find.byType(MifuWordmark), findsOneWidget);
+          _expectClusterFooterFullyVisible(tester);
+          expect(tester.takeException(), isNull);
+          final boundary = tester.renderObject<RenderRepaintBoundary>(
+            find.byKey(_desktopCaptureKey),
+          );
+          await tester.runAsync(() async {
+            final image = await boundary.toImage(pixelRatio: 1.5);
+            try {
+              final png = await image.toByteData(
+                format: ui.ImageByteFormat.png,
+              );
+              final folder = Directory('../output/mifu-ui');
+              await folder.create(recursive: true);
+              await File(
+                '${folder.path}/desktop-mifu-compact-${mode.name}-fixture-preview.png',
+              ).writeAsBytes(png!.buffer.asUint8List());
+            } finally {
+              image.dispose();
+            }
+          });
+          await tester.pumpWidget(const SizedBox.shrink());
+          await tester.pumpAndSettle();
+        } finally {
+          debugDisableShadows = shadows;
+        }
+      },
+      skip: !const bool.fromEnvironment('MIFU_DESKTOP_CAPTURE'),
+    );
+
+    testWidgets(
       '桌面玻璃预览 ${mode.name}',
       (tester) async {
         final shadows = debugDisableShadows;
         debugDisableShadows = false;
         try {
-          await tester.runAsync(() async {
-            final regular = await File(
-              r'C:\Windows\Fonts\msyh.ttc',
-            ).readAsBytes();
-            final bold = await File(
-              r'C:\Windows\Fonts\msyhbd.ttc',
-            ).readAsBytes();
-            for (final family in [
-              AppTypography.chineseFontFamily,
-              'HarmonyOS Sans',
-              'Microsoft YaHei UI',
-              'Roboto',
-              'Ahem',
-              AppTypography.monoFontFamily,
-            ]) {
-              await (FontLoader(family)
-                    ..addFont(Future.value(ByteData.sublistView(regular)))
-                    ..addFont(Future.value(ByteData.sublistView(bold))))
-                  .load();
-            }
-            await (FontLoader('MaterialIcons')
-                  ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf')))
-                .load();
-          });
+          await _loadCaptureFonts(tester);
           await _mount(tester, brightness: mode);
           await _images(tester);
           await expectLater(
@@ -371,6 +502,7 @@ Future<void> _mount(
   Brightness brightness = Brightness.light,
   Size size = const Size(1360, 900),
   bool effects = false,
+  bool captureMifu = false,
   TextScaler textScaler = TextScaler.noScaling,
 }) async {
   SharedPreferences.setMockInitialValues({});
@@ -386,6 +518,12 @@ Future<void> _mount(
     ProviderScope(
       overrides: [
         databaseProvider.overrideWithValue(db),
+        clusterPlanningSnapshotProvider.overrideWith(
+          (_) async => cluster_fixture.fixture(),
+        ),
+        mifuHealthProvider.overrideWith(
+          (_) => Stream.value(const MifuHealth.disconnected()),
+        ),
         bambuAccountManagerProvider.overrideWith((ref) => _QuietAccounts()),
         bambuCloudProvider.overrideWith((ref) => _QuietCloud()),
         allCloudDevicesProvider.overrideWith((ref) => _QuietDevices()),
@@ -411,16 +549,46 @@ Future<void> _mount(
         stockAlertsProvider.overrideWith((ref) async => []),
         materialHeroPrinterStatusProvider.overrideWithValue(null),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: _theme(brightness),
-        builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(textScaler: textScaler),
-          child: child!,
-        ),
-        home: InteractionEffectsScope(
-          enabled: effects,
-          child: const AuroraWorkspace(),
+      child: RepaintBoundary(
+        key: _desktopCaptureKey,
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: _theme(brightness),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+            child: child!,
+          ),
+          home: InteractionEffectsScope(
+            enabled: effects,
+            child: captureMifu
+                ? Column(
+                    children: [
+                      Material(
+                        color: _theme(brightness).colorScheme.primaryContainer,
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            child: Text(
+                              '演示数据 · 完整桌面工作区预览 · 未连接打印机，未调用模型服务',
+                              style: TextStyle(
+                                color: _theme(
+                                  brightness,
+                                ).colorScheme.onPrimaryContainer,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const Expanded(child: AuroraWorkspace()),
+                    ],
+                  )
+                : const AuroraWorkspace(),
+          ),
         ),
       ),
     ),
@@ -437,6 +605,47 @@ Future<void> _images(WidgetTester tester) async {
     ]),
   );
   await tester.pumpAndSettle();
+}
+
+void _expectClusterFooterFullyVisible(WidgetTester tester) {
+  final screen = find.byType(ClusterScreen);
+  final viewport = tester.getRect(
+    find.descendant(of: screen, matching: find.byType(Scrollable)).first,
+  );
+  final button = tester.getRect(
+    find.descendant(
+      of: screen,
+      matching: find.widgetWithText(TextButton, '刷新状态'),
+    ),
+  );
+  // Check all edges: a hit-testable center can still hide half of the footer.
+  expect(button.left, greaterThanOrEqualTo(viewport.left));
+  expect(button.top, greaterThanOrEqualTo(viewport.top));
+  expect(button.right, lessThanOrEqualTo(viewport.right));
+  expect(button.bottom, lessThanOrEqualTo(viewport.bottom));
+}
+
+Future<void> _loadCaptureFonts(WidgetTester tester) async {
+  await tester.runAsync(() async {
+    final regular = await File(r'C:\Windows\Fonts\msyh.ttc').readAsBytes();
+    final bold = await File(r'C:\Windows\Fonts\msyhbd.ttc').readAsBytes();
+    for (final family in [
+      AppTypography.chineseFontFamily,
+      'HarmonyOS Sans',
+      'Microsoft YaHei UI',
+      'Roboto',
+      'Ahem',
+      AppTypography.monoFontFamily,
+    ]) {
+      await (FontLoader(family)
+            ..addFont(Future.value(ByteData.sublistView(regular)))
+            ..addFont(Future.value(ByteData.sublistView(bold))))
+          .load();
+    }
+    await (FontLoader(
+      'MaterialIcons',
+    )..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
+  });
 }
 
 // These read-only fixture notifiers never load real accounts, scan files,

@@ -142,6 +142,15 @@ try {
     $verifiedExport = & $verify -SourceStage $repositoryExport
     Assert-Condition ($exportResult.ManifestSha256 -eq $verifiedExport.ManifestSha256) 'Repository export manifest hash changed.'
     Assert-Condition ($verifiedExport.CoreAssets -eq $true) 'Repository export was not a Core snapshot.'
+    foreach ($required in @(
+        '电脑软件/mifu_service/mifu_native.py',
+        '电脑软件/mifu_service/mifu_server.py',
+        '电脑软件/mifu_service/requirements-native.txt',
+        '电脑软件/mifu_service/tests/test_mifu_native.py',
+        'docs/mifu.md', 'docs/mifu-components.md'
+    )) {
+        Assert-Condition (Test-Path -LiteralPath (Join-Path $repositoryExport $required) -PathType Leaf) "Mifu public source is missing: $required"
+    }
     Pass 'real repository Core export'
 
     $rejectedOutput = Join-Path $fixtureRoot 'tag-mismatch-output'

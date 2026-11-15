@@ -1,0 +1,3 @@
+# The SDK is deliberately pinned. Install CUDA-enabled PyTorch separately after
+# checking the local driver; this file does not claim a tested 4070 CUDA build.
+laya==0.4.31

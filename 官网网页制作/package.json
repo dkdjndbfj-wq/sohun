@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "node src/server.js",
+    "export:offline": "node scripts/export_offline_home.mjs",
     "test": "node --test"
   }
 }

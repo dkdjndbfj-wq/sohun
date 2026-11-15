@@ -9,6 +9,7 @@ import '../core/theme/interaction_effects.dart';
 import '../core/theme/personal_desktop_theme.dart';
 import '../widgets/personal_desktop_chrome.dart';
 import '../widgets/app_brand_icon.dart';
+import '../widgets/app_icon.dart';
 import '../providers/printer_connection_provider.dart';
 import '../providers/slicer_provider.dart';
 import '../providers/bambu_account_manager.dart';
@@ -28,6 +29,7 @@ import '../features/inventory/inventory_screen.dart';
 import '../features/print_history/print_history_screen.dart';
 import '../features/project_orders/personal_project_orders_screen.dart';
 import '../features/printers/printers_screen.dart';
+import '../features/cluster/cluster_screen.dart';
 import '../features/restock/restock_screen.dart';
 import '../features/support/support_screen.dart';
 import '../features/usage/usage_log_screen.dart';
@@ -71,6 +73,14 @@ class _AuroraWorkspaceState extends ConsumerState<AuroraWorkspace> {
       'printer',
       PrintersScreen(),
       group: '工作',
+    ),
+    _NavSpec(
+      WorkspacePageIds.cluster,
+      '集群管理',
+      'cluster',
+      ClusterScreen(),
+      group: '工作',
+      appIcon: AppIconData.cluster,
     ),
     _NavSpec(
       WorkspacePageIds.inventory,
@@ -364,6 +374,7 @@ class _NavSpec {
   final String icon;
   final Widget page;
   final String group;
+  final AppIconData? appIcon;
 
   const _NavSpec(
     this.id,
@@ -371,7 +382,13 @@ class _NavSpec {
     this.icon,
     this.page, {
     required this.group,
+    this.appIcon,
   });
+
+  Widget buildIcon({required double size, required Color color}) =>
+      appIcon != null
+      ? AppIcon(appIcon!, size: size, color: color)
+      : BambuIcon(name: icon, size: size, color: color, applyColorFilter: true);
 }
 
 class _AuroraSidebar extends StatelessWidget {
@@ -561,12 +578,7 @@ class _NavTile extends StatelessWidget {
                   ),
                   curve: Curves.easeOutCubic,
                   scale: selected ? 1 : 0.94,
-                  child: BambuIcon(
-                    name: item.icon,
-                    size: 20,
-                    color: color,
-                    applyColorFilter: true,
-                  ),
+                  child: item.buildIcon(size: 20, color: color),
                 ),
                 if (!collapsed) ...[
                   const SizedBox(width: 10),
@@ -653,12 +665,7 @@ class _AuroraTopBar extends ConsumerWidget {
                       child: Row(
                         key: ValueKey(current.label),
                         children: [
-                          BambuIcon(
-                            name: current.icon,
-                            size: 22,
-                            color: Aurora.primary,
-                            applyColorFilter: true,
-                          ),
+                          current.buildIcon(size: 22, color: Aurora.primary),
                           const SizedBox(width: 10),
                           Flexible(
                             child: Text(
@@ -1031,6 +1038,27 @@ class _HelpEntry {
 
 const _helpEntries = <_HelpEntry>[
   _HelpEntry(
+    category: 'Mifu 集群管理',
+    title: 'Mifu 集群管理从哪里开始？',
+    answer: '先在“项目”导入任务、在“打印机”准备设备，再进入“集群管理”选择打印盘，检查候选后比较。',
+    keywords: 'Mifu 集群 多设备 候选 任务 打印盘',
+    targetPage: '集群管理',
+  ),
+  _HelpEntry(
+    category: 'Mifu 集群管理',
+    title: 'Mifu 显示待连接或待训练怎么办？',
+    answer: '待连接表示本机服务未接通；待训练表示专属权重未就绪。点击集群页的模型状态查看详情，打开软件不会自动下载或训练模型。',
+    keywords: 'Mifu 集群 本机服务 连接 权重 模型 状态',
+    targetPage: '集群管理',
+  ),
+  _HelpEntry(
+    category: 'Mifu 集群管理',
+    title: 'Mifu 会自动开始打印吗？',
+    answer: '不会。概率只比较本次候选，不是成功率。“记录选择”仅保存反馈；“检查并排产”经人工确认后可能启动真实打印。',
+    keywords: 'Mifu 集群 人工确认 排产 打印 选择 概率 反馈',
+    targetPage: '集群管理',
+  ),
+  _HelpEntry(
     category: '快速开始',
     title: '如何添加耗材并调整卷数？',
     answer: '进入“库存”，点击“新增耗材”。卡片底部的减号和加号可按整卷调整库存，点击卡片可编辑详细信息。',
@@ -1206,11 +1234,9 @@ class _HelpSearchDialogState extends ConsumerState<_HelpSearchDialog> {
                             final item = navMatches[index];
                             final target = widget.items.indexOf(item);
                             return ListTile(
-                              leading: BambuIcon(
-                                name: item.icon,
+                              leading: item.buildIcon(
                                 size: 20,
                                 color: Aurora.primary,
-                                applyColorFilter: true,
                               ),
                               title: Text(item.label),
                               subtitle: Text('打开${item.group}'),
@@ -1268,7 +1294,7 @@ class _HelpSearchDialogState extends ConsumerState<_HelpSearchDialog> {
                               onTap: () => _showFaultDetails(fault),
                             );
                           }
-                          final entry = shown[index];
+                          final entry = shown[contentIndex];
                           return ListTile(
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 6,
