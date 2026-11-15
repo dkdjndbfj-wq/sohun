@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "createdAt": "2026-11-15T04:06:14.6646352+00:00",
+  "createdAt": "2026-11-15T04:54:03.6479612+00:00",
   "purpose": "Public source export; not a signed binary or third-party release clearance.",
   "coreAssets": true,
   "omittedAssetTrees": [
@@ -28,7 +28,7 @@
     "related tests and build scripts"
   ],
   "resourceReview": "THIRD_PARTY_NOTICES.md remains authoritative. Keeping attributed source data is not a clearance declaration for a distributable binary.",
-  "fileCount": 1067,
+  "fileCount": 1072,
   "files": [
     {
       "path": ".agents/skills/sohun-validation/SKILL.md",
@@ -898,12 +898,12 @@
     {
       "path": "电脑软件/community_server/package-lock.json",
       "bytes": 704,
-      "sha256": "15013b6b926eebfc35ea29fe0d3a7b7937cf1472d57ccdbd635530469de7cc05"
+      "sha256": "428ade530c666a6c8bc93443c9241ec5d4e8777215f75cc03750e1cf53e99340"
     },
     {
       "path": "电脑软件/community_server/package.json",
-      "bytes": 290,
-      "sha256": "e5675499bcd502ca9feec3b3d2d7d7d970c48de37c747a9f658238cf212f97bc"
+      "bytes": 291,
+      "sha256": "e7c7eff4c8eb585f0a5755d8909be444a771caa34812b524b3eba7777638c3f7"
     },
     {
       "path": "电脑软件/community_server/policies/privacy/2026-07-29.md",
@@ -1224,11 +1224,6 @@
       "path": "电脑软件/lib/core/services/kill_switch_service.dart",
       "bytes": 8481,
       "sha256": "26fa6fbc38f465d99f26dbad0d2e0d522569f6c68a4e30d40b67b0716da17537"
-    },
-    {
-      "path": "电脑软件/lib/core/services/local_host_monitor.dart",
-      "bytes": 6607,
-      "sha256": "b1d1086770357216629e0ed7ba84ba6e556a8584ed75aa957b90c7013760303e"
     },
     {
       "path": "电脑软件/lib/core/services/material_identity_service.dart",
@@ -2086,9 +2081,14 @@
       "sha256": "1248e9b174d47c3f328ec0625a53943cd9c2320a81428a5fad1bf2643a4568b1"
     },
     {
+      "path": "电脑软件/lib/features/cluster/cluster_assistance.dart",
+      "bytes": 2601,
+      "sha256": "89731f42fbdc794c834c19017ff609c56170eb45bf77c0f09e3d389efcd4edfe"
+    },
+    {
       "path": "电脑软件/lib/features/cluster/cluster_decision_widgets.dart",
-      "bytes": 16851,
-      "sha256": "732b7e6707bd0da409c23acc47d41c7d71b365c3daa89c7436a0682d2f5a5ecb"
+      "bytes": 18207,
+      "sha256": "538952ba1767678cc1534395eff4c7305ef81547eff1fafcd23b0f8adffc65ea"
     },
     {
       "path": "电脑软件/lib/features/cluster/cluster_device_details.dart",
@@ -2097,8 +2097,8 @@
     },
     {
       "path": "电脑软件/lib/features/cluster/cluster_host_status.dart",
-      "bytes": 6347,
-      "sha256": "6ef83aa91d79d3a9e7928bd325dddc4d7bd25e8aeac3e0d287b6dcece95d7530"
+      "bytes": 4831,
+      "sha256": "dac28ca27db3cdef3dd6761f0eef9cfeaac5b3b0c71d790a8969aa07981a7a41"
     },
     {
       "path": "电脑软件/lib/features/cluster/cluster_observation.dart",
@@ -2112,13 +2112,13 @@
     },
     {
       "path": "电脑软件/lib/features/cluster/cluster_preparation_dialog.dart",
-      "bytes": 3597,
-      "sha256": "080cc2906efdb7e0a91d90ad30134fee20bb5593ba5dbcfe23ad3af49623d5c1"
+      "bytes": 4143,
+      "sha256": "cf2abea05a3f21cff7a4be394628e275c1bed66b0a9d9373cb55b11b3972d6c1"
     },
     {
       "path": "电脑软件/lib/features/cluster/cluster_screen.dart",
-      "bytes": 62311,
-      "sha256": "e7f59dc6014187c044b1f3e33bbc2837e5a0637be8913c13f0098a46cf05fa95"
+      "bytes": 64674,
+      "sha256": "a65ad5cbd2badaa5131b949210baf307d7a1fa6166dd0cac6c00e66dcd36af49"
     },
     {
       "path": "电脑软件/lib/features/cluster/cluster_task_array.dart",
@@ -2856,11 +2856,6 @@
       "sha256": "b54c7627b3414e278daeae19028907a0283c3e65c067495125b3b66198416c9d"
     },
     {
-      "path": "电脑软件/lib/providers/local_host_monitor_provider.dart",
-      "bytes": 801,
-      "sha256": "6b72d7073f611ff3c845faf506364ba35a9945447387867c1081fc9ebb6accf4"
-    },
-    {
       "path": "电脑软件/lib/providers/material_catalog_provider.dart",
       "bytes": 930,
       "sha256": "367ad98a484ea481b645870b84517529d9bfa3342be0fdbc37889a44aedbc8b6"
@@ -3047,8 +3042,8 @@
     },
     {
       "path": "电脑软件/lib/widgets/bambu_icon.dart",
-      "bytes": 2452,
-      "sha256": "bcdf78af1e59127101dc2e25094b91d530c53c9ab5c7e927b38aaa229ddbe4bf"
+      "bytes": 5518,
+      "sha256": "7843273e5024c75d2322885a421fd6ebd0ffbf291183478dcc7149da1157670b"
     },
     {
       "path": "电脑软件/lib/widgets/confirm_dialog.dart",
@@ -3442,8 +3437,8 @@
     },
     {
       "path": "电脑软件/pubspec.yaml",
-      "bytes": 4505,
-      "sha256": "2b83654ae887fcfc80b9a74cbc5b054cbb5ba8e8d897a4cbf6f449fe3211e26c"
+      "bytes": 4506,
+      "sha256": "c0ff126a598d953c37dc114a05130281ff083a6e230d0e4dc3f93ddab49da86f"
     },
     {
       "path": "电脑软件/README.md",
@@ -3677,13 +3672,18 @@
     },
     {
       "path": "电脑软件/test/bambu_feed_capabilities_test.dart",
-      "bytes": 10122,
-      "sha256": "07494149bfe2de62dbcb3b07149b7a59acba06814a903e825b76abcab677781c"
+      "bytes": 11019,
+      "sha256": "3c3386a04aee89fcd42754f4d1a418ff1a1d27c135be39719c9169f8e0b56f3b"
     },
     {
       "path": "电脑软件/test/bambu_feed_incremental_test.dart",
       "bytes": 11393,
       "sha256": "37be60dc8b794293f1d3fc642fef283fd26b01b256ada3965878ba645841e093"
+    },
+    {
+      "path": "电脑软件/test/bambu_icon_test.dart",
+      "bytes": 4493,
+      "sha256": "a1f7ac0aece59bbcb9e74381215f2df2e18492363e5ae0988f061e57264b4fc4"
     },
     {
       "path": "电脑软件/test/bambu_studio_param_exporter_security_test.dart",
@@ -3741,14 +3741,19 @@
       "sha256": "5a439661e8f70668773528e7ab95b03d7cb1d625cb4d6f0f10dcc1990f9a57b8"
     },
     {
+      "path": "电脑软件/test/cluster_assistance_test.dart",
+      "bytes": 2058,
+      "sha256": "cb0f9e2fc09d28adf379abbe0e6ff4dbb08cd5aa24aa6780d183619ee0c9109e"
+    },
+    {
       "path": "电脑软件/test/cluster_compact_desktop_test.dart",
       "bytes": 2262,
       "sha256": "6be933cdbbe8d89bb5640e781b671d987526b19fed037aecf3177077c33f92e5"
     },
     {
       "path": "电脑软件/test/cluster_decision_lifecycle_test.dart",
-      "bytes": 26240,
-      "sha256": "ebf80a1ae811bc013558b1563ed32c67b6bf1b2d5474c343b3269206c5be2799"
+      "bytes": 31447,
+      "sha256": "028c7ed59ef69ec392eff305334b92108a8773aa9d15a3aad21d5799d1c34c33"
     },
     {
       "path": "电脑软件/test/cluster_device_details_test.dart",
@@ -3757,8 +3762,8 @@
     },
     {
       "path": "电脑软件/test/cluster_host_status_test.dart",
-      "bytes": 5490,
-      "sha256": "49cb2b0cbc6140a9b1bc4a69aa81c571757353aef22e676633228d6d6f588865"
+      "bytes": 3778,
+      "sha256": "0c6a0f04af113cc7218ddd803d2b0b21fea1409997eb83efade030ad37ca9791"
     },
     {
       "path": "电脑软件/test/cluster_mifu_request_test.dart",
@@ -3787,13 +3792,13 @@
     },
     {
       "path": "电脑软件/test/cluster_preparation_validation_test.dart",
-      "bytes": 1764,
-      "sha256": "f94ecc8b4508241f33de6238a3ef135f1cf18dbdf3f038de9902bb03d08e95ba"
+      "bytes": 2662,
+      "sha256": "27ae876c11dd6d919d294094797a2db2591ba9f32e585bd2ddb8da73fabd5d2a"
     },
     {
       "path": "电脑软件/test/cluster_screen_test.dart",
-      "bytes": 15401,
-      "sha256": "b6fb1496840c960d38f50607bc67734c9874e2f9fe408e647d3c66525d24c964"
+      "bytes": 15661,
+      "sha256": "4ff95d5edaf06ea9ba15f6fc925454b2216f5d5eb61527b02ca36b4e0090fcb8"
     },
     {
       "path": "电脑软件/test/cluster_task_array_test.dart",
@@ -3867,13 +3872,28 @@
     },
     {
       "path": "电脑软件/test/desktop_cluster_walkthrough_capture_test.dart",
-      "bytes": 36774,
-      "sha256": "0bd028f6c2d7e52cecd40aa027babb52a87bbb87c97385eb8268c41acff1b0e4"
+      "bytes": 37182,
+      "sha256": "d3f3a43035d7d5f3bc4c3dad10c4e37bfdcf53a606604630aa42efde69522d79"
     },
     {
       "path": "电脑软件/test/desktop_inventory_entry_modes_test.dart",
       "bytes": 13744,
       "sha256": "24f2c6f2afad2f6013496f2b7e296c426c5f8b0623980537bf477c098df7e289"
+    },
+    {
+      "path": "电脑软件/test/desktop_inventory_walkthrough_capture_test.dart",
+      "bytes": 12245,
+      "sha256": "f1bc74d83bd3126e0f7d1bef633af70d8423d2bb71b76e38f4aff63ba13f395d"
+    },
+    {
+      "path": "电脑软件/test/desktop_printer_walkthrough_capture_test.dart",
+      "bytes": 6285,
+      "sha256": "00c5c1754fa2bc85fb37336ec3ea8f22bcee3896d64fd5769e5e3c1ee5bdc7cc"
+    },
+    {
+      "path": "电脑软件/test/desktop_project_walkthrough_capture_test.dart",
+      "bytes": 13197,
+      "sha256": "74d37de7191686959b4c2a59f9bc87b12e7ddc9889a0a77ab52da14b9dda7ac1"
     },
     {
       "path": "电脑软件/test/desktop_rfid_bridge_test.dart",
@@ -3894,6 +3914,11 @@
       "path": "电脑软件/test/desktop_template_repository_test.dart",
       "bytes": 3776,
       "sha256": "c3d49a3b96cc84a031bd1cfac0b93bc867b19cdb9a5c389693cb7b735c0679b0"
+    },
+    {
+      "path": "电脑软件/test/desktop_workflow_walkthrough_capture_test.dart",
+      "bytes": 14314,
+      "sha256": "c56ccd5a1a52f78e78336b64794aaf6cad220061f18f4ddebe0df1a8be99a16c"
     },
     {
       "path": "电脑软件/test/device_tag_nfc_test.dart",
@@ -4184,11 +4209,6 @@
       "path": "电脑软件/test/legacy_database_import_test.dart",
       "bytes": 4030,
       "sha256": "137660a6cbc4dfeb436dd56d605780ef6675d788fd1dc5a1bf0d199b78367e49"
-    },
-    {
-      "path": "电脑软件/test/local_host_monitor_test.dart",
-      "bytes": 4721,
-      "sha256": "a559ef36e8ba136c7f40112aa7a460e41188bb7df69b8baf7789b05708162a27"
     },
     {
       "path": "电脑软件/test/maintenance_deduction_plan_test.dart",
@@ -4716,6 +4736,11 @@
       "sha256": "dc168cb97810d435d91f38589f82a107af6b267d1451479e45ad311b45460451"
     },
     {
+      "path": "电脑软件/test/support/desktop_walkthrough_support.dart",
+      "bytes": 17899,
+      "sha256": "81e43621c5aa82e8d415706e1957854c67df53ce2d857c32717d30c791fd0d1d"
+    },
+    {
       "path": "电脑软件/test/support/device_workbench_fixture.dart",
       "bytes": 7124,
       "sha256": "4cdd95c20fdb70611ce4aa396005450b4c658b56472132ed66c4f7c6f7d44836"
@@ -5082,13 +5107,13 @@
     },
     {
       "path": "手机软件/package-lock.json",
-      "bytes": 27101,
-      "sha256": "8f4be8e515fb051ed85b871187dc353f78c7ebe810a5a856e8f989e6aa58baf2"
+      "bytes": 30473,
+      "sha256": "109b53e2c8a7511fe65e9036520c8c82eee190019225135f608379d0cb5a25bd"
     },
     {
       "path": "手机软件/package.json",
       "bytes": 437,
-      "sha256": "fc8687237a9195de4921529c65f163a10cd668c638249bc9560eca43523911cf"
+      "sha256": "0a7082b5f5223e761074f8fdafd9f474a30b4efdcfde000523d4b2a6335ec35e"
     },
     {
       "path": "手机软件/public/favicon.ico",
@@ -5152,8 +5177,8 @@
     },
     {
       "path": "docs/bambu-feed-compatibility.md",
-      "bytes": 10188,
-      "sha256": "0d26bd4fb38bb42752d7a29f91976a2ae8a37e79ad7ad73751abd586b248172a"
+      "bytes": 10898,
+      "sha256": "33d056c7e6304e6fa0b4ad1c2dbea173ac4474c2e651de13ff2df9f4a8d9144e"
     },
     {
       "path": "docs/bambu-printer-fault-alerts.md",
@@ -5172,13 +5197,13 @@
     },
     {
       "path": "docs/images/mifu-1.1/desktop-dark.png",
-      "bytes": 849672,
-      "sha256": "fb0b182bcc98f79b536f4c15ed37d366d17ced989855766bd898251baf66a630"
+      "bytes": 886743,
+      "sha256": "6287f85457ac2bd93f3f11cb771d7a3d14215cac9483c8fff2184bd25f6fa1f7"
     },
     {
       "path": "docs/images/mifu-1.1/desktop-light.png",
-      "bytes": 1066139,
-      "sha256": "c22d0a231e54a723d4c6da47d09445272cbe7d252afbd26e5c78f49f450dbe26"
+      "bytes": 1097865,
+      "sha256": "e072219c5e5140c3f223f9c9713b238adacbfa137851764b562f5b6e67c287c4"
     },
     {
       "path": "docs/images/mobile-1.0.2/inventory-dark.png",
@@ -5222,13 +5247,13 @@
     },
     {
       "path": "docs/mifu-components.md",
-      "bytes": 2558,
-      "sha256": "9de75d5e83c8ccaf40d2d2084d00d658f84a7260962cbfdea2b0be397d2aab42"
+      "bytes": 2582,
+      "sha256": "ec00f72a8b32a408e9471df61026d466d1763b86a399ed3c93d98a88cba487d9"
     },
     {
       "path": "docs/mifu.md",
-      "bytes": 5105,
-      "sha256": "fa9cea5edf76fca6f5f20ecb6a2c5b879a33ed570b0a1f96d226bf99e14d3cbf"
+      "bytes": 5155,
+      "sha256": "9312cd423b96ffb70ce24ae561664c0eac2b1880312600185d0ce72fee510fca"
     },
     {
       "path": "docs/mobile-reader-guide.md",
@@ -5266,9 +5291,9 @@
       "sha256": "e8b9d99b5263071f0a6b72afa322b4a6a0153aaf543f42912e2ff4d1d7b095ac"
     },
     {
-      "path": "docs/releases/1.1.0-9.md",
-      "bytes": 5852,
-      "sha256": "1ee76437adc25ba76afd5e7a4d555d7ebb6aee252ef9fb567a15f4489cfa2b88"
+      "path": "docs/releases/1.1.0-10.md",
+      "bytes": 6133,
+      "sha256": "8723ba29cc5a2f5ccc8f2ece85889b3ad2904477485c409bd1be11411793988c"
     },
     {
       "path": "docs/windows-build-repair-2026-09-06.md",
@@ -5282,13 +5307,13 @@
     },
     {
       "path": "PUBLIC_RELEASE_MANIFEST.md",
-      "bytes": 6188,
-      "sha256": "bd957d798110b89df8dc14e70279becd61b17c783a81d8da2463d4eb63198536"
+      "bytes": 6280,
+      "sha256": "71ce662d57a8bf11182a0addee04d28a9deb3e9adabe0650f9e800de9a36d119"
     },
     {
       "path": "README.md",
-      "bytes": 23096,
-      "sha256": "f7ee9b576c3c901b081cffe4039c602a74f18f010469508f1a804e371512c8ec"
+      "bytes": 23416,
+      "sha256": "e0f574224cc99a040ee158337dfe935216aa358cd082eea555bb2f453bb1cf15"
     },
     {
       "path": "scripts/analyze_dart.ps1",
@@ -5307,8 +5332,8 @@
     },
     {
       "path": "scripts/export_public_source.ps1",
-      "bytes": 13792,
-      "sha256": "adb1a8b0bae819f2ce3fa96311378d5ffa2b044753db63956cfc9ce0f68f3d30"
+      "bytes": 13984,
+      "sha256": "3026226755d845c961c4e2d09d44e1614ce0c22f1cc6c9bc83ef0d4df67400c8"
     },
     {
       "path": "scripts/public_core_build.ps1",
@@ -5357,8 +5382,8 @@
     },
     {
       "path": "scripts/verify_bambu_feed.ps1",
-      "bytes": 2798,
-      "sha256": "2e7ff9a7d0649896e3f470340c02ef6102ab5839cca9c4817c243178fa535ba1"
+      "bytes": 3429,
+      "sha256": "48d5ca94c3292505e64bf377b9ced124e4a49da1debd6b53c9b22cb23ca66d5c"
     },
     {
       "path": "scripts/verify_public_source.ps1",

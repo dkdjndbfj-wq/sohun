@@ -2,9 +2,9 @@
 
 面向个人 3D 打印用户的耗材库存、实物卷追踪、打印机与设备工作台。Windows 桌面端负责日常管理，Android 客户端负责移动查看与 NFC 标签操作；两端可以使用同一个 sohun 个人账号同步。
 
-[访问官网](https://sohun.top) · [Windows 1.1.0+9 安装器](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/sohun-setup-1.1.0-9-windows-x64.exe) · [Windows 便携包](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/sohun-1.1.0-9-windows-x64.zip) · [下载 Android 1.1.0+9](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/sohun-1.1.0-9-android.apk) · [所有版本与附件](https://github.com/dkdjndbfj-wq/sohun/releases)
+[访问官网](https://sohun.top) · [Windows 1.1.0+10 安装器](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B10/sohun-setup-1.1.0-10-windows-x64.exe) · [Windows 便携包](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B10/sohun-1.1.0-10-windows-x64.zip) · [下载 Android 1.1.0+10](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B10/sohun-1.1.0-10-android.apk) · [所有版本与附件](https://github.com/dkdjndbfj-wq/sohun/releases)
 
-**1.1.0+9** 同时提供 Windows 与 Android 客户端。桌面新增集群管理工作区：左侧任务与多盘进度、中间 Mifu 决策中枢、右侧设备名称阵列；条件检查、人工选择、打印结果和质检记录贯穿同一次打印。浅色、深色主题沿用 Sohun 的视觉风格。完整内容见 [1.1.0+9 图文说明](docs/releases/1.1.0-9.md)。
+**1.1.0+10** 同时提供 Windows 与 Android 客户端。桌面新增集群管理工作区：左侧任务与多盘进度、中间 Mifu 决策中枢、右侧设备名称阵列；条件检查、人工选择、打印结果和质检记录贯穿同一次打印。浅色、深色主题沿用 Sohun 的视觉风格。完整内容见 [1.1.0+10 图文说明](docs/releases/1.1.0-10.md)。
 
 手机继续使用简洁的“读取 CUID / FUID”入口：已有资料进入入库确认，空白新卡进入独立写卡设置，读写、颜色选择与库存操作使用居中弹窗。品牌识别与实物卷规则和桌面共用；手机页面没有新增整套桌面集群布局。
 
@@ -16,9 +16,9 @@ Windows 公开核心版未做 Authenticode 签名。Mifu 原生数值模型提�
 
 一个任务可以包含多盘，每盘保留自己的重复次数、设备条件和执行记录。设备以名称、状态与关键信息排列，数量增加时仍能查看；中枢展示当前选择、条件检查和实际服务状态，避免把“检测到显卡”当作“正在推理”。
 
-![浅色集群工作区：左侧多盘任务、中间 Mifu、右侧设备阵列](https://raw.githubusercontent.com/dkdjndbfj-wq/sohun/v1.1.0%2B9/docs/images/mifu-1.1/desktop-light.png)
+![浅色集群工作区：左侧多盘任务、中间 Mifu、右侧设备阵列](https://raw.githubusercontent.com/dkdjndbfj-wq/sohun/v1.1.0%2B10/docs/images/mifu-1.1/desktop-light.png)
 
-![深色集群工作区：沿用相同操作结构与设备名称阵列](https://raw.githubusercontent.com/dkdjndbfj-wq/sohun/v1.1.0%2B9/docs/images/mifu-1.1/desktop-dark.png)
+![深色集群工作区：沿用相同操作结构与设备名称阵列](https://raw.githubusercontent.com/dkdjndbfj-wq/sohun/v1.1.0%2B10/docs/images/mifu-1.1/desktop-dark.png)
 
 以上两图由当前 Flutter 界面组件渲染，使用示例任务和设备，未连接打印机、未调用模型服务；它们展示界面，不是实际推理或打印效果证明。
 
@@ -86,7 +86,7 @@ Windows 公开核心版未做 Authenticode 签名。Mifu 原生数值模型提�
 
 **Mifu 是由 Sohun 项目作者自主设计与训练的数值决策模型及配套集群管理系统。** 任务阵列、打印盘、设备阵列和选择记录围绕同一个决策工作台组织；原生数值模型在已知耗时和合格候选中比较设备，不调用聊天模型生成结论。
 
-桌面集群与采集流程随 1.1.0+9 客户端交付，原生模型作为独立离线研究成果维护。模型在已知耗时条件下输出设备偏好分，不是打印成功率；没有合格权重时，本机 HTTP 服务保持“待配置”。人工检查并确认的排产流程与模型自动派单权限分开，当前模型不会自行启动打印。
+桌面集群与采集流程随 1.1.0+10 客户端交付，原生模型作为独立离线研究成果维护。模型在已知耗时条件下输出设备偏好分，不是打印成功率；没有合格权重时，本机 HTTP 服务保持“待配置”。人工检查并确认的排产流程与模型自动派单权限分开，当前模型不会自行启动打印。
 
 [Mifu 产品与验证范围](docs/mifu.md) · [本机服务与离线入口](电脑软件/mifu_service/README.md) · [组件信息](docs/mifu-components.md)
 
@@ -184,24 +184,24 @@ Windows 和 Android 可以登录同一个 sohun 个人账号。个人库存的�
 
 | 平台与版本 | 下载 | 说明与校验 |
 | --- | --- | --- |
-| Windows 10/11 x64 · 1.1.0+9 | [安装器](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/sohun-setup-1.1.0-9-windows-x64.exe) · [便携包](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/sohun-1.1.0-9-windows-x64.zip) | [图文说明](docs/releases/1.1.0-9.md) · [SHA-256](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/SHA256SUMS.txt) |
-| Android · 1.1.0+9 | [正式 APK](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/sohun-1.1.0-9-android.apk) | [读卡指南](docs/mobile-reader-guide.md) · [SHA-256](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/SHA256SUMS.txt) |
+| Windows 10/11 x64 · 1.1.0+10 | [安装器](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B10/sohun-setup-1.1.0-10-windows-x64.exe) · [便携包](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B10/sohun-1.1.0-10-windows-x64.zip) | [图文说明](docs/releases/1.1.0-10.md) · [SHA-256](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B10/SHA256SUMS.txt) |
+| Android · 1.1.0+10 | [正式 APK](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B10/sohun-1.1.0-10-android.apk) | [读卡指南](docs/mobile-reader-guide.md) · [SHA-256](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B10/SHA256SUMS.txt) |
 
 各包的哈希及签名状态以本次 Release 的 `SHA256SUMS.txt` 与 `release-manifest.json` 为准。历史 Android 1.0.2+7 的预览保留作既有读卡流程参考，不是新版桌面集群截图。
 
 ### Windows 10/11 x64 安装器
 
-下载 [`sohun-setup-1.1.0-9-windows-x64.exe`](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/sohun-setup-1.1.0-9-windows-x64.exe)，核对 SHA-256 后运行安装器。该公开核心版没有 Authenticode 签名，Windows 可能提示未知发布者；请先确认下载来源及哈希，不要为安装而全局关闭安全防护。
+下载 [`sohun-setup-1.1.0-10-windows-x64.exe`](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B10/sohun-setup-1.1.0-10-windows-x64.exe)，核对 SHA-256 后运行安装器。该公开核心版没有 Authenticode 签名，Windows 可能提示未知发布者；请先确认下载来源及哈希，不要为安装而全局关闭安全防护。
 
 升级前先完成库存同步或备份，退出正在运行的 sohun，再运行新版安装器。通常不需要先卸载旧版；保留原数据，安装后核对账号、库存和余料记录。
 
 ### Windows 10/11 x64 便携版
 
-下载 [`sohun-1.1.0-9-windows-x64.zip`](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/sohun-1.1.0-9-windows-x64.zip)，核对 SHA-256 后完整解压到新的可写目录，再运行其中的 `sohun.exe`。不要只从压缩包内单独启动 EXE，也不要把新版 EXE 覆盖进旧目录，以免混用不同版本的 DLL 和资源。更新前先同步或备份库存，核对新版中的账号和数据后再处理旧目录；便携版同样未做 Authenticode 签名。
+下载 [`sohun-1.1.0-10-windows-x64.zip`](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B10/sohun-1.1.0-10-windows-x64.zip)，核对 SHA-256 后完整解压到新的可写目录，再运行其中的 `sohun.exe`。不要只从压缩包内单独启动 EXE，也不要把新版 EXE 覆盖进旧目录，以免混用不同版本的 DLL 和资源。更新前先同步或备份库存，核对新版中的账号和数据后再处理旧目录；便携版同样未做 Authenticode 签名。
 
 ### Android Release APK
 
-下载 [`sohun-1.1.0-9-android.apk`](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B9/sohun-1.1.0-9-android.apk)，在 Android 系统安装页确认安装。该 APK 使用长期保存的发行密钥签名，后续版本沿用同一签名；遇到与旧调试包签名不一致的提示时，请先备份或同步库存，不要直接卸载丢失本地数据。使用 CUID/FUID 或 NTAG213 需要支持相应 NFC 能力的 Android 设备；不同厂商系统、标签批次和 NFC 芯片仍需现场测试。
+下载 [`sohun-1.1.0-10-android.apk`](https://github.com/dkdjndbfj-wq/sohun/releases/download/v1.1.0%2B10/sohun-1.1.0-10-android.apk)，在 Android 系统安装页确认安装。该 APK 使用长期保存的发行密钥签名，后续版本沿用同一签名；遇到与旧调试包签名不一致的提示时，请先备份或同步库存，不要直接卸载丢失本地数据。使用 CUID/FUID 或 NTAG213 需要支持相应 NFC 能力的 Android 设备；不同厂商系统、标签批次和 NFC 芯片仍需现场测试。
 
 项目目前没有 macOS 或 iOS 交付入口。
 
@@ -258,7 +258,7 @@ npm test
 
 ```powershell
 # Windows / Android 公开核心版；Windows 安装器需要 Inno Setup。
-./scripts/public_core_build.ps1 -Target All -PublicRelease -ExpectedTag 'v1.1.0+9' -Installer -RunTests
+./scripts/public_core_build.ps1 -Target All -PublicRelease -ExpectedTag 'v1.1.0+10' -Installer -RunTests
 # 正式 Android 构建还需仓库外 key.properties 与预期证书 SHA-256。
 ```
 

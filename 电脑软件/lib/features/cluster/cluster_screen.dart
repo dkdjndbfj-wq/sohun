@@ -131,6 +131,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
   }
 
   void _clearDecision() {
+    _preparationCache.clear();
     _generation++;
     _decisionExpiry?.cancel();
     _decisionExpiry = null;
@@ -168,6 +169,28 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
     return plan == null
         ? null
         : _fingerprint(snapshot, plan, _candidates(snapshot, plan));
+  }
+
+  void _validatePreparationCache(
+    AsyncValue<ClusterPlanningSnapshot> state,
+    MifuHealth? health,
+  ) {
+    if (state.isLoading) return;
+    final snapshot = state.valueOrNull;
+    final plan = snapshot == null
+        ? null
+        : _plates(snapshot).where((p) => p.plate.id == _plateId).firstOrNull;
+    if (state.hasError || snapshot == null || plan == null) {
+      _preparationCache.clear();
+      return;
+    }
+    final candidates = _candidates(snapshot, plan);
+    _preparationCache.read(
+      fingerprint: _fingerprint(snapshot, plan, candidates),
+      modelIdentity: _modelIdentity(health),
+      candidateIds: candidates.map((c) => c.printerId),
+      now: DateTime.now(),
+    );
   }
 
   @override
@@ -223,8 +246,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
     List<ClusterPrinterCandidate> candidates, {
     Map<int, int?>? confirmedPreparation,
     bool editPreparation = false,
-  }
-  ) async {
+  }) async {
     if (_preparing || _inferring || _checking || _recording || _dispatching) {
       return;
     }
@@ -256,8 +278,11 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
           candidateIds: candidates.map((c) => c.printerId),
           now: DateTime.now(),
         );
-        final preparation = confirmedPreparation ??
-            (!editPreparation && cached != null && cached.values.values.every((v) => v != null)
+        final preparation =
+            confirmedPreparation ??
+            (!editPreparation &&
+                    cached != null &&
+                    cached.values.values.every((v) => v != null)
                 ? cached.values
                 : await showClusterPreparationDialog(
                     context,
@@ -276,7 +301,10 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
           return;
         }
         final now = DateTime.now();
-        final observedAt = confirmedPreparation == null && !editPreparation && identical(preparation, cached?.values)
+        final observedAt =
+            confirmedPreparation == null &&
+                !editPreparation &&
+                identical(preparation, cached?.values)
             ? cached!.observedAt
             : now;
         _preparationCache.store(
@@ -404,12 +432,16 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
         context,
         candidates: candidates,
         checkingOnly: true,
-        initialValues: _preparationCache.read(
-          fingerprint: fingerprint,
-          modelIdentity: modelIdentity,
-          candidateIds: candidates.map((c) => c.printerId),
-          now: DateTime.now(),
-        )?.values ?? const {},
+        initialValues:
+            _preparationCache
+                .read(
+                  fingerprint: fingerprint,
+                  modelIdentity: modelIdentity,
+                  candidateIds: candidates.map((c) => c.printerId),
+                  now: DateTime.now(),
+                )
+                ?.values ??
+            const {},
       );
       if (!mounted || generation != _generation || preparation == null) return;
       if (!await _evidenceStillCurrent(
@@ -595,6 +627,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
   @override
   Widget build(BuildContext context) {
     ref.listen(clusterPlanningSnapshotProvider, (previous, next) {
+      _validatePreparationCache(next, ref.read(mifuHealthProvider).valueOrNull);
       // Keep ordinary telemetry refreshes usable, but permanently retire a
       // request when its facts change. Hiding it during a mismatch would allow
       // an obsolete result to reappear when the same facts later return.
@@ -632,6 +665,14 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
     });
     ref.listen(mifuHealthProvider, (previous, next) {
       if (next.isLoading) return;
+      if (_modelIdentity(previous?.valueOrNull) !=
+          _modelIdentity(next.valueOrNull)) {
+        _preparationCache.clear();
+      }
+      _validatePreparationCache(
+        ref.read(clusterPlanningSnapshotProvider),
+        next.valueOrNull,
+      );
       final identity = _modelIdentity(next.valueOrNull);
       if (((_decision != null || _inferring) &&
               _decisionModelIdentity != identity) ||
@@ -717,7 +758,6 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
         final wide =
             bounds.maxWidth >= 1000 &&
             MediaQuery.textScalerOf(context).scale(1) < 1.4;
-        final panelHeight = (bounds.maxHeight - 210).clamp(460.0, 1100.0);
         final left = ClusterTaskArray(
           snapshot: snapshot,
           selectedPlateId: plan?.plate.id,
@@ -741,89 +781,101 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
         );
         final right = _devices(snapshot, plan, candidates, selected);
         return SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 20,
-                runSpacing: 14,
-                children: [
-                  const Text(
-                    '生产集群',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
-                  ),
-                  ClusterHostStatus(health: health, onOpenDetails: () => _modelDetails(health)),
-                ],
-              ),
-              const SizedBox(height: 10),
-              FrostPanel(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                child: Wrap(
-                  spacing: 24,
-                  runSpacing: 8,
+          child: SizedBox(
+            // Reserve the actual header/footer heights before sizing the
+            // panels. Font metrics and wrapped content can exceed a fixed
+            // deduction, leaving the refresh button partly outside the view.
+            height: wide ? bounds.maxHeight.clamp(640.0, 1280.0) : null,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 20,
+                  runSpacing: 14,
                   children: [
-                    _number('设备总数', '${snapshot.printers.length}'),
-                    _number('打印中', '$printing'),
-                    _number('设备待核对', '$attention'),
-                    _number(
-                      '通过设备检查',
-                      '${snapshot.printers.where((p) => p.isEligible).length}',
+                    const Text(
+                      '生产集群',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    _number('受阻打印盘', '$blocked'),
-
-                    _number(
-                      '待分配盘次',
-                      '${plans.fold<int>(0, (v, p) => v + p.remainingRuns)}',
+                    ClusterHostStatus(
+                      health: health,
+                      onOpenDetails: () => _modelDetails(health),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 10),
-              if (wide)
-                SizedBox(
-                  height: panelHeight,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                const SizedBox(height: 10),
+                FrostPanel(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  child: Wrap(
+                    spacing: 24,
+                    runSpacing: 8,
                     children: [
-                      Expanded(flex: 28, child: left),
-                      const SizedBox(width: 10),
-                      Expanded(flex: 32, child: middle),
-                      const SizedBox(width: 10),
-                      Expanded(flex: 40, child: right),
+                      _number('设备总数', '${snapshot.printers.length}'),
+                      _number('打印中', '$printing'),
+                      _number('设备待核对', '$attention'),
+                      _number(
+                        '通过设备检查',
+                        '${snapshot.printers.where((p) => p.isEligible).length}',
+                      ),
+                      _number('受阻打印盘', '$blocked'),
+
+                      _number(
+                        '待分配盘次',
+                        '${plans.fold<int>(0, (v, p) => v + p.remainingRuns)}',
+                      ),
                     ],
                   ),
-                )
-              else ...[
-                SizedBox(height: 400, child: left),
-                const SizedBox(height: 12),
-                SizedBox(height: 660, child: middle),
-                const SizedBox(height: 12),
-                SizedBox(height: 500, child: right),
-              ],
-              const SizedBox(height: 6),
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                spacing: 12,
-                children: [
-                  Text(
-                    '更新于 ${clusterTimestamp(snapshot.generatedAt)}',
-                    style: Theme.of(context).textTheme.labelSmall,
-                  ),
-                  TextButton.icon(
-                    onPressed: _dispatching
-                        ? null
-                        : () => ref.invalidate(clusterPlanningSnapshotProvider),
-                    icon: const Icon(Icons.sync, size: 14),
-                    label: const Text('刷新状态'),
-                  ),
+                ),
+                const SizedBox(height: 10),
+                if (wide)
+                  Expanded(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(flex: 28, child: left),
+                        const SizedBox(width: 10),
+                        Expanded(flex: 32, child: middle),
+                        const SizedBox(width: 10),
+                        Expanded(flex: 40, child: right),
+                      ],
+                    ),
+                  )
+                else ...[
+                  SizedBox(height: 400, child: left),
+                  const SizedBox(height: 12),
+                  SizedBox(height: 660, child: middle),
+                  const SizedBox(height: 12),
+                  SizedBox(height: 500, child: right),
                 ],
-              ),
-            ],
+                const SizedBox(height: 6),
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  spacing: 12,
+                  children: [
+                    Text(
+                      '更新于 ${clusterTimestamp(snapshot.generatedAt)}',
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                    TextButton.icon(
+                      onPressed: _dispatching
+                          ? null
+                          : () =>
+                                ref.invalidate(clusterPlanningSnapshotProvider),
+                      icon: const Icon(Icons.sync, size: 14),
+                      label: const Text('刷新状态'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -994,7 +1046,11 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
         _recordedRequestId == _request?.requestId &&
         plan != null &&
         _requestFingerprint == _fingerprint(snapshot, plan, candidates);
-    final recommended = decision == null ? null : candidates.where((c) => '${c.printerId}' == decision.choice).firstOrNull;
+    final recommended = decision == null
+        ? null
+        : candidates
+              .where((c) => '${c.printerId}' == decision.choice)
+              .firstOrNull;
     final content = <Widget>[
       if (plan == null) ...[
         const SizedBox(height: 24),
@@ -1019,15 +1075,25 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
         const SizedBox(height: 12),
         MifuRecommendationCard(
           plan: plan,
-          candidate: recommended ?? (candidates.length == 1 ? candidates.single : null),
+          candidate:
+              recommended ??
+              (candidates.length == 1 ? candidates.single : null),
           candidateCount: candidates.length,
           request: decision == null ? null : _request,
           modelRecommended: recommended != null,
           busy: _inferring || _checking,
           ready: health.ready,
           stale: stale,
-          onReadyToCompare: canInfer && health.inputContract == 'mifu-decision-v4'
-              ? () => _infer(snapshot, plan, candidates, confirmedPreparation: {for (final candidate in candidates) candidate.printerId: 0})
+          onReadyToCompare:
+              canInfer && health.inputContract == 'mifu-decision-v4'
+              ? () => _infer(
+                  snapshot,
+                  plan,
+                  candidates,
+                  confirmedPreparation: {
+                    for (final candidate in candidates) candidate.printerId: 0,
+                  },
+                )
               : null,
         ),
         const SizedBox(height: 4),
@@ -1037,7 +1103,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
               child: Tooltip(
                 message: '概率只在本次候选中比较，不是打印成功率。',
                 child: Text(
-                  decision == null ? '可选设备' : '设备比较',
+                  decision == null ? '候选设备' : '模型偏好概率',
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 12,
@@ -1047,7 +1113,17 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
             ),
             if (health.supportsV4Check)
               TextButton(
-                onPressed: canInfer || (!health.ready && candidates.length >= 2 && candidates.length <= 16 && !refreshing && !_checking && !_inferring && !_preparing && !_recording && !_dispatching)
+                onPressed:
+                    canInfer ||
+                        (!health.ready &&
+                            candidates.length >= 2 &&
+                            candidates.length <= 16 &&
+                            !refreshing &&
+                            !_checking &&
+                            !_inferring &&
+                            !_preparing &&
+                            !_recording &&
+                            !_dispatching)
                     ? () => _checkInput(snapshot, plan, candidates)
                     : null,
                 child: Text(_checking ? '检查中' : '检查条件'),
@@ -1139,7 +1215,12 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
           children: [
             OutlinedButton.icon(
               onPressed: canInfer
-                  ? () => _infer(snapshot, plan, candidates)
+                  ? () => _infer(
+                      snapshot,
+                      plan,
+                      candidates,
+                      editPreparation: true,
+                    )
                   : null,
               icon: const Icon(Icons.compare_arrows_rounded, size: 15),
               label: Text(_inferring ? '推理中' : '重新决策'),
@@ -1210,16 +1291,18 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
                   _inferring
               ? null
               : selected != null
-                  ? () => _review(plan, selected)
-                  : canInfer ? () => _infer(snapshot, plan, candidates) : null,
+              ? () => _review(plan, selected)
+              : canInfer
+              ? () => _infer(snapshot, plan, candidates)
+              : null,
           icon: const Icon(Icons.arrow_forward, size: 16),
-          label: Text(_dispatching ? '检查中' : selected != null ? '检查并排产' : '智能推荐'),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          selected != null ? '确认设备与份数后开始' : '自动检查条件并比较设备',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant),
+          label: Text(
+            _dispatching
+                ? '检查中'
+                : selected != null
+                ? '检查并排产'
+                : '智能推荐',
+          ),
         ),
       ],
     );
@@ -1380,6 +1463,7 @@ class _ClusterScreenState extends ConsumerState<ClusterScreen> {
                     builder: (context, bounds) {
                       final scale = MediaQuery.textScalerOf(context).scale(1);
                       return GridView.builder(
+                        key: const ValueKey('cluster-printer-grid'),
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: scale < 1.3
                               ? (bounds.maxWidth / 180).floor().clamp(1, 4)

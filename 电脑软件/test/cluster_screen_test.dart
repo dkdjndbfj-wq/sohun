@@ -180,6 +180,7 @@ void main() {
     expect(find.text('多盘任务'), findsOneWidget);
     expect(find.text('P01  外壳'), findsOneWidget);
     expect(find.text('P02  底板'), findsOneWidget);
+    expect(find.text('P01 · 外壳'), findsOneWidget);
     await tester.tap(find.text('P02  底板'));
     await tester.pumpAndSettle();
     expect(find.text('P02 · 底板'), findsOneWidget);
@@ -409,8 +410,15 @@ void main() {
       expect(snapshot.printers.first.state, isNull);
       expect(snapshot.printers.first.availableAfterSeconds, 0);
       await pumpCluster(tester, snapshot: snapshot);
-      expect(find.text('机器等待未知'), findsNWidgets(2));
-      expect(find.text('机器等待 0 分'), findsNothing);
+      final devices = find.byKey(const ValueKey('cluster-printer-grid'));
+      expect(
+        find.descendant(of: devices, matching: find.text('机器等待未知')),
+        findsNWidgets(2),
+      );
+      expect(
+        find.descendant(of: devices, matching: find.text('机器等待 0 分')),
+        findsNothing,
+      );
       await tester.tap(find.byTooltip('查看设备 1档案'));
       await tester.pumpAndSettle();
       expect(find.byType(AlertDialog), findsOneWidget);

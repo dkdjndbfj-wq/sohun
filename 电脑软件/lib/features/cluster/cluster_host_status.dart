@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/services/mifu_client.dart';
-import '../../providers/local_host_monitor_provider.dart';
 import '../../ui/aurora_design.dart';
 
-/// Host resources are local OS readings; GPU readings come from Mifu /health.
-/// An unavailable model does not make local CPU or memory disappear.
-class ClusterHostStatus extends ConsumerWidget {
+/// Displays the supplied node snapshot. Presentation captures inject their
+/// own health data; this widget never substitutes missing operational values.
+class ClusterHostStatus extends StatelessWidget {
   const ClusterHostStatus({
     super.key,
     required this.health,
@@ -18,95 +16,62 @@ class ClusterHostStatus extends ConsumerWidget {
   final VoidCallback onOpenDetails;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(localHostSnapshotProvider);
-    final sample = state.valueOrNull;
+  Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final gpuLoad = _percent(health.utilizationPercent);
-    final gpuMemory = _gpuMemory(health);
-    final temperature = health.temperatureC;
-    final hasTemperature =
-        temperature != null && temperature.isFinite && temperature >= 0;
-    final hasGpu = gpuLoad != null || gpuMemory != null || hasTemperature;
-    final modelLabel = switch (health.trainingState) {
-      'ready' => 'Mifu 就绪',
-      'loading' => 'Mifu 加载中',
-      'unconfigured' => 'Mifu 待配置',
-      'error' => 'Mifu 加载失败',
-      _ => 'Mifu 未连接',
-    };
+    final load = _validNumber(health.utilizationPercent, maximum: 100);
+    final temperature = _validNumber(health.temperatureC);
+    final name = health.gpuName?.trim();
+    final statusColor = health.ready
+        ? scheme.primary
+        : health.trainingState == 'error'
+        ? scheme.error
+        : scheme.onSurfaceVariant;
     return FrostPanel(
       key: const ValueKey('cluster-host-status'),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       child: Wrap(
-        spacing: 14,
-        runSpacing: 8,
+        spacing: 18,
+        runSpacing: 10,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          Tooltip(
-            message: '当前电脑的系统资源，每3秒更新',
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.computer_outlined,
-                  size: 16,
-                  color: scheme.onSurfaceVariant,
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: .07),
+                  borderRadius: BorderRadius.circular(9),
                 ),
-                const SizedBox(width: 6),
-                const Text('本机', style: TextStyle(fontSize: 11)),
-              ],
-            ),
+                child: Icon(
+                  Icons.memory_outlined,
+                  size: 19,
+                  color: scheme.primary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 180),
+                child: _Metric(
+                  '计算节点',
+                  name == null || name.isEmpty ? 'GPU 未识别' : name,
+                ),
+              ),
+            ],
           ),
-          if (sample?.hasMetrics == true) ...[
-            if (sample!.cpuPercent != null)
-              _Metric('CPU', '${sample.cpuPercent!.round()}%')
-            else if (sample.cpuSampling)
-              const _Metric('CPU', '采样中'),
-            if (sample.hasMemory)
-              _Metric(
-                '内存',
-                '${_gigabytes(sample.memoryUsedBytes!)} / ${_gigabytes(sample.memoryTotalBytes!)} GB',
-              ),
-          ] else
-            Text(
-              state.isLoading
-                  ? '正在读取资源'
-                  : sample?.unavailableReason ?? '本机资源暂不可用',
-              style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
-            ),
-          if (hasGpu)
-            Tooltip(
-              message: '${health.gpuName ?? 'GPU'} · 本机 Mifu 服务采样',
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (gpuLoad != null) _Metric('GPU', gpuLoad),
-                  if (gpuMemory != null) ...[
-                    if (gpuLoad != null) const SizedBox(width: 14),
-                    _Metric('显存', gpuMemory),
-                  ],
-                  if (hasTemperature) ...[
-                    if (gpuLoad != null || gpuMemory != null)
-                      const SizedBox(width: 14),
-                    _Metric('温度', '${temperature.round()}°C'),
-                  ],
-                ],
-              ),
-            ),
+          _Metric('GPU 负载', load == null ? '—' : '${load.round()}%'),
+          _Metric('显存', _gpuMemory(health) ?? '—'),
+          _Metric('温度', temperature == null ? '—' : '${temperature.round()}°C'),
           Tooltip(
-            message: health.trainingState == 'disconnected'
-                ? '本机 Mifu 服务尚未连接，点击查看连接信息'
-                : hasGpu
-                ? '查看模型与计算节点'
-                : '查看模型信息；当前服务未提供 GPU 监测数据',
+            message: '查看模型与训练节点',
             child: TextButton(
               key: const ValueKey('cluster-host-model-status'),
               onPressed: onOpenDetails,
               style: TextButton.styleFrom(
                 visualDensity: VisualDensity.compact,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                minimumSize: const Size(0, 32),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+                minimumSize: const Size(0, 34),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -116,15 +81,17 @@ class ClusterHostStatus extends ConsumerWidget {
                     height: 6,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: health.ready
-                          ? scheme.primary
-                          : scheme.onSurfaceVariant,
+                      color: statusColor,
                     ),
                   ),
                   const SizedBox(width: 7),
-                  Text(modelLabel, style: const TextStyle(fontSize: 11)),
-                  const SizedBox(width: 3),
-                  const Icon(Icons.chevron_right_rounded, size: 15),
+                  _Metric('Mifu', health.label),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 15,
+                    color: statusColor,
+                  ),
                 ],
               ),
             ),
@@ -134,25 +101,20 @@ class ClusterHostStatus extends ConsumerWidget {
     );
   }
 
-  static String _gigabytes(int bytes) =>
-      (bytes / (1024 * 1024 * 1024)).toStringAsFixed(1);
-
-  static String? _percent(double? value) =>
-      value != null && value.isFinite && value >= 0 && value <= 100
-      ? '${value.round()}%'
+  static double? _validNumber(double? value, {double? maximum}) =>
+      value != null &&
+          value.isFinite &&
+          value >= 0 &&
+          (maximum == null || value <= maximum)
+      ? value
       : null;
 
   static String? _gpuMemory(MifuHealth health) {
-    final used = health.memoryUsedMb;
-    final total = health.memoryTotalMb;
-    if (used == null ||
-        total == null ||
-        !used.isFinite ||
-        !total.isFinite ||
-        used < 0 ||
-        total <= 0 ||
-        used > total)
+    final used = _validNumber(health.memoryUsedMb);
+    final total = _validNumber(health.memoryTotalMb);
+    if (used == null || total == null || total <= 0 || used > total) {
       return null;
+    }
     return '${(used / 1024).toStringAsFixed(1)} / ${(total / 1024).toStringAsFixed(1)} GB';
   }
 }
@@ -162,8 +124,9 @@ class _Metric extends StatelessWidget {
   final String label, value;
 
   @override
-  Widget build(BuildContext context) => Row(
+  Widget build(BuildContext context) => Column(
     mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(
         label,
@@ -172,10 +135,16 @@ class _Metric extends StatelessWidget {
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
-      const SizedBox(width: 5),
+      const SizedBox(height: 3),
       Text(
         value,
-        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
       ),
     ],
   );

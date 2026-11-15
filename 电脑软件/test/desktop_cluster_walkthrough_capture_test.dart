@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -46,7 +47,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 const _captureKey = ValueKey('native-cluster-walkthrough');
 const _size = Size(1600, 1000);
 const _modelVersion = 'Mifu 0.9';
-const _output = '../output/sohun-walkthrough-20261113/frames';
+const _output = String.fromEnvironment(
+  'SOHUN_WALKTHROUGH_OUTPUT',
+  defaultValue: '../output/sohun-walkthrough-20261115/frames',
+);
 
 /// Reusable in-memory scenario. Names on screen are natural, but provenance is
 /// explicit in the external metadata. These observations are NOT operational
@@ -166,8 +170,8 @@ class DesktopClusterWalkthroughScenario {
                   printerSerial: printers[device].serial!,
                   printerName: names[device],
                   maxRuns: plate.requiredRuns,
-                  queuedRuns: 0,
-                  availableAfterSeconds: 0,
+                  queuedRuns: device == 0 ? 1 : 0,
+                  availableAfterSeconds: device == 0 ? 720 : 0,
                   materialMatches: [
                     ClusterMaterialMatch(
                       toolIndex: 0,
@@ -227,6 +231,7 @@ class DesktopClusterWalkthroughScenario {
   late final MifuClient client;
   final requests = <Map<String, Object?>>[];
   int dispatchAttempts = 0;
+  final hostTick = ValueNotifier(0);
 
   ClusterPrinter _printer(int index, String name, String model) {
     final serial = 'walkthrough-device-${index + 1}';
@@ -314,11 +319,13 @@ class DesktopClusterWalkthroughScenario {
       ),
       activeQueueCount: index == 4
           ? 5
-          : running
+          : running || index == 0
           ? 1
           : 0,
       availableAfterSeconds: running
           ? const [0, 0, 1920, 3240, 22680, 4080][index]
+          : index == 0
+          ? 720
           : 0,
       blockers: index == 4 ? const ['活动队列已达上限'] : const [],
     );
@@ -496,6 +503,7 @@ class _Sequence {
   }
 
   Future<void> frame({int durationMs = 100}) async {
+    scenario.hostTick.value = elapsedMs ~/ 2200;
     await tester.pump(Duration(milliseconds: durationMs));
     expect(tester.takeException(), isNull);
     final name = 'frame_${frames.length.toString().padLeft(4, '0')}.png';
@@ -732,18 +740,52 @@ Future<void> _mount(
           throw StateError('Real dispatch is forbidden in capture');
         }),
         mifuClientProvider.overrideWith((_) => scenario.client),
-        mifuHealthProvider.overrideWith(
-          (_) => Stream.value(
-            const MifuHealth(
+        mifuHealthProvider.overrideWith((ref) {
+          final controller = StreamController<MifuHealth>();
+          void emit() => controller.add(
+            MifuHealth(
               trainingState: 'ready',
               version: _modelVersion,
               device: 'cuda',
+              gpuName: 'NVIDIA RTX 4070',
+              utilizationPercent: const [
+                31.0,
+                34.0,
+                38.0,
+                42.0,
+                37.0,
+                33.0,
+              ][scenario.hostTick.value % 6],
+              memoryUsedMb: const [
+                4210.0,
+                4260.0,
+                4310.0,
+                4390.0,
+                4300.0,
+                4240.0,
+              ][scenario.hostTick.value % 6],
+              memoryTotalMb: 12288,
+              temperatureC: const [
+                48.0,
+                49.0,
+                50.0,
+                51.0,
+                50.0,
+                49.0,
+              ][scenario.hostTick.value % 6],
               inputContract: 'mifu-decision-v4',
               supportedInputContracts: ['mifu-decision-v4'],
               supportedObjectives: ['earliest_known_finish'],
             ),
-          ),
-        ),
+          );
+          scenario.hostTick.addListener(emit);
+          emit();
+          ref.onDispose(() {
+            scenario.hostTick.removeListener(emit);
+            unawaited(controller.close());
+          });
+          return controller.stream;
+        }),
         bambuAccountManagerProvider.overrideWith((_) => _QuietAccounts()),
         bambuCloudProvider.overrideWith((_) => _QuietCloud()),
         allCloudDevicesProvider.overrideWith((_) => _QuietDevices()),
@@ -822,6 +864,7 @@ void main() {
           await _loadFonts(tester);
           final scenario = DesktopClusterWalkthroughScenario();
           addTearDown(scenario.client.close);
+          addTearDown(scenario.hostTick.dispose);
           final pointer = ValueNotifier(const _PointerState(Offset(1310, 870)));
           addTearDown(pointer.dispose);
           await _mount(tester, scenario, pointer);
@@ -879,39 +922,12 @@ void main() {
             expect(scenario.requests, isEmpty);
           } else if (segment == 2) {
             await sequence.click(
-              find.text('P01  底壳'),
-              '任务阵列 / P01 底壳',
-              linger: 8,
-              moveFrames: 6,
-            );
-            await sequence.click(
-              find.widgetWithText(OutlinedButton, '重新决策'),
-              'Mifu / 重新决策',
-              linger: 8,
-            );
-            await sequence.type(
-              find.byKey(const ValueKey('preparation-1')),
-              '90',
-              'P1S-01 / 预计准备秒数',
-            );
-            await sequence.type(
-              find.byKey(const ValueKey('preparation-2')),
-              '30',
-              'P1S-02 / 预计准备秒数',
-            );
-            await sequence.click(
-              find.widgetWithText(FilledButton, '开始比较'),
-              '准备耗时 / 开始比较',
-              linger: 14,
+              find.byKey(const ValueKey('mifu-ready-compare')),
+              'Mifu / 确认均无需准备并直接比较',
+              linger: 30,
               moveFrames: 6,
             );
             expect(find.text('68.0%'), findsOneWidget);
-            final panel = find.byKey(const ValueKey('mifu-decision-panel'));
-            await sequence.click(
-              find.descendant(of: panel, matching: find.text('P1S-01')),
-              'Mifu候选 / 人工改选 P1S-01',
-              linger: 10,
-            );
             await sequence.click(
               find.widgetWithText(OutlinedButton, '记录选择'),
               'Mifu / 记录选择',
@@ -933,7 +949,7 @@ void main() {
             ]);
             expect(
               (scenario.requests.last['body'] as Map)['feedback'],
-              'corrected',
+              'accepted',
             );
           } else {
             await sequence.click(
@@ -976,7 +992,7 @@ void main() {
           }
           expect(tester.takeException(), isNull);
           await sequence.finish(
-            const ['进入集群与设备档案', 'Mifu比较与人工改选', '查看打印结果与人工质检'][segment - 1],
+            const ['进入集群与设备档案', 'Mifu一键比较与采纳建议', '查看打印结果与人工质检'][segment - 1],
             prelude,
           );
         } finally {

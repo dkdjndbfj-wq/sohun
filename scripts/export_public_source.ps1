@@ -44,7 +44,7 @@ $sourceFiles = @(
     'docs/bambu-printer-fault-alerts.md', 'docs/windows-build-repair-2026-09-06.md',
     'docs/glass-button-system.md', 'docs/agent-workflow-audit-2026-09-06.md',
     'docs/release-validation-1.0.1.md',
-    'docs/mifu.md', 'docs/mifu-components.md', 'docs/releases/1.1.0-9.md',
+    'docs/mifu.md', 'docs/mifu-components.md', 'docs/releases/1.1.0-10.md',
     'docs/images/mifu-1.1/desktop-light.png', 'docs/images/mifu-1.1/desktop-dark.png',
     '电脑软件/mifu_service/mifu_native.py',
     '电脑软件/mifu_service/mifu_server.py',

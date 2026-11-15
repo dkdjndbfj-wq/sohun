@@ -12,15 +12,22 @@ $appPath = Get-ChildItem -LiteralPath $workspaceRoot -Directory |
 if ([string]::IsNullOrWhiteSpace($appPath)) { throw 'Main Flutter project not found.' }
 
 if ($CheckOfficialCatalog) {
-    # Independently reviewed names from official BBL.json on 2026-09-05.
-    # A mismatch requires a source review, not an automatic capability guess.
-    $expectedModels = @(
+    # Capability-reviewed names from official BBL.json on 2026-09-05.
+    # Catalog presence alone does not establish supported hardware capabilities.
+    $supportedModels = @(
         'Bambu Lab X1 Carbon', 'Bambu Lab X1', 'Bambu Lab X1E',
         'Bambu Lab P1P', 'Bambu Lab P1S', 'Bambu Lab P2S',
         'Bambu Lab A1 mini', 'Bambu Lab A1', 'Bambu Lab A2L',
         'Bambu Lab H2D', 'Bambu Lab H2D Pro', 'Bambu Lab H2S',
         'Bambu Lab H2C', 'Bambu Lab X2D'
     )
+    # Catalog delta reviewed on 2026-11-15. H3C remains unsupported: no
+    # capability preset, model alias, or automatic print admission is added.
+    $reviewedUnsupportedModels = @('Bambu Lab H3C')
+    if (@($supportedModels | Where-Object { $_ -in $reviewedUnsupportedModels }).Count -gt 0) {
+        throw 'A model cannot be both supported and reviewed as unsupported.'
+    }
+    $expectedModels = @($supportedModels) + @($reviewedUnsupportedModels)
     $catalog = Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/bambulab/BambuStudio/master/resources/profiles/BBL.json' -TimeoutSec 30
     $actualModels = @($catalog.machine_model_list | ForEach-Object { $_.name })
     if ($actualModels.Count -eq 0) { throw 'Official model catalog could not be read.' }
@@ -29,7 +36,8 @@ if ($CheckOfficialCatalog) {
         $difference | Format-Table | Out-String | Write-Output
         throw 'Bambu model catalog changed. Review sources, capabilities and regression expectations before release.'
     }
-    Write-Host "Official model catalog matches all $($expectedModels.Count) reviewed models."
+    Write-Host "Official model catalog matches $($supportedModels.Count) supported and $($reviewedUnsupportedModels.Count) reviewed unsupported models."
+    Write-Host "Unsupported models remain excluded from print admission: $($reviewedUnsupportedModels -join ', ')."
 }
 
 if (-not $SkipTests) {

@@ -123,6 +123,150 @@ class _Harness {
 }
 
 void main() {
+  testWidgets(
+    'model change during a snapshot refresh clears cached preparation after a failed check',
+    (tester) async {
+      final initial = v4_fixtures.liveFixture(DateTime.now());
+      final harness = _Harness(initial: initial, model: _v4Ready);
+      var calls = 0;
+      await harness.pump(tester, (request) async {
+        calls++;
+        return http.Response('{"error":"busy"}', 503);
+      });
+      await tester.tap(find.text('检查条件'));
+      await tester.pumpAndSettle();
+      await _submitPreparation(tester, check: true);
+      final refresh = Completer<ClusterPlanningSnapshot>();
+      harness.pendingSnapshot = refresh;
+      harness.container.invalidate(clusterPlanningSnapshotProvider);
+      await tester.pump();
+      harness.container.read(harness.health.notifier).state = _ready;
+      await tester.pump();
+      harness.container.read(harness.health.notifier).state = _v4Ready;
+      await tester.pump();
+      refresh.complete(initial);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('mifu-primary-action')));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const ValueKey('preparation-1')))
+            .controller!
+            .text,
+        isEmpty,
+      );
+      expect(calls, 1);
+      await tester.tap(find.text('取消'));
+      await tester.pumpAndSettle();
+    },
+  );
+
+  testWidgets(
+    'failed check preparation cannot revive after facts change and return',
+    (tester) async {
+      final initial = v4_fixtures.liveFixture(DateTime.now());
+      final harness = _Harness(initial: initial, model: _v4Ready);
+      var calls = 0;
+      await harness.pump(tester, (request) async {
+        calls++;
+        return http.Response('{"error":"busy"}', 503);
+      });
+      await tester.tap(find.text('检查条件'));
+      await tester.pumpAndSettle();
+      await _submitPreparation(tester, check: true);
+      expect(calls, 1);
+      harness.container.read(harness.snapshot.notifier).state = fixtures
+          .fixture(candidateCount: 3);
+      await tester.pumpAndSettle();
+      harness.container.read(harness.snapshot.notifier).state = initial;
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('mifu-primary-action')));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const ValueKey('preparation-1')))
+            .controller!
+            .text,
+        isEmpty,
+      );
+      expect(calls, 1);
+      await tester.tap(find.text('取消'));
+      await tester.pumpAndSettle();
+    },
+  );
+
+  testWidgets(
+    'ready shortcut checks and compares once without writing or dispatching',
+    (tester) async {
+      final harness = _Harness(
+        initial: v4_fixtures.liveFixture(DateTime.now()),
+        model: _v4Ready,
+      );
+      final sent = <http.Request>[];
+      await harness.pump(tester, (request) async {
+        sent.add(request);
+        return _v4Reply(request);
+      });
+      expect(sent, isEmpty);
+      await tester.tap(find.byKey(const ValueKey('mifu-ready-compare')));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(sent.map((r) => r.url.path), [
+        '/v1/decisions/check',
+        '/v1/decisions',
+      ]);
+      for (final request in sent) {
+        final input = jsonDecode(request.body) as Map;
+        expect(
+          (input['candidates'] as List).every(
+            (c) => c['features']['setup_seconds'] == 0,
+          ),
+          isTrue,
+        );
+      }
+      expect(find.text('Mifu 建议'), findsOneWidget);
+      expect(find.text('当前选择 · 设备 2'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'checked preparation is reused by the primary action without renewing its timestamp',
+    (tester) async {
+      final harness = _Harness(
+        initial: v4_fixtures.liveFixture(DateTime.now()),
+        model: _v4Ready,
+      );
+      final inputs = <Map>[];
+      await harness.pump(tester, (request) async {
+        inputs.add(jsonDecode(request.body) as Map);
+        return _v4Reply(request);
+      });
+      await tester.tap(find.text('检查条件'));
+      await tester.pumpAndSettle();
+      await _submitPreparation(tester, check: true);
+      final firstSetup =
+          ((inputs.first['candidates'] as List).first['features']
+              as Map)['timing_evidence']['setup'];
+      await tester.tap(find.byKey(const ValueKey('mifu-primary-action')));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(inputs, hasLength(3));
+      final lastSetup =
+          ((inputs.last['candidates'] as List).first['features']
+              as Map)['timing_evidence']['setup'];
+      expect(lastSetup, firstSetup);
+      expect(
+        (inputs.last['candidates'] as List).last['features']['setup_seconds'],
+        40,
+      );
+      expect(find.text('80.0%'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('v4 hardware changes invalidate otherwise identical candidates', (
     tester,
   ) async {

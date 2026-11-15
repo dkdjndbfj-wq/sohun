@@ -4,7 +4,7 @@ Mifu 是由 Sohun 项目作者自主设计与训练的数值决策模型及配�
 
 当前自研模型 **Mifu Core** 专注于一个明确问题：在候选设备已经通过条件检查、耗时信息完整时，为当前打印盘比较预计完成时间，并在完成时间相同时比较准备时间。模型结构、数值特征、训练过程、权重与评估记录均由本项目维护。
 
-## 1.1.0+9 交付范围
+## 1.1.0+10 交付范围
 
 | 部分 | 提供的内容 | 当前状态 |
 | --- | --- | --- |
@@ -14,7 +14,7 @@ Mifu 是由 Sohun 项目作者自主设计与训练的数值决策模型及配�
 
 Android 继续提供耗材读写和库存同步，不包含桌面集群全套布局。客户端更新、服务启动和模型质量验收是不同环节；检测到 GPU 只说明取得主机信息，不表示模型已加载或正在推理。
 
-![Mifu 浅色集群工作区](https://raw.githubusercontent.com/dkdjndbfj-wq/sohun/v1.1.0%2B9/docs/images/mifu-1.1/desktop-light.png)
+![Mifu 浅色集群工作区](https://raw.githubusercontent.com/dkdjndbfj-wq/sohun/v1.1.0%2B10/docs/images/mifu-1.1/desktop-light.png)
 
 图为当前 Flutter 组件与示例数据，未连接打印机、未调用模型服务。任务支持多盘及每盘多次打印；设备以名称排列。操作窗口使用居中弹窗。
 

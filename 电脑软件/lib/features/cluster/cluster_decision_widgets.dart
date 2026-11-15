@@ -123,18 +123,18 @@ class MifuPlateSummary extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Wrap(
-            spacing: 20,
-            runSpacing: 8,
+            spacing: 14,
+            runSpacing: 6,
             children: [
-              _metric(context, '剩余盘次', '${plan.remainingRuns}'),
+              _metric(context, '剩余', '${plan.remainingRuns}'),
               _metric(
                 context,
-                '单盘用量',
+                '用量',
                 grams.isFinite && grams > 0
                     ? '${grams.toStringAsFixed(1)} g'
                     : '—',
               ),
-              _metric(context, '单盘耗时', duration),
+              _metric(context, '耗时', duration),
             ],
           ),
         ],
@@ -142,8 +142,8 @@ class MifuPlateSummary extends StatelessWidget {
     );
   }
 
-  Widget _metric(BuildContext context, String label, String value) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _metric(BuildContext context, String label, String value) => Row(
+    mainAxisSize: MainAxisSize.min,
     children: [
       Text(
         label,
@@ -152,7 +152,7 @@ class MifuPlateSummary extends StatelessWidget {
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
-      const SizedBox(height: 4),
+      const SizedBox(width: 5),
       Text(
         value,
         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
@@ -287,20 +287,26 @@ class MifuCandidateTile extends StatelessWidget {
                           ),
                           if (recommended) ...[
                             const SizedBox(width: 5),
-                            Text('建议', style: TextStyle(fontSize: 10, color: accent)),
+                            Text(
+                              '建议',
+                              style: TextStyle(fontSize: 10, color: accent),
+                            ),
                           ],
                         ],
                       );
                       final score = probability == null
                           ? null
-                          : Tooltip(message: '模型偏好概率，不是打印成功率', child: Text(
-                              '${(probability! * 100).toStringAsFixed(1)}%',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: selected ? accent : scheme.onSurface,
+                          : Tooltip(
+                              message: '模型偏好概率，不是打印成功率',
+                              child: Text(
+                                '${(probability! * 100).toStringAsFixed(1)}%',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: selected ? accent : scheme.onSurface,
+                                ),
                               ),
-                            ));
+                            );
                       if (stackProbability) {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,53 +388,125 @@ class MifuRecommendationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final chosen = candidate;
-    final input = request?.candidates.where((c) => '${c['id']}' == '${chosen?.printerId}').firstOrNull;
+    final input = request?.candidates
+        .where((c) => '${c['id']}' == '${chosen?.printerId}')
+        .firstOrNull;
     final features = input?['features'];
     final rawSetup = features is Map ? features['setup_seconds'] : null;
     final setup = rawSetup is int && rawSetup >= 0 ? rawSetup : null;
     final wait = chosen?.availableAfterSeconds;
-    final run = plan.plate.estimatedSeconds > 0 ? plan.plate.estimatedSeconds : null;
-    final total = wait != null && setup != null && run != null ? wait + setup + run : null;
-    final title = busy ? '正在比较设备' : chosen != null ? chosen.printerName : candidateCount == 0 ? '需要处理设备或材料' : '已筛选 $candidateCount 台设备';
-    final caption = busy ? '条件检查 → 耗时比较' : modelRecommended ? 'Mifu 建议' : chosen != null ? '唯一适配设备' : stale ? '条件已更新' : '自动筛选完成';
+    final run = plan.plate.estimatedSeconds > 0
+        ? plan.plate.estimatedSeconds
+        : null;
+    final total = wait != null && setup != null && run != null
+        ? wait + setup + run
+        : null;
+    final title = busy
+        ? '正在比较设备'
+        : chosen != null
+        ? chosen.printerName
+        : candidateCount == 0
+        ? '需要处理设备或材料'
+        : '已筛选 $candidateCount 台设备';
+    final caption = busy
+        ? '条件检查 → 耗时比较'
+        : modelRecommended
+        ? 'Mifu 建议'
+        : chosen != null
+        ? '唯一适配设备'
+        : stale
+        ? '条件已更新'
+        : '自动筛选完成';
     return Container(
       key: const ValueKey('mifu-recommendation-card'),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [scheme.primary.withValues(alpha: .09), scheme.surface.withValues(alpha: .45)],
+          colors: [
+            scheme.primary.withValues(alpha: .09),
+            scheme.surface.withValues(alpha: .45),
+          ],
         ),
         border: Border.all(color: scheme.primary.withValues(alpha: .16)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(children: [
-            Icon(modelRecommended ? Icons.auto_awesome_rounded : Icons.filter_alt_outlined, size: 15, color: scheme.primary),
-            const SizedBox(width: 6),
-            Expanded(child: Text(caption, style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant))),
-            if (modelRecommended) Icon(Icons.check_circle_rounded, size: 15, color: scheme.primary),
-          ]),
+          Row(
+            children: [
+              Icon(
+                modelRecommended
+                    ? Icons.auto_awesome_rounded
+                    : Icons.filter_alt_outlined,
+                size: 15,
+                color: scheme.primary,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  caption,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              if (modelRecommended)
+                Icon(
+                  Icons.check_circle_rounded,
+                  size: 15,
+                  color: scheme.primary,
+                ),
+            ],
+          ),
           const SizedBox(height: 8),
-          Text(title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
+          Text(
+            title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: 8),
           if (chosen != null) ...[
-            Text('材料已匹配 · 可排 ${chosen.maxRuns} 次', style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant)),
-            const SizedBox(height: 12),
-            Wrap(spacing: 16, runSpacing: 8, children: [
-              _time(context, '机器等待', wait),
-              _time(context, '准备', setup),
-              _time(context, '单盘打印', run),
-            ]),
+            Text(
+              '材料已匹配 · 可排 ${chosen.maxRuns} 次',
+              style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 16,
+              runSpacing: 8,
+              children: [
+                _time(context, '机器等待', wait),
+                _time(context, '准备', setup),
+                _time(context, '单盘打印', run),
+              ],
+            ),
             if (total != null) ...[
               const SizedBox(height: 10),
-              Tooltip(message: '已知等待下界 + 人工准备估计 + 切片耗时；非完成时间承诺', child: Text('已知单盘耗时 ≥ ${clusterDuration(total)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
+              Tooltip(
+                message: '已知等待下界 + 人工准备估计 + 切片耗时；非完成时间承诺',
+                child: Text(
+                  '已知单盘耗时 ≥ ${clusterDuration(total)}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             ],
           ] else if (!busy) ...[
-            Text(candidateCount == 0 ? '在详情中查看待处理项' : ready ? '确认准备时间，即可比较' : '模型未连接，可手动选择设备', style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant)),
+            Text(
+              candidateCount == 0
+                  ? '在详情中查看待处理项'
+                  : ready
+                  ? '确认准备时间，即可比较'
+                  : '可手动选择设备，模型状态见上方',
+              style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+            ),
             if (onReadyToCompare != null) ...[
               const SizedBox(height: 10),
               TextButton.icon(
@@ -444,12 +522,25 @@ class MifuRecommendationCard extends StatelessWidget {
     );
   }
 
-  Widget _time(BuildContext context, String title, int? seconds) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _time(BuildContext context, String title, int? seconds) => Row(
+    mainAxisSize: MainAxisSize.min,
     children: [
-      Text(title, style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-      const SizedBox(height: 3),
-      Text(seconds == null ? '待确认' : seconds == 0 ? '无需等待' : clusterDuration(seconds), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+      Text(
+        title,
+        style: TextStyle(
+          fontSize: 10,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
+      const SizedBox(width: 5),
+      Text(
+        seconds == null || seconds < 0
+            ? '待确认'
+            : seconds == 0
+            ? (title == '准备' ? '无需准备' : '无需等待')
+            : clusterDuration(seconds),
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+      ),
     ],
   );
 }

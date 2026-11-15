@@ -34,7 +34,7 @@ BambuPrinterStatus statusWithUnits(List<AmsUnit> units) => BambuPrinterStatus(
     );
 
 void main() {
-  test('every official model has a separate, verified capability entry', () {
+  test('every supported model has a separate, verified capability entry', () {
     expect(PrinterModelNormalizer.knownBambuModels, matrix.keys.toSet());
     expect(
         PrinterPresets.all.where((p) => p.isBambu).map((p) => p.model).toSet(),
@@ -58,6 +58,27 @@ void main() {
     expect(PrinterPresets.findByModel('Bambu Lab H2DP')!.model, 'H2D Pro');
     expect(PrinterPresets.findByModel('X1 Carbon')!.model, 'X1C');
     expect(PrinterPresets.findByModel('A3 unknown'), isNull);
+  });
+
+  test('catalog-only H3C remains unsupported and cannot inherit H2 capabilities',
+      () {
+    for (final model in ['H3C', 'Bambu Lab H3C', 'Bambu Lab H3C 0.4 nozzle']) {
+      expect(PrinterModelNormalizer.normalize(model), 'H3C');
+      expect(PrinterModelNormalizer.isKnownBambuModel(model), isFalse);
+      expect(PrinterModelNormalizer.groupOf(model), isNull);
+      expect(PrinterModelNormalizer.sameModel(model, 'H2C'), isFalse);
+      expect(PrinterPresets.findByModel(model, brand: '拓竹'), isNull);
+      for (final channel in [0, 254, 255]) {
+        expect(
+            validateBambuPrintFeed(
+                model: model,
+                mapping: [channel],
+                activeTools: [0],
+                status: statusWithUnits(const [])),
+            contains('供料能力'),
+            reason: '$model must reject AMS and external feed admission');
+      }
+    }
   });
 
   test('limits apply to combinations as well as individual AMS generations',

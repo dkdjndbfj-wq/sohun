@@ -11,6 +11,6 @@
     "test": "node --test"
   },
   "dependencies": {
-    "nodemailer": "9.1.1"
+    "nodemailer": "10.5.0"
   }
 }

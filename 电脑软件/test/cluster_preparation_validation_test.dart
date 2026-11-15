@@ -5,6 +5,29 @@ import 'package:flutter_test/flutter_test.dart';
 import 'cluster_screen_test.dart' as fixtures;
 
 void main() {
+  testWidgets('preparation only becomes zero after an explicit ready action', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ClusterPreparationDialog(
+          candidates: fixtures.fixture().plates.first.candidates,
+          checkingOnly: false,
+          initialValues: const {1: 90},
+        ),
+      ),
+    );
+    final first = find.byKey(const ValueKey('preparation-1'));
+    final second = find.byKey(const ValueKey('preparation-2'));
+    expect(tester.widget<TextField>(first).controller!.text, '90');
+    expect(tester.widget<TextField>(second).controller!.text, isEmpty);
+    await tester.tap(find.text('全部无需准备'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(first).controller!.text, '0');
+    expect(tester.widget<TextField>(second).controller!.text, '0');
+    expect(tester.takeException(), isNull);
+  });
+
   for (final raw in ['-5', '1.5', '1e3', '0x10', '+5', '2678401']) {
     testWidgets('preparation rejects $raw without rewriting the estimate', (
       tester,

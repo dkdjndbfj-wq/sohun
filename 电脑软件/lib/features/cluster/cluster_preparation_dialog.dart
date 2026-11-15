@@ -6,11 +6,13 @@ Future<Map<int, int?>?> showClusterPreparationDialog(
   BuildContext context, {
   required List<ClusterPrinterCandidate> candidates,
   required bool checkingOnly,
+  Map<int, int?> initialValues = const {},
 }) => showDialog<Map<int, int?>>(
   context: context,
   builder: (_) => ClusterPreparationDialog(
     candidates: candidates,
     checkingOnly: checkingOnly,
+    initialValues: initialValues,
   ),
 );
 
@@ -19,9 +21,11 @@ class ClusterPreparationDialog extends StatefulWidget {
     super.key,
     required this.candidates,
     required this.checkingOnly,
+    this.initialValues = const {},
   });
   final List<ClusterPrinterCandidate> candidates;
   final bool checkingOnly;
+  final Map<int, int?> initialValues;
   @override
   State<ClusterPreparationDialog> createState() =>
       _ClusterPreparationDialogState();
@@ -30,7 +34,9 @@ class ClusterPreparationDialog extends StatefulWidget {
 class _ClusterPreparationDialogState extends State<ClusterPreparationDialog> {
   late final _controllers = {
     for (final candidate in widget.candidates)
-      candidate.printerId: TextEditingController(),
+      candidate.printerId: TextEditingController(
+        text: widget.initialValues[candidate.printerId]?.toString() ?? '',
+      ),
   };
   String? _error;
   @override
@@ -69,7 +75,20 @@ class _ClusterPreparationDialogState extends State<ClusterPreparationDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('预计取件、换板和换料所需的额外时间。留空表示未知，确认无需准备时填0。'),
+            const Text('取件、换板或换料所需时间。未知请留空。'),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () => setState(() {
+                  for (final controller in _controllers.values) {
+                    controller.text = '0';
+                  }
+                  _error = null;
+                }),
+                icon: const Icon(Icons.done_all, size: 16),
+                label: const Text('全部无需准备'),
+              ),
+            ),
             const SizedBox(height: 16),
             for (final candidate in widget.candidates)
               Padding(
@@ -85,7 +104,6 @@ class _ClusterPreparationDialogState extends State<ClusterPreparationDialog> {
                   ),
                 ),
               ),
-            const Text('这里保存人工估计，后续打印结果会单独记录。', style: TextStyle(fontSize: 12)),
             if (_error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
